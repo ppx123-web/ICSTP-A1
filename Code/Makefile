@@ -29,7 +29,13 @@ lexical: $(LFILE)
 syntax-c: $(YFILE)
 	$(BISON) -o $(YFC) -d -v $(YFILE)
 
+YYCFILE = $(shell find ./ -name *.yy.c)
+scanner: lexical
+	$(CC) $(YYCFILE) -lfl -I. -o scanner
+	./scanner ../Test/test1.cmm
+
 -include $(patsubst %.o, %.d, $(OBJS))
+
 
 # 定义的一些伪目标
 .PHONY: clean test
@@ -40,3 +46,5 @@ clean:
 	rm -f $(OBJS) $(OBJS:.o=.d)
 	rm -f $(LFC) $(YFC) $(YFC:.c=.h)
 	rm -f *~
+	rm -f scanner
+

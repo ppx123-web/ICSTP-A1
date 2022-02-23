@@ -2,4 +2,6 @@ int main()
 {
 	int i = 1;
 	int j = 2;
+	float asda = -1.21312e21;
+	return 0;
 }
