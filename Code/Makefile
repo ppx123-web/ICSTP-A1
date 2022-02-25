@@ -30,12 +30,25 @@ syntax-c: $(YFILE)
 	$(BISON) -o $(YFC) -d -v $(YFILE)
 
 YYCFILE = $(shell find ./ -name *.yy.c)
+ifeq ($(file),all)
+	TESTFILE = $(shell find ../Test/ -name "*.cmm")
+else 
+	ifeq ($(file),)
+		file = 1
+	endif
+	TESTFILE = ../Test/test$(file).cmm
+endif
 scanner: lexical
 	$(CC) $(YYCFILE) -lfl -I. -o scanner
-	./scanner ../Test/test1.cmm
+	@echo -e \\n==============================\\n
+	@./scanner $(TESTFILE)
+	@echo -e \\n==============================\\n
+	@echo Scanner Test:$(notdir $(TESTFILE))
+
+
+
 
 -include $(patsubst %.o, %.d, $(OBJS))
-
 
 # 定义的一些伪目标
 .PHONY: clean test
