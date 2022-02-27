@@ -1,7 +1,6 @@
 int main()
 {
-	int i = 1;
-	int j = 2;
-	float asda = -1.21312e21;
-	return 0;
+	float ad = -2312.231e-321;
+	int a = 00.2e231;
+	inssa = 2 + 2;
 }

@@ -17,35 +17,46 @@ YFC = $(shell find ./ -name "*.y" | sed s/[^/]*\\.y/syntax.tab.c/)
 LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
 
-ifeq ($(debug),1)
-	CFLAGS += -DDEBUG
-endif
-
-ifeq ($(scanner),1))
-	CFLAGS += -DDEBUG -DSCANNER_DEBUG
-endif
-
 parser: syntax $(filter-out $(LFO),$(OBJS))
 	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
 
 syntax: lexical syntax-c
 	$(CC) -c $(YFC) -o $(YFO)
 
-lexical:clean $(LFILE)
+lexical: $(LFILE)
 	$(FLEX) -o $(LFC) $(LFILE)
 
 syntax-c: $(YFILE)
 	$(BISON) -o $(YFC) -d -v $(YFILE)
 
--include $(patsubst %.o, %.d, $(OBJS))
 
-test: parser
-	./parser ../Test/test1.cmm
-	./parser ../Test/test2.cmm
-	@rm *.o
+
+YYCFILE = $(shell find ./ -name *.yy.c)
+ifeq ($(file),all)
+	TESTFILE = $(shell find ../Test/ -name "*.cmm")
+else 
+	ifeq ($(file),)
+		file = 1
+		TESTFILE = ../Test/test$(file).cmm
+	endif
+endif
+
+scanner: clean lexical
+	$(CC) $(YYCFILE) -lfl -I. -DSCANNER_DEBUG -o scanner
+	@echo -e \\n==============================\\n
+	@./scanner $(TESTFILE)
+	@echo -e \\n==============================\\n
+	@echo Scanner Test:$(notdir $(TESTFILE))
+
+
+
+
+-include $(patsubst %.o, %.d, $(OBJS))
 
 # 定义的一些伪目标
 .PHONY: clean test
+test:
+	./parser ../Test/test1.cmm
 clean:
 	rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	rm -f $(OBJS) $(OBJS:.o=.d)

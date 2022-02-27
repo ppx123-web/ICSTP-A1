@@ -17,14 +17,6 @@ YFC = $(shell find ./ -name "*.y" | sed s/[^/]*\\.y/syntax.tab.c/)
 LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
 
-ifeq ($(debug),1)
-	CFLAGS += -DDEBUG
-endif
-
-ifeq ($(scanner),1))
-	CFLAGS += -DDEBUG -DSCANNER_DEBUG
-endif
-
 parser: syntax $(filter-out $(LFO),$(OBJS))
 	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
 
@@ -42,7 +34,6 @@ syntax-c: $(YFILE)
 test: parser
 	./parser ../Test/test1.cmm
 	./parser ../Test/test2.cmm
-	@rm *.o
 
 # 定义的一些伪目标
 .PHONY: clean test
