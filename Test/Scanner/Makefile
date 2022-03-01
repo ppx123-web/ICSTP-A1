@@ -33,7 +33,7 @@ syntax-c: $(YFILE)
 
 YYCFILE = $(shell find ./ -name *.yy.c)
 ifeq ($(file),all)
-	TESTFILE = $(shell find ../Test/ -name "*.cmm")
+	TESTFILE = $(shell find ../ -name "*.cmm")
 else 
 	ifeq ($(file),)
 		file = 1
