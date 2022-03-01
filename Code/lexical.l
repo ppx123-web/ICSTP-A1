@@ -2,22 +2,6 @@
     #include <stdio.h>
     #include "debug.h"
     #include "syntax.tab.h"
-
-    struct YYLTYPE {
-        int first_line;
-        int first_column;
-        int last_line;
-        int last_column;
-    };
-
-    struct YYLTYPE yylloc = {0};
-
-    int yycolumn = 1;
-    #define YY_USER_ACTION \
-                yylloc.first_line = yylloc.last_line = yylineno; \
-                yylloc.first_column = yycolumn; \
-                yylloc.last_column = yycolumn + yyleng - 1; \
-                yycolumn += yyleng;
 %}
 
 INT (([+-]?[0-9])|([+-]?[1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[1-7][0-7]*))[^.]

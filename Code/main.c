@@ -1,5 +1,9 @@
-#include "lex.yy.c"
 #include <stdio.h>
+
+int yyrestart(FILE*);
+int yyparse (void);
+int yylex(void);
+void yyerror(char* s);
 
 int main(int argc,char *argv[]) {
     if (argc <= 1) {
