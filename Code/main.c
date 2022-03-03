@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "debug.h"
+#include "data.h"
 
 int yyrestart(FILE*);
 int yyparse (void);
@@ -22,6 +24,3 @@ int main(int argc,char *argv[]) {
     return 0;
 }
 
-void yyerror(char* msg) {
-    fprintf(stderr,"error: %s\n", msg);
-}

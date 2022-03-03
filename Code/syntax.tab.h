@@ -80,14 +80,24 @@ extern int yydebug;
     RETURN = 281,                  /* RETURN  */
     IF = 282,                      /* IF  */
     ELSE = 283,                    /* ELSE  */
-    WHILE = 284                    /* WHILE  */
+    WHILE = 284,                   /* WHILE  */
+    LOWER_THAN_ELSE = 285          /* LOWER_THAN_ELSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+union YYSTYPE
+{
+#line 26 "./syntax.y"
+
+    struct __Tree_node_t * node;
+
+#line 98 "./syntax.tab.h"
+
+};
+typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
 #endif

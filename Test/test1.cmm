@@ -1,6 +1,12 @@
 int main()
 {
 	float ad = -2312.231e-321;
-	int a = 00.2e231;
-	inssa = 2 + 2;
+	int a = 09;
+	int a = 0x3G9;
+	asda= 12;
+	inssa = 2 + 2++;
+	inssa = 2 + 2++;
+	if (c = a + b;) {
+		a = 2;
+	}
 }

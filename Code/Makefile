@@ -18,11 +18,11 @@ LFO = $(LFC:.c=.o)
 YFO = $(YFC:.c=.o)
 
 ifeq ($(debug),1)
-	CFLAGS += -DDEBUG
+CFLAGS += -DDEBUG
 endif
 
-ifeq ($(scanner),1))
-	CFLAGS += -DDEBUG -DSCANNER_DEBUG
+ifeq ($(scanner),1)
+CFLAGS += -DDEBUG -DSCANNER_DEBUG
 endif
 
 parser: syntax $(filter-out $(LFO),$(OBJS))

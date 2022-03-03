@@ -39,8 +39,8 @@ WHILE	while
 {ELSE}    { ELEMENT("ELSE"); return ELSE; }
 {WHILE}   { ELEMENT("WHILE"); return WHILE; }
 {TYPE}    { ELEMENT("TYPE"); return TYPE; }
-{INT}     { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0; Log("TYPE = INT:( %s )",yytext); return INT;}
-{FLOAT}   { Log("TYPE = FLOAT: %s",yytext); return FLOAT;}
+{INT}     { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0; /*Log("TYPE = INT:( %s )",yytext);*/ return INT;}
+{FLOAT}   { /*Log("TYPE = FLOAT: %s",yytext);*/ return FLOAT;}
 {ID}      { ELEMENT("ID"); return ID; }
 {SEMI}	  { ELEMENT("SEMI"); return SEMI;}
 {COMMA}   { ELEMENT("COMMA"); return COMMA;}
@@ -59,11 +59,16 @@ WHILE	while
 {RB}	    { ELEMENT("RB"); return RB;}
 {LC}	    { ELEMENT("LC"); return LC;}
 {RC}	    { ELEMENT("RC"); return RC;}
-[ \t]       { ;}
-[\n]        { yycolumn += 1; }
-.           { printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext); }
+[ ]         { ;}
+[\t]        { yycolumn += 3; }
+[\n]        { yycolumn = 1; yylineno += 1; }
+.           { LexicalError("Lexical Error: %s",yytext);     /*printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);*/ }
 
 %%
+
+void yyerror(char* msg) {
+    SyntaxError("%s : \n\t%s\n\t^", msg,yytext);
+}
 
 // #ifdef SCANNER_DEBUG
 // int main(int argc,char* argv[]) {

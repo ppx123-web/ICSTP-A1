@@ -1,7 +1,11 @@
 # Project 1
 
-完成包括语法规则在内的Flex代码
+错误恢复
 
-Flex对.l文件进行编译 flex lexical.l
+Stmt -> error SEMI
 
-gcc main.c lex.yy.c -lfl -o scanner
+CompSt -> error RC
+
+Exp -> error RP | error RB  | error OPs(+-*/ && || RELOP)
+
+Args -> error COMMA
