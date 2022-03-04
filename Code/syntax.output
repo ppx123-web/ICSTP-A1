@@ -79,24 +79,25 @@
    56    | ID
    57    | INT
    58    | FLOAT
+   59    | Exp PLUS error
 
-   59 Args: Exp COMMA Args
-   60     | Exp
-   61     | error Args
+   60 Args: Exp COMMA Args
+   61     | Exp
+   62     | error Args
 
 
 终结语词，附有它们出现处的规则
 
     $end (0) 0
-    error <node> (256) 24 33 61
+    error <node> (256) 24 33 59 62
     INT <node> (258) 17 57
     FLOAT <node> (259) 58
     ID <node> (260) 13 15 16 18 19 52 53 55 56
     SEMI <node> (261) 4 5 27 29 33 36
-    COMMA <node> (262) 8 20 38 59
+    COMMA <node> (262) 8 20 38 60
     ASSIGNOP <node> (263) 40 41
     RELOP <node> (264) 44
-    PLUS <node> (265) 45
+    PLUS <node> (265) 45 59
     MINUS <node> (266) 46 50
     STAR <node> (267) 47
     DIV <node> (268) 48
@@ -181,11 +182,11 @@
         on left: 39 40
         on right: 37 38
     Exp <node> (51)
-        on left: 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58
-        on right: 27 29 30 31 32 40 41 42 43 44 45 46 47 48 49 50 51 54 55 59 60
+        on left: 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59
+        on right: 27 29 30 31 32 40 41 42 43 44 45 46 47 48 49 50 51 54 55 59 60 61
     Args <node> (52)
-        on left: 59 60 61
-        on right: 52 59 61
+        on left: 60 61 62
+        on right: 52 60 62
 
 
 状态 0
@@ -795,6 +796,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     SEMI      偏移，并进入状态 75
     ASSIGNOP  偏移，并进入状态 76
@@ -886,6 +888,7 @@
    50    | MINUS Exp •
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     DOT    偏移，并进入状态 84
@@ -907,6 +910,7 @@
    51    | NOT Exp •
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     DOT    偏移，并进入状态 84
@@ -928,6 +932,7 @@
    49    | LP Exp • RP
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -955,6 +960,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     SEMI      偏移，并进入状态 93
     ASSIGNOP  偏移，并进入状态 76
@@ -1050,7 +1056,9 @@
 状态 78
 
    45 Exp: Exp PLUS • Exp
+   59    | Exp PLUS • error
 
+    error  偏移，并进入状态 98
     INT    偏移，并进入状态 48
     FLOAT  偏移，并进入状态 49
     ID     偏移，并进入状态 50
@@ -1058,7 +1066,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 98
+    Exp  转到状态 99
 
 
 状态 79
@@ -1072,7 +1080,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 99
+    Exp  转到状态 100
 
 
 状态 80
@@ -1086,7 +1094,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 100
+    Exp  转到状态 101
 
 
 状态 81
@@ -1100,7 +1108,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 101
+    Exp  转到状态 102
 
 
 状态 82
@@ -1114,7 +1122,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 102
+    Exp  转到状态 103
 
 
 状态 83
@@ -1128,14 +1136,14 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 103
+    Exp  转到状态 104
 
 
 状态 84
 
    55 Exp: Exp DOT • ID
 
-    ID  偏移，并进入状态 104
+    ID  偏移，并进入状态 105
 
 
 状态 85
@@ -1149,7 +1157,7 @@
     NOT    偏移，并进入状态 52
     LP     偏移，并进入状态 53
 
-    Exp  转到状态 105
+    Exp  转到状态 106
 
 
 状态 86
@@ -1165,6 +1173,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -1189,7 +1198,7 @@
 
 状态 88
 
-   61 Args: error • Args
+   62 Args: error • Args
 
     error  偏移，并进入状态 88
     INT    偏移，并进入状态 48
@@ -1200,7 +1209,7 @@
     LP     偏移，并进入状态 53
 
     Exp   转到状态 90
-    Args  转到状态 106
+    Args  转到状态 107
 
 
 状态 89
@@ -1222,10 +1231,11 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
-   59 Args: Exp • COMMA Args
-   60     | Exp •
+   59    | Exp • PLUS error
+   60 Args: Exp • COMMA Args
+   61     | Exp •
 
-    COMMA     偏移，并进入状态 107
+    COMMA     偏移，并进入状态 108
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
     PLUS      偏移，并进入状态 78
@@ -1237,14 +1247,14 @@
     DOT       偏移，并进入状态 84
     LB        偏移，并进入状态 85
 
-    $default  使用规则 60 以归约 (Args)
+    $default  使用规则 61 以归约 (Args)
 
 
 状态 91
 
    52 Exp: ID LP Args • RP
 
-    RP  偏移，并进入状态 108
+    RP  偏移，并进入状态 109
 
 
 状态 92
@@ -1275,6 +1285,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -1285,7 +1296,7 @@
     AND       偏移，并进入状态 82
     OR        偏移，并进入状态 83
     DOT       偏移，并进入状态 84
-    RP        偏移，并进入状态 109
+    RP        偏移，并进入状态 110
     LB        偏移，并进入状态 85
 
 
@@ -1302,6 +1313,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -1312,7 +1324,7 @@
     AND       偏移，并进入状态 82
     OR        偏移，并进入状态 83
     DOT       偏移，并进入状态 84
-    RP        偏移，并进入状态 110
+    RP        偏移，并进入状态 111
     LB        偏移，并进入状态 85
 
 
@@ -1329,6 +1341,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -1357,6 +1370,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     PLUS   偏移，并进入状态 78
     MINUS  偏移，并进入状态 79
@@ -1370,6 +1384,13 @@
 
 状态 98
 
+   59 Exp: Exp PLUS error •
+
+    $default  使用规则 59 以归约 (Exp)
+
+
+状态 99
+
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
    43    | Exp • OR Exp
@@ -1381,6 +1402,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     STAR   偏移，并进入状态 80
@@ -1391,7 +1413,7 @@
     $default  使用规则 45 以归约 (Exp)
 
 
-状态 99
+状态 100
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1404,6 +1426,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     DOT    偏移，并进入状态 84
@@ -1412,7 +1435,7 @@
     $default  使用规则 46 以归约 (Exp)
 
 
-状态 100
+状态 101
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1425,6 +1448,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     DIV    偏移，并进入状态 81
@@ -1434,7 +1458,7 @@
     $default  使用规则 47 以归约 (Exp)
 
 
-状态 101
+状态 102
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1447,6 +1471,7 @@
    48    | Exp DIV Exp •
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     MINUS  偏移，并进入状态 79
     DOT    偏移，并进入状态 84
@@ -1455,7 +1480,7 @@
     $default  使用规则 48 以归约 (Exp)
 
 
-状态 102
+状态 103
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1468,6 +1493,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     RELOP  偏移，并进入状态 77
     PLUS   偏移，并进入状态 78
@@ -1480,7 +1506,7 @@
     $default  使用规则 42 以归约 (Exp)
 
 
-状态 103
+状态 104
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1493,6 +1519,7 @@
    48    | Exp • DIV Exp
    54    | Exp • LB Exp RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     RELOP  偏移，并进入状态 77
     PLUS   偏移，并进入状态 78
@@ -1506,14 +1533,14 @@
     $default  使用规则 43 以归约 (Exp)
 
 
-状态 104
+状态 105
 
    55 Exp: Exp DOT ID •
 
     $default  使用规则 55 以归约 (Exp)
 
 
-状态 105
+状态 106
 
    41 Exp: Exp • ASSIGNOP Exp
    42    | Exp • AND Exp
@@ -1526,6 +1553,7 @@
    54    | Exp • LB Exp RB
    54    | Exp LB Exp • RB
    55    | Exp • DOT ID
+   59    | Exp • PLUS error
 
     ASSIGNOP  偏移，并进入状态 76
     RELOP     偏移，并进入状态 77
@@ -1537,19 +1565,19 @@
     OR        偏移，并进入状态 83
     DOT       偏移，并进入状态 84
     LB        偏移，并进入状态 85
-    RB        偏移，并进入状态 111
-
-
-状态 106
-
-   61 Args: error Args •
-
-    $default  使用规则 61 以归约 (Args)
+    RB        偏移，并进入状态 112
 
 
 状态 107
 
-   59 Args: Exp COMMA • Args
+   62 Args: error Args •
+
+    $default  使用规则 62 以归约 (Args)
+
+
+状态 108
+
+   60 Args: Exp COMMA • Args
 
     error  偏移，并进入状态 88
     INT    偏移，并进入状态 48
@@ -1560,41 +1588,20 @@
     LP     偏移，并进入状态 53
 
     Exp   转到状态 90
-    Args  转到状态 112
+    Args  转到状态 113
 
 
-状态 108
+状态 109
 
    52 Exp: ID LP Args RP •
 
     $default  使用规则 52 以归约 (Exp)
 
 
-状态 109
+状态 110
 
    30 Stmt: IF LP Exp RP • Stmt
    31     | IF LP Exp RP • Stmt ELSE Stmt
-
-    error   偏移，并进入状态 47
-    INT     偏移，并进入状态 48
-    FLOAT   偏移，并进入状态 49
-    ID      偏移，并进入状态 50
-    MINUS   偏移，并进入状态 51
-    NOT     偏移，并进入状态 52
-    LP      偏移，并进入状态 53
-    LC      偏移，并进入状态 24
-    RETURN  偏移，并进入状态 54
-    IF      偏移，并进入状态 55
-    WHILE   偏移，并进入状态 56
-
-    CompSt  转到状态 57
-    Stmt    转到状态 113
-    Exp     转到状态 60
-
-
-状态 110
-
-   32 Stmt: WHILE LP Exp RP • Stmt
 
     error   偏移，并进入状态 47
     INT     偏移，并进入状态 48
@@ -1615,36 +1622,57 @@
 
 状态 111
 
+   32 Stmt: WHILE LP Exp RP • Stmt
+
+    error   偏移，并进入状态 47
+    INT     偏移，并进入状态 48
+    FLOAT   偏移，并进入状态 49
+    ID      偏移，并进入状态 50
+    MINUS   偏移，并进入状态 51
+    NOT     偏移，并进入状态 52
+    LP      偏移，并进入状态 53
+    LC      偏移，并进入状态 24
+    RETURN  偏移，并进入状态 54
+    IF      偏移，并进入状态 55
+    WHILE   偏移，并进入状态 56
+
+    CompSt  转到状态 57
+    Stmt    转到状态 115
+    Exp     转到状态 60
+
+
+状态 112
+
    54 Exp: Exp LB Exp RB •
 
     $default  使用规则 54 以归约 (Exp)
 
 
-状态 112
-
-   59 Args: Exp COMMA Args •
-
-    $default  使用规则 59 以归约 (Args)
-
-
 状态 113
+
+   60 Args: Exp COMMA Args •
+
+    $default  使用规则 60 以归约 (Args)
+
+
+状态 114
 
    30 Stmt: IF LP Exp RP Stmt •
    31     | IF LP Exp RP Stmt • ELSE Stmt
 
-    ELSE  偏移，并进入状态 115
+    ELSE  偏移，并进入状态 116
 
     $default  使用规则 30 以归约 (Stmt)
 
 
-状态 114
+状态 115
 
    32 Stmt: WHILE LP Exp RP Stmt •
 
     $default  使用规则 32 以归约 (Stmt)
 
 
-状态 115
+状态 116
 
    31 Stmt: IF LP Exp RP Stmt ELSE • Stmt
 
@@ -1661,11 +1689,11 @@
     WHILE   偏移，并进入状态 56
 
     CompSt  转到状态 57
-    Stmt    转到状态 116
+    Stmt    转到状态 117
     Exp     转到状态 60
 
 
-状态 116
+状态 117
 
    31 Stmt: IF LP Exp RP Stmt ELSE Stmt •
 

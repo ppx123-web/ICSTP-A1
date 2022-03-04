@@ -1,9 +1,10 @@
-#include "data.h"
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
-#include "debug.h"
 #include <stdarg.h>
+#include <stdlib.h>
+#include "data.h"
+#include "debug.h"
 
 static MultiwayTree_t * __MultiwayTree_init(MultiwayTree_t * t) {
     t->root = tree->Node_alloc("begin",0);
@@ -65,12 +66,13 @@ static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
     }
     if(cur->lchild == NULL) {
         printf("%s",cur->content);
+        char ** s;
         if(strcmp(cur->content,"ID") == 0) {
             printf(": %s",cur->text);
         } else if(strcmp(cur->content,"INT") == 0) {
-            printf(": %s",cur->text);
+            printf(": %d",strtol(cur->text,s,0));
         } else if(strcmp(cur->content,"FLOAT") == 0) {
-            printf(": %s",cur->text);
+            printf(": %f",(float)atof(cur->text));
         } else if(strcmp(cur->content,"TYPE") == 0) {
             printf(": %s",cur->text);
         }
@@ -107,7 +109,6 @@ MultiwayTree_t * tree = &__Multiwaytree;
 
 Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
     cur = tree->Node_alloc(content,line);
-    // Log("%s %d %d",content,line,argc);
     // printf("%d: parent:%p %s:%s--- child:",argc,cur,cur->content,cur->text);
     va_list ap;
     va_start(ap,argc);
@@ -115,7 +116,6 @@ Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
         Node_t * temp = (Node_t*)va_arg(ap,Node_t*);
         if(temp == NULL) continue;
         // printf("%p %s:%s--- ",temp,temp->content,temp->text);
-        // Log("%s",temp->content);
         tree->rminsert(cur,temp);
     }
     va_end(ap);
@@ -123,8 +123,4 @@ Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
     return cur;
 }
 
-
-static char * num_transform(char * s) {
-
-}
 

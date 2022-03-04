@@ -40,10 +40,13 @@ syntax-c: $(YFILE)
 -include $(patsubst %.o, %.d, $(OBJS))
 
 
+
+TESTFILE = $(shell find ../ -name "*.cmm")
+
 # 定义的一些伪目标
 .PHONY: clean test
 test: parser
-	./parser ../Test/test1.cmm ../Test/test2.cmm > a.txt
+	./parser $(TESTFILE) > a.txt
 	@rm *.o
 clean:
 	@rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output

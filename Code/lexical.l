@@ -63,10 +63,10 @@ WHILE	while
 {RB}	    { ELEMENT("RB"); return RB;}
 {LC}	    { ELEMENT("LC"); return LC;}
 {RC}	    { ELEMENT("RC"); return RC;}
-[ ]         { ;}
-[\t]        { yycolumn += 3; }
-[\n]        { yycolumn = 1; yylineno += 1; }
-.           { LexicalError("Lexical Error: %s",yytext);     /*printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);*/ }
+[ ]         { strcat(linetext," ");}
+[\t]        { yycolumn += 3; strcat(linetext,"\t");}
+[\n]        { yycolumn = 1; yylineno += 1; linetext[0] = '\0'; }
+.           { LexicalError("Lexical Error: %s",yytext); }
 
 %%
 
@@ -74,7 +74,7 @@ extern int syntax;
 
 void yyerror(char* msg) {
     syntax++;
-    SyntaxError("%s : \n\t%s\n\t^", msg,yytext);
+    SyntaxError("%s : %s\n\t%s\n", msg,yytext,linetext);
 }
 
 static Node_t* add_node_text(char * content,char *text,int len) {

@@ -943,23 +943,23 @@ YY_RULE_SETUP
 case 27:
 YY_RULE_SETUP
 #line 66 "./lexical.l"
-{ ;}
+{ strcat(linetext," ");}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
 #line 67 "./lexical.l"
-{ yycolumn += 3; }
+{ yycolumn += 3; strcat(linetext,"\t");}
 	YY_BREAK
 case 29:
 /* rule 29 can match eol */
 YY_RULE_SETUP
 #line 68 "./lexical.l"
-{ yycolumn = 1; yylineno += 1; }
+{ yycolumn = 1; yylineno += 1; linetext[0] = '\0'; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 #line 69 "./lexical.l"
-{ LexicalError("Lexical Error: %s",yytext);     /*printf("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext);*/ }
+{ LexicalError("Lexical Error: %s",yytext); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
@@ -1978,7 +1978,7 @@ extern int syntax;
 
 void yyerror(char* msg) {
     syntax++;
-    SyntaxError("%s : \n\t%s\n\t^", msg,yytext);
+    SyntaxError("%s : %s\n\t%s\n", msg,yytext,linetext);
 }
 
 static Node_t* add_node_text(char * content,char *text,int len) {

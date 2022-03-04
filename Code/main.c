@@ -25,13 +25,15 @@ int main(int argc,char *argv[]) {
         }
         yyrestart(f);
         yyparse();
-        fclose(f);   
-        if(syntax == 0) {
-            tree->traverse(tree->root,0);
+        fclose(f);
+        if (syntax == 1) {
+            #ifndef FINAL
+                printf("Syntax error:%d\n",syntax);
+                printf("\n\n\n");
+            #endif
         } else {
-            printf("Syntax error:%d\n",syntax);
+            tree->traverse(tree->root,0);
         }
-        printf("\n\n\n");
     }
     return 0;
 }

@@ -2,6 +2,7 @@
 
 %{
     int yycolumn = 1;
+    char linetext[128];
     #define YY_USER_ACTION \
                 yylloc.first_line = yylloc.last_line = yylineno; \
                 yylloc.first_column = yycolumn; \
@@ -195,6 +196,7 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | ID                            { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | INT                           { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | FLOAT                         { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
+    | Exp PLUS error                { $$ = NULL; }
     ;
 Args : Exp COMMA Args               { $$ = Operator($$,"Args",@$.first_line,3,$1,$2,$3); }
     | Exp                           { $$ = Operator($$,"Args",@$.first_line,1,$1); }
