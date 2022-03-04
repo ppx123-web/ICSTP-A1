@@ -45,6 +45,8 @@ static Node_t * __MultiwayTree_Node_alloc(char * content,int line) {
     Node_t * new_node = (Node_t*)malloc(sizeof(Node_t));
 
     char * newstr = (char *)malloc(strlen(content)+5);
+    
+    new_node->text[0] = 0;
     // Log("%s %d",content,line);
     strcpy(newstr,content);
     new_node->content = newstr;
@@ -59,15 +61,29 @@ static Node_t * __MultiwayTree_Node_alloc(char * content,int line) {
 static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
     if (cur == NULL) return;
     for (int i = 0;i < deep;i++) {
-        printf("\t");
+        printf("  ");
     }
-    printf("%s (%d)\n",cur->content,cur->line);
-    if (cur->left != NULL) {
+    if(cur->lchild == NULL) {
+        printf("%s",cur->content);
+        if(strcmp(cur->content,"ID") == 0) {
+            printf(": %s",cur->text);
+        } else if(strcmp(cur->content,"INT") == 0) {
+            printf(": %s",cur->text);
+        } else if(strcmp(cur->content,"FLOAT") == 0) {
+            printf(": %s",cur->text);
+        } else if(strcmp(cur->content,"TYPE") == 0) {
+            printf(": %s",cur->text);
+        }
+        printf("\n");
+    } else {
+        printf("%s (%d)\n",cur->content,cur->line);
+    } 
+    if (cur->lchild != NULL) {
         Node_t * child = cur->lchild;
         do {
             __MultiwayTree_Traverse(child,deep + 1);
             child = child->right;
-        }while (child != cur->right);
+        }while (child != NULL);
     }
 }
 
@@ -88,4 +104,27 @@ MultiwayTree_t __Multiwaytree = {
     .insert_all = __MultiwayTree_insert_all,
 };
 MultiwayTree_t * tree = &__Multiwaytree;
+
+Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
+    cur = tree->Node_alloc(content,line);
+    // Log("%s %d %d",content,line,argc);
+    // printf("%d: parent:%p %s:%s--- child:",argc,cur,cur->content,cur->text);
+    va_list ap;
+    va_start(ap,argc);
+    for (int i = 0;i < argc;i++) {
+        Node_t * temp = (Node_t*)va_arg(ap,Node_t*);
+        if(temp == NULL) continue;
+        // printf("%p %s:%s--- ",temp,temp->content,temp->text);
+        // Log("%s",temp->content);
+        tree->rminsert(cur,temp);
+    }
+    va_end(ap);
+    // printf("\n");
+    return cur;
+}
+
+
+static char * num_transform(char * s) {
+
+}
 

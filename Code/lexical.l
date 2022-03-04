@@ -2,6 +2,10 @@
     #include <stdio.h>
     #include "debug.h"
     #include "syntax.tab.h"
+    #include "data.h"
+    #include <string.h>
+
+    static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
 INT (([+-]?[0-9])|([+-]?[1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[1-7][0-7]*))[^.]
@@ -39,8 +43,8 @@ WHILE	while
 {ELSE}    { ELEMENT("ELSE"); return ELSE; }
 {WHILE}   { ELEMENT("WHILE"); return WHILE; }
 {TYPE}    { ELEMENT("TYPE"); return TYPE; }
-{INT}     { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0; /*Log("TYPE = INT:( %s )",yytext);*/ return INT;}
-{FLOAT}   { /*Log("TYPE = FLOAT: %s",yytext);*/ return FLOAT;}
+{INT}     { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;ELEMENT("INT"); return INT;}
+{FLOAT}   { ELEMENT("FLOAT"); return FLOAT;}
 {ID}      { ELEMENT("ID"); return ID; }
 {SEMI}	  { ELEMENT("SEMI"); return SEMI;}
 {COMMA}   { ELEMENT("COMMA"); return COMMA;}
@@ -66,9 +70,21 @@ WHILE	while
 
 %%
 
+extern int syntax;
+
 void yyerror(char* msg) {
+    syntax++;
     SyntaxError("%s : \n\t%s\n\t^", msg,yytext);
 }
+
+static Node_t* add_node_text(char * content,char *text,int len) {
+    Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
+    strncpy(cur->text,text,len);
+    // printf("%s %s\n",content,text);
+    return cur;
+}
+
+
 
 // #ifdef SCANNER_DEBUG
 // int main(int argc,char* argv[]) {
