@@ -23,9 +23,11 @@ static Node_t * __MultiwayTree_leftmostinsert(Node_t * cur ,Node_t * node) {
 }
 
 static Node_t * __MultiwayTree_rightmostinsert(Node_t * cur ,Node_t * node) {
+    assert(cur != NULL);
     Node_t * lastright = cur->rchild;
     if (lastright == NULL) {
         cur->lchild = cur->rchild = node;
+        node->right = node->left = NULL;
     } else {
         cur->rchild = node;
         node->left = lastright;
@@ -42,18 +44,20 @@ static Node_t * __MultiwayTree_remove(Node_t * cur ,Node_t * node) {
 static Node_t * __MultiwayTree_Node_alloc(char * content,int line) {
     Node_t * new_node = (Node_t*)malloc(sizeof(Node_t));
 
-    char * newstr = (char *)malloc(strlen(content)+1);
-    Log("%s %d",content,line);
+    char * newstr = (char *)malloc(strlen(content)+5);
+    // Log("%s %d",content,line);
     strcpy(newstr,content);
     new_node->content = newstr;
     new_node->line = line;
     new_node->type = NONE;
     new_node->rchild = new_node->lchild = new_node->right = new_node->left = NULL;
 
+
     return new_node;
 }
 
 static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
+    if (cur == NULL) return;
     for (int i = 0;i < deep;i++) {
         printf("\t");
     }

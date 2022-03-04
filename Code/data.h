@@ -7,6 +7,7 @@ typedef struct __Tree_node_t {
         NONE,Sentinel,
     }type;
     int line;
+    char text[32];
     struct __Tree_node_t * lchild,* rchild,* left,* right;
 }Node_t;
 

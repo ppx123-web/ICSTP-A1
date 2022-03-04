@@ -23,6 +23,6 @@
     _Log("\33[1;34m[%s,%d,%s] " format "\33[0m\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
-
+#define PRINT_TREE(A) tree->traverse(A,0);
 
 #endif
