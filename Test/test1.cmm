@@ -1,5 +1,5 @@
-int inc()
+int main()
 {
 	int i = 0123;
-	int j = 0x3F -=;
+	int j = 0x3F;
 }

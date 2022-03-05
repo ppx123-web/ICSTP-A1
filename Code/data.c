@@ -109,17 +109,17 @@ MultiwayTree_t * tree = &__Multiwaytree;
 
 Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
     cur = tree->Node_alloc(content,line);
-    // printf("%d: parent:%p %s:%s--- child:",argc,cur,cur->content,cur->text);
+    printf("%d: parent:%p %s:%s--- child:",argc,cur,cur->content,cur->text);
     va_list ap;
     va_start(ap,argc);
     for (int i = 0;i < argc;i++) {
         Node_t * temp = (Node_t*)va_arg(ap,Node_t*);
-        if(temp == NULL) continue;
-        // printf("%p %s:%s--- ",temp,temp->content,temp->text);
+        if(temp == NULL) {printf("a nullptr--- "); continue; };
+        printf("%p %s:%s--- ",temp,temp->content,temp->text);
         tree->rminsert(cur,temp);
     }
     va_end(ap);
-    // printf("\n");
+    printf("\n");
     return cur;
 }
 

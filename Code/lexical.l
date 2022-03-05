@@ -5,6 +5,7 @@
     #include "data.h"
     #include <string.h>
 
+    int Iscomments = 0;
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
@@ -35,6 +36,8 @@ RETURN	return
 IF	if
 ELSE	else
 WHILE	while
+LINECOMMENT "//"
+LCOMMENTS   "/*"   
 
 %%
 {STRUCT}  { ELEMENT("STRUCT"); return STRUCT; }
@@ -66,7 +69,27 @@ WHILE	while
 [ ]         { strcat(linetext," ");}
 [\t]        { yycolumn += 3; strcat(linetext,"\t");}
 [\n]        { yycolumn = 1; yylineno += 1; linetext[0] = '\0'; }
-.           { LexicalError("Lexical Error: %s",yytext); }
+{LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
+{LCOMMENTS} {   
+                char c1 = input(),c2 = input();
+                if (c1 == '\n') {
+                    yylineno += 1;
+                    yycolumn = 1;
+                } else {
+                    yycolumn += 1;
+                }
+                while (c1 != '*' || c2 != '/') {
+                    if (c2 == '\n') {
+                        yylineno += 1;
+                        yycolumn = 1;
+                    } else {
+                        yycolumn += 1;
+                    }
+                    c1 = c2;
+                    c2 = input();
+                }
+            }
+.           { LexicalError("%s",yytext); }
 
 %%
 
@@ -74,13 +97,13 @@ extern int syntax;
 
 void yyerror(char* msg) {
     syntax++;
-    SyntaxError("%s : %s\n\t%s\n", msg,yytext,linetext);
+    SyntaxError("%s\n\t%s\n",yytext,linetext);
 }
 
 static Node_t* add_node_text(char * content,char *text,int len) {
     Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
     strncpy(cur->text,text,len);
-    // printf("%s %s\n",content,text);
+    printf("%s %s\n",content,text);
     return cur;
 }
 

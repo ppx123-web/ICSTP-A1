@@ -19,8 +19,8 @@
     #define LexicalError(format, ...) _Log("Error type A at Line %d: Mysterious characters \'%s\'\n", yylineno, yytext)
 #else
     #define _Log(...) fprintf(stderr,__VA_ARGS__);
-    #define SyntaxError(format, ...) _Log("\33[1;31m row=%d col=%d, " format "\33[0m\n",yylloc.first_line,yycolumn, ## __VA_ARGS__)
-    #define LexicalError(format, ...) _Log("\33[1;32m row=%d col=%d, " format "\33[0m\n",yylloc.first_line,yycolumn, ## __VA_ARGS__)
+    #define SyntaxError(format, ...) _Log("\33[1;31m row=%d col=%d, Syntax Error: " format "\33[0m\n",yylloc.first_line,yycolumn, ## __VA_ARGS__)
+    #define LexicalError(format, ...) _Log("\33[1;32m row=%d col=%d, Lexical Error: " format "\33[0m\n",yylloc.first_line,yycolumn, ## __VA_ARGS__)
 #endif
 
 #define Log(format, ...) \

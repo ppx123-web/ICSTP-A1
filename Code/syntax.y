@@ -8,6 +8,8 @@
                 yylloc.first_column = yycolumn; \
                 yylloc.last_column = yycolumn + yyleng - 1; \
                 yycolumn += yyleng;
+    //#define YYDEBUG 1
+    //int yydebug = 1;
 %}
 
 %{
@@ -22,7 +24,7 @@
     Node_t * Operator(Node_t * cur,char * content,int line,int argc,...);
 
     extern int syntax;
-                
+
 %}
 
 /* declared types */
@@ -148,7 +150,7 @@ ParamDec : Specifier VarDec         { $$ = Operator($$,"ParamDec",@$.first_line,
 /*Statements */
 
 CompSt : LC DefList StmtList RC     { $$ = Operator($$,"CompSt",@$.first_line,4,$1,$2,$3,$4); }
-    | error RC                      { $$ = Operator($$,"CompSt",@$.first_line,2,$1,$2);/* error */ }
+    | error RC                      { $$ = NULL;SyntaxError("CompSt:%d %d %s",@2.first_line,@2.last_column,$2->text); }
     ;
 StmtList : Stmt StmtList            { $$ = Operator($$,"StmtList",@$.first_line,2,$1,$2); }
     |                               { $$ = NULL; }
@@ -159,7 +161,7 @@ Stmt : Exp SEMI                     { $$ = Operator($$,"Stmt",@$.first_line,2,$1
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE   { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$4,$5); }
     | IF LP Exp RP Stmt ELSE Stmt   { $$ = Operator($$,"Stmt",@$.first_line,7,$1,$2,$3,$4,$5,$6,$7); }
     | WHILE LP Exp RP Stmt          { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$3,$4); }
-    | error SEMI                    { $$ = Operator($$,"Stmt",@$.first_line,2,$1,$2);/* error */ }
+    | error SEMI                    { $$ = NULL;SyntaxError("Stmt:%d %d %s",@2.first_line,@2.last_column,$2->text); }
     ;
 
 /*Local Definitions */
@@ -171,6 +173,7 @@ Def : Specifier DecList SEMI        { $$ = Operator($$,"Def",@$.first_line,3,$1,
     ;
 DecList : Dec                       { $$ = Operator($$,"DecList",@$.first_line,1,$1); }
     | Dec COMMA DecList             { $$ = Operator($$,"DecList",@$.first_line,3,$1,$2,$3); }
+    | Dec error DecList                 { $$ = NULL;SyntaxError("%d %d",@1.first_line,@1.last_column); }
     ;
 Dec : VarDec                        { $$ = Operator($$,"Dec",@$.first_line,1,$1); }
     | VarDec ASSIGNOP Exp           { $$ = Operator($$,"Dec",@$.first_line,3,$1,$2,$3); }
@@ -196,11 +199,11 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | ID                            { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | INT                           { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | FLOAT                         { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
-    | Exp PLUS error                { $$ = NULL; }
+    | Exp PLUS error                { $$ = NULL;SyntaxError("Exp:%d %d %s",@2.first_line,@2.last_column,$2->text); }
     ;
 Args : Exp COMMA Args               { $$ = Operator($$,"Args",@$.first_line,3,$1,$2,$3); }
     | Exp                           { $$ = Operator($$,"Args",@$.first_line,1,$1); }
-    | error Args                    { $$ = Operator($$,"Args",@$.first_line,2,$1,$2);/* error */ }
+    | error Args                    { $$ = NULL;SyntaxError("Args:%d %d %s",@2.first_line,@2.last_column,$2->text); }
     ;
 
 %%
