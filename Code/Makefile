@@ -35,19 +35,23 @@ lexical:clean $(LFILE)
 	$(FLEX) -o $(LFC) $(LFILE)
 
 syntax-c: $(YFILE)
-	$(BISON) -o $(YFC) -d -v $(YFILE)
+	$(BISON) -o $(YFC) -d -v -Wcounterexamples $(YFILE)
 
 -include $(patsubst %.o, %.d, $(OBJS))
 
 
 
-TESTFILE = $(shell find ../ -name "*.cmm")
+TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 
 # 定义的一些伪目标
 .PHONY: clean test
 test: parser
 	./parser $(TESTFILE) > a.txt
 	@rm *.o
+zero: parser
+	./parser ../Test/test0.cmm > a.txt
+	@rm *.o
+
 clean:
 	@rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
 	@rm -f $(OBJS) $(OBJS:.o=.d)

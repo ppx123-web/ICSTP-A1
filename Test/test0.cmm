@@ -1,0 +1,17 @@
+int main()
+{
+	int i = 09;
+	int j = 0x3G;
+}
+
+/*int a(int a int b) {
+    a[1][2] = 0;
+}
+
+struct a {
+    int a;
+}
+
+int main() {
+    return 0;
+}*/

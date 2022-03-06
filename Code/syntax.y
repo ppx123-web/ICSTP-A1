@@ -61,7 +61,7 @@
 %token <node> IF
 %token <node> ELSE
 %token <node> WHILE
-%token <node> error 
+
 
 %right ASSIGNOP
 %left OR
@@ -115,6 +115,10 @@ ExtDefList : ExtDef ExtDefList      { $$ = Operator($$,"ExtDefList",@$.first_lin
 ExtDef : Specifier ExtDecList SEMI  { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
     | Specifier SEMI                { $$ = Operator($$,"ExtDef",@$.first_line,2,$1,$2); }
     | Specifier FunDec CompSt       { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
+    | error SEMI                    { $$ = NULL;yyerror("ExtDef"); }
+    | Specifier error SEMI          { $$ = NULL;yyerror("ExtDef"); }
+    | Specifier error               { $$ = NULL;yyerror("ExtDef,missing ;"); }
+    | Specifier error CompSt        { $$ = NULL;yyerror("ExtDef"); }
     ;
 ExtDecList : VarDec                 { $$ = Operator($$,"ExtDecList",@$.first_line,1,$1); }
     | VarDec COMMA ExtDecList       { $$ = Operator($$,"ExtDecList",@$.first_line,3,$1,$2,$3); }
@@ -137,9 +141,12 @@ Tag : ID                            { $$ = Operator($$,"Tag",@$.first_line,1,$1)
 
 VarDec : ID                         { $$ = Operator($$,"VarDec",@$.first_line,1,$1); }
     | VarDec LB INT RB              { $$ = Operator($$,"VarDec",@$.first_line,4,$1,$2,$3,$4); }
+    | VarDec LB error RB            { $$ = NULL; yyerror("VarDec"); }
     ;
 FunDec : ID LP VarList RP           { $$ = Operator($$,"FunDec",@$.first_line,4,$1,$2,$3,$4); }
     | ID LP RP                      { $$ = Operator($$,"FunDec",@$.first_line,3,$1,$2,$3); }
+    | ID LP error RP                { $$ = NULL; yyerror("FunDec"); }
+    | error LP VarList RP           { $$ = NULL; yyerror("FunDec"); }
     ;
 VarList : ParamDec COMMA VarList    { $$ = Operator($$,"VarList",@$.first_line,3,$1,$2,$3); }
     | ParamDec                      { $$ = Operator($$,"ParamDec",@$.first_line,1,$1); }
@@ -150,7 +157,7 @@ ParamDec : Specifier VarDec         { $$ = Operator($$,"ParamDec",@$.first_line,
 /*Statements */
 
 CompSt : LC DefList StmtList RC     { $$ = Operator($$,"CompSt",@$.first_line,4,$1,$2,$3,$4); }
-    | error RC                      { $$ = NULL;SyntaxError("CompSt:%d %d %s",@2.first_line,@2.last_column,$2->text); }
+    | LC DefList error RC           { $$ = NULL; yyerror("CompSt"); }
     ;
 StmtList : Stmt StmtList            { $$ = Operator($$,"StmtList",@$.first_line,2,$1,$2); }
     |                               { $$ = NULL; }
@@ -161,7 +168,12 @@ Stmt : Exp SEMI                     { $$ = Operator($$,"Stmt",@$.first_line,2,$1
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE   { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$4,$5); }
     | IF LP Exp RP Stmt ELSE Stmt   { $$ = Operator($$,"Stmt",@$.first_line,7,$1,$2,$3,$4,$5,$6,$7); }
     | WHILE LP Exp RP Stmt          { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$3,$4); }
-    | error SEMI                    { $$ = NULL;SyntaxError("Stmt:%d %d %s",@2.first_line,@2.last_column,$2->text); }
+    | error SEMI                    { $$ = NULL; yyerror("Stmt"); }
+    | Exp error                     { $$ = NULL; yyerror("Stmt"); }
+    | IF error Stmt                 { $$ = NULL; yyerror("Stmt"); }
+    | IF LP Exp RP Stmt ELSE error  { $$ = NULL; yyerror("Stmt"); }
+    | RETURN error SEMI             { $$ = NULL; yyerror("Stmt"); }
+    | RETURN Exp error              { $$ = NULL; yyerror("Stmt"); }
     ;
 
 /*Local Definitions */
@@ -170,10 +182,11 @@ DefList : Def DefList               { $$ = Operator($$,"DefList",@$.first_line,2
     |                               { $$ = NULL; }
     ;
 Def : Specifier DecList SEMI        { $$ = Operator($$,"Def",@$.first_line,3,$1,$2,$3); }
+    | Specifier error SEMI          { $$ = NULL; yyerror("Def,missing ;"); }
+    | Specifier DecList error SEMI  { $$ = NULL; yyerror("Def,missing ; 3"); }
     ;
 DecList : Dec                       { $$ = Operator($$,"DecList",@$.first_line,1,$1); }
     | Dec COMMA DecList             { $$ = Operator($$,"DecList",@$.first_line,3,$1,$2,$3); }
-    | Dec error DecList                 { $$ = NULL;SyntaxError("%d %d",@1.first_line,@1.last_column); }
     ;
 Dec : VarDec                        { $$ = Operator($$,"Dec",@$.first_line,1,$1); }
     | VarDec ASSIGNOP Exp           { $$ = Operator($$,"Dec",@$.first_line,3,$1,$2,$3); }
@@ -199,11 +212,23 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | ID                            { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | INT                           { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | FLOAT                         { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
-    | Exp PLUS error                { $$ = NULL;SyntaxError("Exp:%d %d %s",@2.first_line,@2.last_column,$2->text); }
+    | Exp ASSIGNOP error            { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp RELOP error               { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp PLUS error                { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp MINUS error               { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp STAR error                { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp DIV error                 { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp AND error                 { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp OR error                  { $$ = NULL; yyerror("Wrong Exp"); }
+    | MINUS error                   { $$ = NULL; yyerror("Wrong Exp"); }
+    | NOT error                     { $$ = NULL; yyerror("Wrong Exp"); }
+    | ID LP error RP                { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp LB error RB               { $$ = NULL; yyerror("Wrong Exp"); }
+    | Exp DOT error                 { $$ = NULL; yyerror("Wrong Exp"); }
     ;
 Args : Exp COMMA Args               { $$ = Operator($$,"Args",@$.first_line,3,$1,$2,$3); }
     | Exp                           { $$ = Operator($$,"Args",@$.first_line,1,$1); }
-    | error Args                    { $$ = NULL;SyntaxError("Args:%d %d %s",@2.first_line,@2.last_column,$2->text); }
+    | error Args                    { $$ = NULL; yyerror("Wrong Args"); }
     ;
 
 %%

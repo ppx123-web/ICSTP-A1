@@ -959,7 +959,7 @@ case 29:
 /* rule 29 can match eol */
 YY_RULE_SETUP
 #line 71 "./lexical.l"
-{ yycolumn = 1; yylineno += 1; linetext[0] = '\0'; }
+{ yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
@@ -2011,13 +2011,17 @@ extern int syntax;
 
 void yyerror(char* msg) {
     syntax++;
-    SyntaxError("%s\n\t%s\n",yytext,linetext);
+    if(strcmp(msg,"syntax error") == 0) {
+        SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
+    } else {
+        SyntaxError("(from syntax.y): %s\n",msg);
+    }
 }
 
 static Node_t* add_node_text(char * content,char *text,int len) {
     Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
     strncpy(cur->text,text,len);
-    printf("%s %s\n",content,text);
+    Treedebug("%s %s\n",content,text);
     return cur;
 }
 

@@ -1,39 +1,10 @@
-TYPE int
-1: parent:0x55972fbd45a0 Specifier:--- child:0x55972fbd3510 TYPE:int--- 
-ID main
-LP (
-RP )
-3: parent:0x55972fbd47a0 FunDec:--- child:0x55972fbd4620 ID:main--- 0x55972fbd46a0 LP:(--- 0x55972fbd4720 RP:)--- 
-LC {
-TYPE int
-1: parent:0x55972fbd4920 Specifier:--- child:0x55972fbd48a0 TYPE:int--- 
-ID i
-1: parent:0x55972fbd4a20 VarDec:--- child:0x55972fbd49a0 ID:i--- 
-ASSIGNOP =
-INT 0123
-1: parent:0x55972fbd4ba0 Exp:--- child:0x55972fbd4b20 INT:0123--- 
-SEMI ;
-3: parent:0x55972fbd4ca0 Dec:--- child:0x55972fbd4a20 VarDec:--- 0x55972fbd4aa0 ASSIGNOP:=--- 0x55972fbd4ba0 Exp:--- 
-1: parent:0x55972fbd4d20 DecList:--- child:0x55972fbd4ca0 Dec:--- 
-3: parent:0x55972fbd4da0 Def:--- child:0x55972fbd4920 Specifier:--- 0x55972fbd4d20 DecList:--- 0x55972fbd4c20 SEMI:;--- 
-TYPE int
-1: parent:0x55972fbd4ea0 Specifier:--- child:0x55972fbd4e20 TYPE:int--- 
-ID j
-1: parent:0x55972fbd4fa0 VarDec:--- child:0x55972fbd4f20 ID:j--- 
-ASSIGNOP =
-INT 0x3F
-1: parent:0x55972fbd5120 Exp:--- child:0x55972fbd50a0 INT:0x3F--- 
-SEMI ;
-3: parent:0x55972fbd5220 Dec:--- child:0x55972fbd4fa0 VarDec:--- 0x55972fbd5020 ASSIGNOP:=--- 0x55972fbd5120 Exp:--- 
-1: parent:0x55972fbd52a0 DecList:--- child:0x55972fbd5220 Dec:--- 
-3: parent:0x55972fbd5320 Def:--- child:0x55972fbd4ea0 Specifier:--- 0x55972fbd52a0 DecList:--- 0x55972fbd51a0 SEMI:;--- 
-RC }
-2: parent:0x55972fbd5420 DefList:--- child:0x55972fbd5320 Def:--- a nullptr--- 
-2: parent:0x55972fbd54a0 DefList:--- child:0x55972fbd4da0 Def:--- 0x55972fbd5420 DefList:--- 
-4: parent:0x55972fbd5520 CompSt:--- child:0x55972fbd4820 LC:{--- 0x55972fbd54a0 DefList:--- a nullptr--- 0x55972fbd53a0 RC:}--- 
-3: parent:0x55972fbd55a0 ExtDef:--- child:0x55972fbd45a0 Specifier:--- 0x55972fbd47a0 FunDec:--- 0x55972fbd5520 CompSt:--- 
-2: parent:0x55972fbd5620 ExtDefList:--- child:0x55972fbd55a0 ExtDef:--- a nullptr--- 
-1: parent:0x55972fbd56a0 Program:--- child:0x55972fbd5620 ExtDefList:--- 
+
+
+
+../Test/test0.cmm:
+
+
+
 ../Test/test1.cmm:
 Program (1)
   ExtDefList (1)
@@ -74,119 +45,10 @@ Program (1)
 
 
 
-TYPE int
-1: parent:0x55972fbd57a0 Specifier:--- child:0x55972fbd5720 TYPE:int--- 
-ID main
-LP (
-RP )
-3: parent:0x55972fbd59a0 FunDec:--- child:0x55972fbd5820 ID:main--- 0x55972fbd58a0 LP:(--- 0x55972fbd5920 RP:)--- 
-LC {
-TYPE int
-1: parent:0x55972fbd5b20 Specifier:--- child:0x55972fbd5aa0 TYPE:int--- 
-ID i
-1: parent:0x55972fbd5c20 VarDec:--- child:0x55972fbd5ba0 ID:i--- 
-ASSIGNOP =
-INT 0
-1: parent:0x55972fbd5da0 Exp:--- child:0x55972fbd5d20 INT:0--- 
-INT 9
-3: parent:0x55972fbd5ea0 Dec:--- child:0x55972fbd5c20 VarDec:--- 0x55972fbd5ca0 ASSIGNOP:=--- 0x55972fbd5da0 Exp:--- 
-SEMI ;
-TYPE int
-ID j
-1: parent:0x55972fbd60a0 VarDec:--- child:0x55972fbd6020 ID:j--- 
-ASSIGNOP =
-INT 0x3
-1: parent:0x55972fbd6220 Exp:--- child:0x55972fbd61a0 INT:0x3--- 
-ID G
-3: parent:0x55972fbd6320 Dec:--- child:0x55972fbd60a0 VarDec:--- 0x55972fbd6120 ASSIGNOP:=--- 0x55972fbd6220 Exp:--- 
-1: parent:0x55972fbd63a0 VarDec:--- child:0x55972fbd62a0 ID:G--- 
-SEMI ;
-1: parent:0x55972fbd64a0 Dec:--- child:0x55972fbd63a0 VarDec:--- 
-1: parent:0x55972fbd6520 DecList:--- child:0x55972fbd64a0 Dec:--- 
-3: parent:0x55972fbd65a0 Def:--- child:0x55972fbd5b20 Specifier:--- a nullptr--- 0x55972fbd6420 SEMI:;--- 
-RC }
-2: parent:0x55972fbd66a0 DefList:--- child:0x55972fbd65a0 Def:--- a nullptr--- 
-4: parent:0x55972fbd6720 CompSt:--- child:0x55972fbd5a20 LC:{--- 0x55972fbd66a0 DefList:--- a nullptr--- 0x55972fbd6620 RC:}--- 
-3: parent:0x55972fbd67a0 ExtDef:--- child:0x55972fbd57a0 Specifier:--- 0x55972fbd59a0 FunDec:--- 0x55972fbd6720 CompSt:--- 
-2: parent:0x55972fbd6820 ExtDefList:--- child:0x55972fbd67a0 ExtDef:--- a nullptr--- 
-1: parent:0x55972fbd68a0 Program:--- child:0x55972fbd6820 ExtDefList:--- 
 ../Test/test2.cmm:
-Program (1)
-  ExtDefList (1)
-    ExtDef (1)
-      Specifier (1)
-        TYPE: int
-      FunDec (1)
-        ID: main
-        LP
-        RP
-      CompSt (2)
-        LC
-        DefList (3)
-          Def (3)
-            Specifier (3)
-              TYPE: int
-            SEMI
-        RC
 
 
 
-TYPE int
-1: parent:0x55972fbd69a0 Specifier:--- child:0x55972fbd6920 TYPE:int--- 
-ID main
-LP (
-RP )
-3: parent:0x55972fbd6ba0 FunDec:--- child:0x55972fbd6a20 ID:main--- 0x55972fbd6aa0 LP:(--- 0x55972fbd6b20 RP:)--- 
-LC {
-TYPE float
-1: parent:0x55972fbd6d20 Specifier:--- child:0x55972fbd6ca0 TYPE:float--- 
-ID i
-1: parent:0x55972fbd6e20 VarDec:--- child:0x55972fbd6da0 ID:i--- 
-ASSIGNOP =
-FLOAT 1.05
-1: parent:0x55972fbd6fa0 Exp:--- child:0x55972fbd6f20 FLOAT:1.05--- 
-ID e
-3: parent:0x55972fbd70a0 Dec:--- child:0x55972fbd6e20 VarDec:--- 0x55972fbd6ea0 ASSIGNOP:=--- 0x55972fbd6fa0 Exp:--- 
-1: parent:0x55972fbd7120 VarDec:--- child:0x55972fbd7020 ID:e--- 
-SEMI ;
-1: parent:0x55972fbd7220 Dec:--- child:0x55972fbd7120 VarDec:--- 
-1: parent:0x55972fbd72a0 DecList:--- child:0x55972fbd7220 Dec:--- 
-3: parent:0x55972fbd7320 Def:--- child:0x55972fbd6d20 Specifier:--- a nullptr--- 0x55972fbd71a0 SEMI:;--- 
-RC }
-2: parent:0x55972fbd7420 DefList:--- child:0x55972fbd7320 Def:--- a nullptr--- 
-4: parent:0x55972fbd74a0 CompSt:--- child:0x55972fbd6c20 LC:{--- 0x55972fbd7420 DefList:--- a nullptr--- 0x55972fbd73a0 RC:}--- 
-3: parent:0x55972fbd7520 ExtDef:--- child:0x55972fbd69a0 Specifier:--- 0x55972fbd6ba0 FunDec:--- 0x55972fbd74a0 CompSt:--- 
-2: parent:0x55972fbd75a0 ExtDefList:--- child:0x55972fbd7520 ExtDef:--- a nullptr--- 
-1: parent:0x55972fbd7620 Program:--- child:0x55972fbd75a0 ExtDefList:--- 
-../Test/test4.cmm:
-Syntax error:1
-
-
-
-TYPE int
-1: parent:0x55972fbd7720 Specifier:--- child:0x55972fbd76a0 TYPE:int--- 
-ID main
-LP (
-RP )
-3: parent:0x55972fbd7920 FunDec:--- child:0x55972fbd77a0 ID:main--- 0x55972fbd7820 LP:(--- 0x55972fbd78a0 RP:)--- 
-LC {
-TYPE float
-1: parent:0x55972fbd7aa0 Specifier:--- child:0x55972fbd7a20 TYPE:float--- 
-ID i
-1: parent:0x55972fbd7ba0 VarDec:--- child:0x55972fbd7b20 ID:i--- 
-ASSIGNOP =
-FLOAT 1.05e-4
-1: parent:0x55972fbd7d20 Exp:--- child:0x55972fbd7ca0 FLOAT:1.05e-4--- 
-SEMI ;
-3: parent:0x55972fbd7e20 Dec:--- child:0x55972fbd7ba0 VarDec:--- 0x55972fbd7c20 ASSIGNOP:=--- 0x55972fbd7d20 Exp:--- 
-1: parent:0x55972fbd7ea0 DecList:--- child:0x55972fbd7e20 Dec:--- 
-3: parent:0x55972fbd7f20 Def:--- child:0x55972fbd7aa0 Specifier:--- 0x55972fbd7ea0 DecList:--- 0x55972fbd7da0 SEMI:;--- 
-RC }
-2: parent:0x55972fbd8020 DefList:--- child:0x55972fbd7f20 Def:--- a nullptr--- 
-4: parent:0x55972fbd80a0 CompSt:--- child:0x55972fbd79a0 LC:{--- 0x55972fbd8020 DefList:--- a nullptr--- 0x55972fbd7fa0 RC:}--- 
-3: parent:0x55972fbd8120 ExtDef:--- child:0x55972fbd7720 Specifier:--- 0x55972fbd7920 FunDec:--- 0x55972fbd80a0 CompSt:--- 
-2: parent:0x55972fbd81a0 ExtDefList:--- child:0x55972fbd8120 ExtDef:--- a nullptr--- 
-1: parent:0x55972fbd8220 Program:--- child:0x55972fbd81a0 ExtDefList:--- 
 ../Test/test3.cmm:
 Program (1)
   ExtDefList (1)
@@ -215,30 +77,10 @@ Program (1)
 
 
 
-TYPE int
-1: parent:0x55972fbd8320 Specifier:--- child:0x55972fbd82a0 TYPE:int--- 
-ID main
-LP (
-RP )
-3: parent:0x55972fbd8520 FunDec:--- child:0x55972fbd83a0 ID:main--- 0x55972fbd8420 LP:(--- 0x55972fbd84a0 RP:)--- 
-LC {
-TYPE int
-1: parent:0x55972fbd86a0 Specifier:--- child:0x55972fbd8620 TYPE:int--- 
-ID i
-1: parent:0x55972fbd87a0 VarDec:--- child:0x55972fbd8720 ID:i--- 
-ASSIGNOP =
-INT 1
-1: parent:0x55972fbd8920 Exp:--- child:0x55972fbd88a0 INT:1--- 
-SEMI ;
-3: parent:0x55972fbd8a20 Dec:--- child:0x55972fbd87a0 VarDec:--- 0x55972fbd8820 ASSIGNOP:=--- 0x55972fbd8920 Exp:--- 
-1: parent:0x55972fbd8aa0 DecList:--- child:0x55972fbd8a20 Dec:--- 
-3: parent:0x55972fbd8b20 Def:--- child:0x55972fbd86a0 Specifier:--- 0x55972fbd8aa0 DecList:--- 0x55972fbd89a0 SEMI:;--- 
-RC }
-2: parent:0x55972fbd8c20 DefList:--- child:0x55972fbd8b20 Def:--- a nullptr--- 
-4: parent:0x55972fbd8ca0 CompSt:--- child:0x55972fbd85a0 LC:{--- 0x55972fbd8c20 DefList:--- a nullptr--- 0x55972fbd8ba0 RC:}--- 
-3: parent:0x55972fbd8d20 ExtDef:--- child:0x55972fbd8320 Specifier:--- 0x55972fbd8520 FunDec:--- 0x55972fbd8ca0 CompSt:--- 
-2: parent:0x55972fbd8da0 ExtDefList:--- child:0x55972fbd8d20 ExtDef:--- a nullptr--- 
-1: parent:0x55972fbd8e20 Program:--- child:0x55972fbd8da0 ExtDefList:--- 
+../Test/test4.cmm:
+
+
+
 ../Test/test5.cmm:
 Program (1)
   ExtDefList (1)
@@ -264,6 +106,3 @@ Program (1)
                   INT: 1
             SEMI
         RC
-
-
-

@@ -40,17 +40,17 @@ LINECOMMENT "//"
 LCOMMENTS   "/*"   
 
 %%
-{STRUCT}  { ELEMENT("STRUCT"); return STRUCT; }
-{RETURN}  { ELEMENT("RETURN"); return RETURN; }
-{IF}      { ELEMENT("IF"); return IF; }
-{ELSE}    { ELEMENT("ELSE"); return ELSE; }
-{WHILE}   { ELEMENT("WHILE"); return WHILE; }
-{TYPE}    { ELEMENT("TYPE"); return TYPE; }
-{INT}     { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;ELEMENT("INT"); return INT;}
-{FLOAT}   { ELEMENT("FLOAT"); return FLOAT;}
-{ID}      { ELEMENT("ID"); return ID; }
-{SEMI}	  { ELEMENT("SEMI"); return SEMI;}
-{COMMA}   { ELEMENT("COMMA"); return COMMA;}
+{STRUCT}    { ELEMENT("STRUCT"); return STRUCT; }
+{RETURN}    { ELEMENT("RETURN"); return RETURN; }
+{IF}        { ELEMENT("IF"); return IF; }
+{ELSE}      { ELEMENT("ELSE"); return ELSE; }
+{WHILE}     { ELEMENT("WHILE"); return WHILE; }
+{TYPE}      { ELEMENT("TYPE"); return TYPE; }
+{INT}       { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;ELEMENT("INT"); return INT;}
+{FLOAT}     { ELEMENT("FLOAT"); return FLOAT;}
+{ID}        { ELEMENT("ID"); return ID; }
+{SEMI}	    { ELEMENT("SEMI"); return SEMI;}
+{COMMA}     { ELEMENT("COMMA"); return COMMA;}
 {ASSIGNOP}	{ ELEMENT("ASSIGNOP"); return ASSIGNOP;}
 {PLUS}	    { ELEMENT("PLUS"); return PLUS;}
 {MINUS}	    { ELEMENT("MINUS"); return MINUS;}
@@ -68,7 +68,7 @@ LCOMMENTS   "/*"
 {RC}	    { ELEMENT("RC"); return RC;}
 [ ]         { strcat(linetext," ");}
 [\t]        { yycolumn += 3; strcat(linetext,"\t");}
-[\n]        { yycolumn = 1; yylineno += 1; linetext[0] = '\0'; }
+[\n]        { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
 {LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
 {LCOMMENTS} {   
                 char c1 = input(),c2 = input();
@@ -97,13 +97,17 @@ extern int syntax;
 
 void yyerror(char* msg) {
     syntax++;
-    SyntaxError("%s\n\t%s\n",yytext,linetext);
+    if(strcmp(msg,"syntax error") == 0) {
+        SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
+    } else {
+        SyntaxError("(from syntax.y): %s\n",msg);
+    }
 }
 
 static Node_t* add_node_text(char * content,char *text,int len) {
     Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
     strncpy(cur->text,text,len);
-    printf("%s %s\n",content,text);
+    Treedebug("%s %s\n",content,text);
     return cur;
 }
 
