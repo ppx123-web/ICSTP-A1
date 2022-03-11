@@ -6,6 +6,7 @@
     #include <string.h>
 
     int Iscomments = 0;
+    extern int syntax;
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
@@ -89,7 +90,7 @@ LCOMMENTS   "/*"
                     c2 = input();
                 }
             }
-.           { LexicalError("%s",yytext); }
+.           { LexicalError("%s",yytext); syntax++; }
 
 %%
 

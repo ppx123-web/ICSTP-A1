@@ -46,7 +46,7 @@ TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 # 定义的一些伪目标
 .PHONY: clean test
 test: parser
-	./parser $(TESTFILE)
+	./parser $(TESTFILE) > a.txt
 	@rm *.o
 zero: parser
 	./parser ../Test/test0.cmm > a.txt
