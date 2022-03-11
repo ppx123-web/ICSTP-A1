@@ -1,11 +1,5 @@
-
-
-
-../Test/test0.cmm:
-
-
-
-../Test/test1.cmm:
+Error type B at Line 3: Syntax error. '9'
+Error type B at Line 4: Syntax error. 'G'
 Program (1)
   ExtDefList (1)
     ExtDef (1)
@@ -42,14 +36,8 @@ Program (1)
                     INT: 63
               SEMI
         RC
-
-
-
-../Test/test2.cmm:
-
-
-
-../Test/test3.cmm:
+Error type B at Line 3: Syntax error. '9'
+Error type B at Line 4: Syntax error. 'G'
 Program (1)
   ExtDefList (1)
     ExtDef (1)
@@ -74,14 +62,7 @@ Program (1)
                   FLOAT: 0.000105
             SEMI
         RC
-
-
-
-../Test/test4.cmm:
-
-
-
-../Test/test5.cmm:
+Error type B at Line 3: Syntax error. 'e'
 Program (1)
   ExtDefList (1)
     ExtDef (1)

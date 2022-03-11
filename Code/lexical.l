@@ -68,7 +68,7 @@ LCOMMENTS   "/*"
 {RC}	    { ELEMENT("RC"); return RC;}
 [ ]         { strcat(linetext," ");}
 [\t]        { yycolumn += 3; strcat(linetext,"\t");}
-[\n]        { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
+[\n\r]      { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
 {LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
 {LCOMMENTS} {   
                 char c1 = input(),c2 = input();
@@ -100,7 +100,7 @@ void yyerror(char* msg) {
     if(strcmp(msg,"syntax error") == 0) {
         SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
     } else {
-        SyntaxError("(from syntax.y): %s\n",msg);
+        //SyntaxError("(from syntax.y): %s\n",msg);
     }
 }
 
