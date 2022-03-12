@@ -3,3 +3,7 @@ Appendix*.pdf
 Project*.pdf
 .vscode/
 */*.o
+*/*.output
+!*/CMakeLists.txt
+*/*.txt
+*/cmake-build-debug/
