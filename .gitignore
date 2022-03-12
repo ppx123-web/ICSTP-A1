@@ -6,4 +6,4 @@ Project*.pdf
 */*.output
 !*/CMakeLists.txt
 */*.txt
-*/cmake-build-debug/
+cmake-build-debug/

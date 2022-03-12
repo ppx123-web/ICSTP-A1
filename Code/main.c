@@ -15,12 +15,10 @@ int main(int argc,char *argv[]) {
         printf("Usage:%s $FILE\n",argv[0]);
     }
     for (int i = 1;i < argc;i++) {
-        #ifndef FINAL
-            fprintf(stderr,"\n\n\n");
-            fprintf(stderr,"%s:\n",argv[i]);
-            printf("\n\n\n");
-            printf("%s:\n",argv[i]);
-        #endif
+    #ifndef FINAL
+        printf("\n\n\n");
+        printf("%s:\n",argv[i]);
+    #endif
         syntax = 0;
         yycolumn = 1;
         yylineno = 1;

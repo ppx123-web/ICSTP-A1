@@ -101,7 +101,7 @@ void yyerror(char* msg) {
     if(strcmp(msg,"syntax error") == 0) {
         SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
     } else {
-        //SyntaxError("(from syntax.y): %s\n",msg);
+        SyntaxError("(from syntax.y): %s\n",msg);
     }
 }
 
@@ -113,16 +113,3 @@ static Node_t* add_node_text(char * content,char *text,int len) {
 }
 
 
-
-// #ifdef SCANNER_DEBUG
-// int main(int argc,char* argv[]) {
-//     if(argc > 1) {
-//         if(!(yyin = fopen(argv[1],"r"))) {
-//             perror(argv[1]);
-//             return 1;
-//         }
-//     }
-//     while (yylex() != 0);
-//     return 0;
-// }
-// #endif
