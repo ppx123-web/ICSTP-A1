@@ -66,13 +66,13 @@ static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
     }
     if(cur->lchild == NULL) {
         printf("%s",cur->content);
-        char ** s;
+        char * s = NULL;
         if(strcmp(cur->content,"ID") == 0) {
             printf(": %s",cur->text);
         } else if(strcmp(cur->content,"INT") == 0) {
-            printf(": %d",strtol(cur->text,s,0));
+            printf(": %d",(int)strtol(cur->text,&s,0));
         } else if(strcmp(cur->content,"FLOAT") == 0) {
-            printf(": %f",(float)atof(cur->text));
+            printf(": %f",(float)strtod(cur->text,&s));
         } else if(strcmp(cur->content,"TYPE") == 0) {
             printf(": %s",cur->text);
         }

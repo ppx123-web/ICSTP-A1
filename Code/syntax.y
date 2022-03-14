@@ -64,15 +64,12 @@
 
 
 %right ASSIGNOP
-%left OR
-%left AND
+%left OR AND
 %left RELOP
-%left PLUS
-/* %left MINUS  取负在前，left可以考虑不写（推断） */
-%left STAR
-%left DIV
-%right NOT
-%right MINUS
+%left PLUS MINUS
+/* 两个负号，一个减法，一个取负，需要分开https://blog.csdn.net/sirouni2003/article/details/400672#SEC85 */
+%left STAR DIV
+%right NOT SMINUS
 %left DOT LB RB LP RP
 
 
@@ -149,7 +146,7 @@ FunDec : ID LP VarList RP           { $$ = Operator($$,"FunDec",@$.first_line,4,
     | error LP VarList RP           { $$ = NULL; yyerror("FunDec"); }
     ;
 VarList : ParamDec COMMA VarList    { $$ = Operator($$,"VarList",@$.first_line,3,$1,$2,$3); }
-    | ParamDec                      { $$ = Operator($$,"ParamDec",@$.first_line,1,$1); }
+    | ParamDec                      { $$ = Operator($$,"VarList",@$.first_line,1,$1); }
     ;
 ParamDec : Specifier VarDec         { $$ = Operator($$,"ParamDec",@$.first_line,2,$1,$2); }
     ;
@@ -167,13 +164,12 @@ Stmt : Exp SEMI                     { $$ = Operator($$,"Stmt",@$.first_line,2,$1
     | RETURN Exp SEMI               { $$ = Operator($$,"Stmt",@$.first_line,3,$1,$2,$3); }
     | IF LP Exp RP Stmt %prec LOWER_THAN_ELSE   { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$4,$5); }
     | IF LP Exp RP Stmt ELSE Stmt   { $$ = Operator($$,"Stmt",@$.first_line,7,$1,$2,$3,$4,$5,$6,$7); }
-    | WHILE LP Exp RP Stmt          { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$3,$4); }
-    | error SEMI                    { $$ = NULL; yyerror("Stmt"); }
-    | Exp error                     { $$ = NULL; yyerror("Stmt"); }
-    | IF error Stmt                 { $$ = NULL; yyerror("Stmt"); }
-    | IF LP Exp RP Stmt ELSE error  { $$ = NULL; yyerror("Stmt"); }
-    | RETURN error SEMI             { $$ = NULL; yyerror("Stmt"); }
-    | RETURN Exp error              { $$ = NULL; yyerror("Stmt"); }
+    | WHILE LP Exp RP Stmt          { $$ = Operator($$,"Stmt",@$.first_line,5,$1,$2,$3,$4,$5); }
+    | error SEMI                    { $$ = NULL; yyerror("1Stmt"); }
+    | Exp error                     { $$ = NULL; yyerror("2Stmt"); }
+    | IF LP Exp error RP Stmt       { $$ = NULL; yyerror("3Stmt"); }
+    | RETURN error SEMI             { $$ = NULL; yyerror("4Stmt"); }
+    | RETURN Exp error              { $$ = NULL; yyerror("5Stmt"); }
     ;
 
 /*Local Definitions */
@@ -183,7 +179,7 @@ DefList : Def DefList               { $$ = Operator($$,"DefList",@$.first_line,2
     ;
 Def : Specifier DecList SEMI        { $$ = Operator($$,"Def",@$.first_line,3,$1,$2,$3); }
     | Specifier error SEMI          { $$ = NULL; yyerror("Def,missing ;"); }
-    | Specifier DecList error SEMI  { $$ = NULL; yyerror("Def,missing ; 3"); }
+    | Specifier DecList error SEMI  { $$ = NULL; yyerror("Def,missing ;"); }
     ;
 DecList : Dec                       { $$ = Operator($$,"DecList",@$.first_line,1,$1); }
     | Dec COMMA DecList             { $$ = Operator($$,"DecList",@$.first_line,3,$1,$2,$3); }
@@ -203,9 +199,9 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | Exp STAR Exp                  { $$ = Operator($$,"Exp",@$.first_line,3,$1,$2,$3); }
     | Exp DIV Exp                   { $$ = Operator($$,"Exp",@$.first_line,3,$1,$2,$3); }
     | LP Exp RP                     { $$ = Operator($$,"Exp",@$.first_line,3,$1,$2,$3); }
-    | MINUS Exp                     { $$ = Operator($$,"Exp",@$.first_line,2,$1,$2); }
+    | MINUS Exp    %prec SMINUS	    { $$ = Operator($$,"Exp",@$.first_line,2,$1,$2); }
     | NOT Exp                       { $$ = Operator($$,"Exp",@$.first_line,2,$1,$2); }
-    | ID LP Args RP                 { $$ = Operator($$,"Exp",@$.first_line,4,$1,$1,$3,$4); }
+    | ID LP Args RP                 { $$ = Operator($$,"Exp",@$.first_line,4,$1,$2,$3,$4); }
     | ID LP RP                      { $$ = Operator($$,"Exp",@$.first_line,3,$1,$2,$3); }
     | Exp LB Exp RB                 { $$ = Operator($$,"Exp",@$.first_line,4,$1,$2,$3,$4); }
     | Exp DOT ID                    { $$ = Operator($$,"Exp",@$.first_line,3,$1,$2,$3); }

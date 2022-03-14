@@ -10,9 +10,9 @@
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
-FLOAT   [+-]?([0-9]*(\.)[0-9]+([eE][+-]?[0-9]+)?|[0-9]+(\.)[0-9]*([eE][+-]?[0-9]+)?)
-INT (([+-]?[0-9])|([+-]?[1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[1-7][0-7]*))
-ID  [A-Za-z_]+[0-9_A-za-z]*
+FLOAT   ([0-9]*(\.)[0-9]+([eE][+-]?[0-9]+)?|[0-9]+(\.)[0-9]*([eE][+-]?[0-9]+)?)
+INT (([0-9])|([1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[0-7]+))
+ID  [A-Za-z_]+[0-9A-Za-z_]*
 SEMI    ;
 COMMA	,
 ASSIGNOP	=
@@ -47,12 +47,13 @@ LCOMMENTS   "/*"
 {ELSE}      { ELEMENT("ELSE"); return ELSE; }
 {WHILE}     { ELEMENT("WHILE"); return WHILE; }
 {TYPE}      { ELEMENT("TYPE"); return TYPE; }
-{INT}       { /*unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;*/ELEMENT("INT"); return INT;}
+{INT}       { ELEMENT("INT"); return INT;}
 {FLOAT}     { ELEMENT("FLOAT"); return FLOAT;}
 {ID}        { ELEMENT("ID"); return ID; }
 {SEMI}	    { ELEMENT("SEMI"); return SEMI;}
 {COMMA}     { ELEMENT("COMMA"); return COMMA;}
 {ASSIGNOP}	{ ELEMENT("ASSIGNOP"); return ASSIGNOP;}
+{RELOP}     { ELEMENT("RELOP"); return RELOP;}
 {PLUS}	    { ELEMENT("PLUS"); return PLUS;}
 {MINUS}	    { ELEMENT("MINUS"); return MINUS;}
 {STAR}	    { ELEMENT("STAR"); return STAR;}
@@ -108,7 +109,7 @@ void yyerror(char* msg) {
 static Node_t* add_node_text(char * content,char *text,int len) {
     Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
     strncpy(cur->text,text,len);
-    Treedebug("%s %s\n",content,text);
+    Treedebug("\t\t%s %s\n",content,text);
     return cur;
 }
 

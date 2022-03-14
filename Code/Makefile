@@ -47,9 +47,9 @@ TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 .PHONY: clean test
 test: parser
 	./parser $(TESTFILE) > a.txt
-	@make clean
+	@rm *.o
 zero: parser
-	./parser ../Test/test0.cmm > a.txt
+	./parser ../Test/test0.cmm
 	@rm *.o
 
 clean:

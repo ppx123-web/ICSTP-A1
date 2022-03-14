@@ -12,6 +12,8 @@
 
 Bison文件包括了token等的定义以及解决移入规约问题的描述，第二部分是附录中的产生式
 
+### 在Bison构建了语法树，可以正确生成语法树
+
 ## 如何编译
 
 使用makefile,在Code目录下，使用make parse，可以在当前目录下获得一个parse文件，直接使用./parse test来使用，test是测试文件

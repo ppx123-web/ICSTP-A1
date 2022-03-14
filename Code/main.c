@@ -33,6 +33,10 @@ int main(int argc,char *argv[]) {
         if (syntax == 0) {
             tree->traverse(tree->root,0);
         }
+#ifndef FINAL
+        if(syntax != 0)
+            tree->traverse(tree->root,0);
+#endif
     }
     return 0;
 }

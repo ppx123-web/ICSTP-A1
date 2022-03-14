@@ -1,5 +1,9 @@
 int main()
 {
-	int i = 0123;
-	int j = 0x3F;
+    // line comment
+    /*
+    block comment
+    */
+    */
+    int i = 1x;
 }
