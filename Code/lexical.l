@@ -10,8 +10,8 @@
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
-INT (([+-]?[0-9])|([+-]?[1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[1-7][0-7]*))[^.]
 FLOAT   [+-]?([0-9]*(\.)[0-9]+([eE][+-]?[0-9]+)?|[0-9]+(\.)[0-9]*([eE][+-]?[0-9]+)?)
+INT (([+-]?[0-9])|([+-]?[1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[1-7][0-7]*))
 ID  [A-Za-z_]+[0-9_A-za-z]*
 SEMI    ;
 COMMA	,
@@ -47,7 +47,7 @@ LCOMMENTS   "/*"
 {ELSE}      { ELEMENT("ELSE"); return ELSE; }
 {WHILE}     { ELEMENT("WHILE"); return WHILE; }
 {TYPE}      { ELEMENT("TYPE"); return TYPE; }
-{INT}       { unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;ELEMENT("INT"); return INT;}
+{INT}       { /*unput(yytext[yyleng-1]); yycolumn--,yytext[yyleng-1] = 0;*/ELEMENT("INT"); return INT;}
 {FLOAT}     { ELEMENT("FLOAT"); return FLOAT;}
 {ID}        { ELEMENT("ID"); return ID; }
 {SEMI}	    { ELEMENT("SEMI"); return SEMI;}
@@ -101,7 +101,7 @@ void yyerror(char* msg) {
     if(strcmp(msg,"syntax error") == 0) {
         SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
     } else {
-        SyntaxError("(from syntax.y): %s\n",msg);
+        //SyntaxError("(from syntax.y): %s\n",msg);
     }
 }
 

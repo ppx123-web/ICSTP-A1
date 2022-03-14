@@ -12,8 +12,6 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(CMAKE_C_FLAGS "-LC:/GnuWin32/lib/")
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
-file(GLOB LEX_FILE ${PROJECT_SOURCE_DIR}/Code/*.l)
-
 add_custom_target(TEMP)
 
 add_custom_command(TARGET TEMP

@@ -1,9 +1,10 @@
 .idea/
+.vscode/
+cmake-build-debug/
 Appendix*.pdf
 Project*.pdf
-.vscode/
 */*.o
 */*.output
-!*/CMakeLists.txt
 */*.txt
-cmake-build-debug/
+*.zip
+*/*.zip
