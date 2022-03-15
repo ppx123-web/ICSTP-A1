@@ -113,8 +113,8 @@ ExtDef : Specifier ExtDecList SEMI  { $$ = Operator($$,"ExtDef",@$.first_line,3,
     | Specifier SEMI                { $$ = Operator($$,"ExtDef",@$.first_line,2,$1,$2); }
     | Specifier FunDec CompSt       { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
     | error SEMI                    { $$ = NULL;yyerror("ExtDef"); }
-    | Specifier error SEMI          { $$ = NULL;yyerror("ExtDef"); }
     | Specifier error               { $$ = NULL;yyerror("ExtDef,missing ;"); }
+    | Specifier error SEMI          { $$ = NULL;yyerror("ExtDef"); }
     | Specifier error CompSt        { $$ = NULL;yyerror("ExtDef"); }
     ;
 ExtDecList : VarDec                 { $$ = Operator($$,"ExtDecList",@$.first_line,1,$1); }
@@ -208,24 +208,27 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | ID                            { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | INT                           { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | FLOAT                         { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
-    | Exp ASSIGNOP error            { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp RELOP error               { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp PLUS error                { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp MINUS error               { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp STAR error                { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp DIV error                 { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp AND error                 { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp OR error                  { $$ = NULL; yyerror("Wrong Exp"); }
-    | MINUS error                   { $$ = NULL; yyerror("Wrong Exp"); }
-    | NOT error                     { $$ = NULL; yyerror("Wrong Exp"); }
-    | ID LP error RP                { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp LB error RB               { $$ = NULL; yyerror("Wrong Exp"); }
-    | Exp DOT error                 { $$ = NULL; yyerror("Wrong Exp"); }
     ;
+//    | Exp ASSIGNOP error            { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp RELOP error               { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp PLUS error                { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp MINUS error               { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp STAR error                { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp DIV error                 { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp AND error                 { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp OR error                  { $$ = NULL; yyerror("Wrong Exp"); }
+//    | MINUS error                   { $$ = NULL; yyerror("Wrong Exp"); }
+//    | NOT error                     { $$ = NULL; yyerror("Wrong Exp"); }
+//    | ID LP error RP                { $$ = NULL; yyerror("Wrong Exp"); }
+//    | LP error RP 	              { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp LB error RB               { $$ = NULL; yyerror("Wrong Exp"); }
+//    | Exp DOT error                 { $$ = NULL; yyerror("Wrong Exp"); }
 Args : Exp COMMA Args               { $$ = Operator($$,"Args",@$.first_line,3,$1,$2,$3); }
     | Exp                           { $$ = Operator($$,"Args",@$.first_line,1,$1); }
     | error Args                    { $$ = NULL; yyerror("Wrong Args"); }
     ;
 
 %%
+
+
 

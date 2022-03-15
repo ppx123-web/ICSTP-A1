@@ -7,6 +7,7 @@
 
     int Iscomments = 0;
     extern int syntax;
+    int last_lineno = 0;
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 

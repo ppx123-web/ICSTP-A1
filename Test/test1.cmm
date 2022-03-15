@@ -1,9 +1,11 @@
-int main()
-{
-    // line comment
-    /*
-    block comment
-    */
-    */
-    int i = 1x;
+struct node {
+    int a,b;
+}
+
+int main() {
+    int a = ---b;
+    int a = a[a *(b+a)];
+    int b = a(;
+    int c = (;
+    int c = ;
 }

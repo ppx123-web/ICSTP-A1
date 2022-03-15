@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_HOME_PPX_ZHAOCHAOYI_LAB_COMPILER_CODE_SYNTAX_TAB_H_INCLUDED
-# define YY_YY_HOME_PPX_ZHAOCHAOYI_LAB_COMPILER_CODE_SYNTAX_TAB_H_INCLUDED
+#ifndef YY_YY_SYNTAX_TAB_H_INCLUDED
+# define YY_YY_SYNTAX_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -91,11 +91,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 31 "/home/ppx/zhaochaoyi/Lab-compiler/Code/syntax.y"
+#line 31 "./syntax.y"
 
     struct __Tree_node_t * node;
 
-#line 99 "/home/ppx/zhaochaoyi/Lab-compiler/Code/syntax.tab.h"
+#line 99 "./syntax.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -124,4 +124,4 @@ extern YYLTYPE yylloc;
 int yyparse (void);
 
 
-#endif /* !YY_YY_HOME_PPX_ZHAOCHAOYI_LAB_COMPILER_CODE_SYNTAX_TAB_H_INCLUDED  */
+#endif /* !YY_YY_SYNTAX_TAB_H_INCLUDED  */

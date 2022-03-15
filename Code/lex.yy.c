@@ -1,6 +1,6 @@
-#line 1 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
+#line 1 "./lex.yy.c"
 
-#line 3 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
+#line 3 "./lex.yy.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -523,8 +523,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
-#line 2 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 1 "./lexical.l"
+#line 2 "./lexical.l"
     #include <stdio.h>
     #include "debug.h"
     #include "syntax.tab.h"
@@ -533,9 +533,10 @@ char *yytext;
 
     int Iscomments = 0;
     extern int syntax;
+    int last_lineno = 0;
     static Node_t* add_node_text(char * content,char *text,int len);
-#line 537 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
-#line 538 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
+#line 538 "./lex.yy.c"
+#line 539 "./lex.yy.c"
 
 #define INITIAL 0
 
@@ -752,9 +753,9 @@ YY_DECL
 		}
 
 	{
-#line 43 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 44 "./lexical.l"
 
-#line 757 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
+#line 758 "./lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -813,163 +814,163 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 44 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 45 "./lexical.l"
 { ELEMENT("STRUCT"); return STRUCT; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 45 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 46 "./lexical.l"
 { ELEMENT("RETURN"); return RETURN; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 46 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 47 "./lexical.l"
 { ELEMENT("IF"); return IF; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 47 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 48 "./lexical.l"
 { ELEMENT("ELSE"); return ELSE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 48 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 49 "./lexical.l"
 { ELEMENT("WHILE"); return WHILE; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 49 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 50 "./lexical.l"
 { ELEMENT("TYPE"); return TYPE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 50 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 51 "./lexical.l"
 { ELEMENT("INT"); return INT;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 51 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 52 "./lexical.l"
 { ELEMENT("FLOAT"); return FLOAT;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 52 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 53 "./lexical.l"
 { ELEMENT("ID"); return ID; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 53 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 54 "./lexical.l"
 { ELEMENT("SEMI"); return SEMI;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 54 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 55 "./lexical.l"
 { ELEMENT("COMMA"); return COMMA;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 55 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 56 "./lexical.l"
 { ELEMENT("ASSIGNOP"); return ASSIGNOP;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 56 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 57 "./lexical.l"
 { ELEMENT("RELOP"); return RELOP;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 57 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 58 "./lexical.l"
 { ELEMENT("PLUS"); return PLUS;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 58 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 59 "./lexical.l"
 { ELEMENT("MINUS"); return MINUS;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 59 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 60 "./lexical.l"
 { ELEMENT("STAR"); return STAR;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 60 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 61 "./lexical.l"
 { ELEMENT("DIV"); return DIV;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 61 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 62 "./lexical.l"
 { ELEMENT("AND"); return AND;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 62 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 63 "./lexical.l"
 { ELEMENT("OR"); return OR;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 63 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 64 "./lexical.l"
 { ELEMENT("DOT"); return DOT;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 64 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 65 "./lexical.l"
 { ELEMENT("NOT"); return NOT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 65 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 66 "./lexical.l"
 { ELEMENT("LP"); return LP;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 66 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 67 "./lexical.l"
 { ELEMENT("RP"); return RP;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 67 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 68 "./lexical.l"
 { ELEMENT("LB"); return LB;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 68 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 69 "./lexical.l"
 { ELEMENT("RB"); return RB;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 69 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 70 "./lexical.l"
 { ELEMENT("LC"); return LC;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 70 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 71 "./lexical.l"
 { ELEMENT("RC"); return RC;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 71 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 72 "./lexical.l"
 { strcat(linetext," ");}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 72 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 73 "./lexical.l"
 { yycolumn += 3; strcat(linetext,"\t");}
 	YY_BREAK
 case 30:
 /* rule 30 can match eol */
 YY_RULE_SETUP
-#line 73 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 74 "./lexical.l"
 { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 74 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 75 "./lexical.l"
 { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 75 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 76 "./lexical.l"
 {   
                 char c1 = input(),c2 = input();
                 if (c1 == '\n') {
@@ -992,15 +993,15 @@ YY_RULE_SETUP
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 94 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 95 "./lexical.l"
 { LexicalError("%s",yytext); syntax++; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 96 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 97 "./lexical.l"
 ECHO;
 	YY_BREAK
-#line 1003 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lex.yy.c"
+#line 1004 "./lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2005,7 +2006,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 96 "/home/ppx/zhaochaoyi/Lab-compiler/Code/lexical.l"
+#line 97 "./lexical.l"
 
 
 extern int syntax;
