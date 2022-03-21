@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 3 "./syntax.y"
+#line 3 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
 
     int yycolumn = 1;
     char linetext[128];
@@ -78,7 +78,7 @@
                 yycolumn += yyleng;
     //#define YYDEBUG 1
     //int yydebug = 1;
-#line 15 "./syntax.y"
+#line 15 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
 
     #include <stdio.h>
     #include "lex.yy.c"
@@ -93,7 +93,7 @@
     extern int syntax;
 
 
-#line 97 "./syntax.tab.c"
+#line 97 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -1364,451 +1364,451 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* Program: ExtDefList  */
-#line 107 "./syntax.y"
+#line 107 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { tree->root = (yyval.node) = Operator((yyval.node),"Program",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1370 "./syntax.tab.c"
+#line 1370 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 3: /* ExtDefList: ExtDef ExtDefList  */
-#line 109 "./syntax.y"
+#line 109 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDefList",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1376 "./syntax.tab.c"
+#line 1376 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 4: /* ExtDefList: %empty  */
-#line 110 "./syntax.y"
+#line 110 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; }
-#line 1382 "./syntax.tab.c"
+#line 1382 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 5: /* ExtDef: Specifier ExtDecList SEMI  */
-#line 112 "./syntax.y"
+#line 112 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDef",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1388 "./syntax.tab.c"
+#line 1388 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 6: /* ExtDef: Specifier SEMI  */
-#line 113 "./syntax.y"
+#line 113 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDef",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1394 "./syntax.tab.c"
+#line 1394 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 7: /* ExtDef: Specifier FunDec CompSt  */
-#line 114 "./syntax.y"
+#line 114 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDef",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1400 "./syntax.tab.c"
+#line 1400 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 8: /* ExtDef: error SEMI  */
-#line 115 "./syntax.y"
+#line 115 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL;yyerror("ExtDef"); }
-#line 1406 "./syntax.tab.c"
+#line 1406 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 9: /* ExtDef: Specifier error  */
-#line 116 "./syntax.y"
+#line 116 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL;yyerror("ExtDef,missing ;"); }
-#line 1412 "./syntax.tab.c"
+#line 1412 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 10: /* ExtDef: Specifier error SEMI  */
-#line 117 "./syntax.y"
+#line 117 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL;yyerror("ExtDef"); }
-#line 1418 "./syntax.tab.c"
+#line 1418 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 11: /* ExtDef: Specifier error CompSt  */
-#line 118 "./syntax.y"
+#line 118 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL;yyerror("ExtDef"); }
-#line 1424 "./syntax.tab.c"
+#line 1424 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 12: /* ExtDecList: VarDec  */
-#line 120 "./syntax.y"
+#line 120 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDecList",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1430 "./syntax.tab.c"
+#line 1430 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 13: /* ExtDecList: VarDec COMMA ExtDecList  */
-#line 121 "./syntax.y"
+#line 121 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ExtDecList",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1436 "./syntax.tab.c"
+#line 1436 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 14: /* Specifier: TYPE  */
-#line 126 "./syntax.y"
+#line 126 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Specifier",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1442 "./syntax.tab.c"
+#line 1442 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 15: /* Specifier: StructSpecifier  */
-#line 127 "./syntax.y"
+#line 127 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Specifier",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1448 "./syntax.tab.c"
+#line 1448 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 16: /* StructSpecifier: STRUCT OptTag LC DefList RC  */
-#line 129 "./syntax.y"
+#line 129 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                                 { (yyval.node) = Operator((yyval.node),"StructSpecifier",(yyloc).first_line,5,(yyvsp[-4].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1454 "./syntax.tab.c"
+#line 1454 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 17: /* StructSpecifier: STRUCT Tag  */
-#line 130 "./syntax.y"
+#line 130 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"StructSpecifier",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1460 "./syntax.tab.c"
+#line 1460 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 18: /* OptTag: ID  */
-#line 132 "./syntax.y"
+#line 132 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"OptTag",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1466 "./syntax.tab.c"
+#line 1466 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 19: /* OptTag: %empty  */
-#line 133 "./syntax.y"
+#line 133 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; }
-#line 1472 "./syntax.tab.c"
+#line 1472 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 20: /* Tag: ID  */
-#line 135 "./syntax.y"
+#line 135 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Tag",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1478 "./syntax.tab.c"
+#line 1478 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 21: /* VarDec: ID  */
-#line 139 "./syntax.y"
+#line 139 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"VarDec",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1484 "./syntax.tab.c"
+#line 1484 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 22: /* VarDec: VarDec LB INT RB  */
-#line 140 "./syntax.y"
+#line 140 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"VarDec",(yyloc).first_line,4,(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1490 "./syntax.tab.c"
+#line 1490 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 23: /* VarDec: VarDec LB error RB  */
-#line 141 "./syntax.y"
+#line 141 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("VarDec"); }
-#line 1496 "./syntax.tab.c"
+#line 1496 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 24: /* FunDec: ID LP VarList RP  */
-#line 143 "./syntax.y"
+#line 143 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"FunDec",(yyloc).first_line,4,(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1502 "./syntax.tab.c"
+#line 1502 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 25: /* FunDec: ID LP RP  */
-#line 144 "./syntax.y"
+#line 144 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"FunDec",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1508 "./syntax.tab.c"
+#line 1508 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 26: /* FunDec: ID LP error RP  */
-#line 145 "./syntax.y"
+#line 145 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("FunDec"); }
-#line 1514 "./syntax.tab.c"
+#line 1514 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 27: /* FunDec: error LP VarList RP  */
-#line 146 "./syntax.y"
+#line 146 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("FunDec"); }
-#line 1520 "./syntax.tab.c"
+#line 1520 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 28: /* VarList: ParamDec COMMA VarList  */
-#line 148 "./syntax.y"
+#line 148 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"VarList",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1526 "./syntax.tab.c"
+#line 1526 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 29: /* VarList: ParamDec  */
-#line 149 "./syntax.y"
+#line 149 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"VarList",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1532 "./syntax.tab.c"
+#line 1532 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 30: /* ParamDec: Specifier VarDec  */
-#line 151 "./syntax.y"
+#line 151 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"ParamDec",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1538 "./syntax.tab.c"
+#line 1538 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 31: /* CompSt: LC DefList StmtList RC  */
-#line 156 "./syntax.y"
+#line 156 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"CompSt",(yyloc).first_line,4,(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1544 "./syntax.tab.c"
+#line 1544 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 32: /* CompSt: LC DefList error RC  */
-#line 157 "./syntax.y"
+#line 157 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("CompSt"); }
-#line 1550 "./syntax.tab.c"
+#line 1550 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 33: /* StmtList: Stmt StmtList  */
-#line 159 "./syntax.y"
+#line 159 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"StmtList",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1556 "./syntax.tab.c"
+#line 1556 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 34: /* StmtList: %empty  */
-#line 160 "./syntax.y"
+#line 160 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; }
-#line 1562 "./syntax.tab.c"
+#line 1562 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 35: /* Stmt: Exp SEMI  */
-#line 162 "./syntax.y"
+#line 162 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1568 "./syntax.tab.c"
+#line 1568 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 36: /* Stmt: CompSt  */
-#line 163 "./syntax.y"
+#line 163 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1574 "./syntax.tab.c"
+#line 1574 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 37: /* Stmt: RETURN Exp SEMI  */
-#line 164 "./syntax.y"
+#line 164 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1580 "./syntax.tab.c"
+#line 1580 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 38: /* Stmt: IF LP Exp RP Stmt  */
-#line 165 "./syntax.y"
+#line 165 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                                 { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,5,(yyvsp[-4].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1586 "./syntax.tab.c"
+#line 1586 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 39: /* Stmt: IF LP Exp RP Stmt ELSE Stmt  */
-#line 166 "./syntax.y"
+#line 166 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,7,(yyvsp[-6].node),(yyvsp[-5].node),(yyvsp[-4].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1592 "./syntax.tab.c"
+#line 1592 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 40: /* Stmt: WHILE LP Exp RP Stmt  */
-#line 167 "./syntax.y"
+#line 167 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Stmt",(yyloc).first_line,5,(yyvsp[-4].node),(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1598 "./syntax.tab.c"
+#line 1598 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 41: /* Stmt: error SEMI  */
-#line 168 "./syntax.y"
+#line 168 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("1Stmt"); }
-#line 1604 "./syntax.tab.c"
+#line 1604 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 42: /* Stmt: Exp error  */
-#line 169 "./syntax.y"
+#line 169 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("2Stmt"); }
-#line 1610 "./syntax.tab.c"
+#line 1610 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 43: /* Stmt: IF LP Exp error RP Stmt  */
-#line 170 "./syntax.y"
+#line 170 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("3Stmt"); }
-#line 1616 "./syntax.tab.c"
+#line 1616 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 44: /* Stmt: RETURN error SEMI  */
-#line 171 "./syntax.y"
+#line 171 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("4Stmt"); }
-#line 1622 "./syntax.tab.c"
+#line 1622 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 45: /* Stmt: RETURN Exp error  */
-#line 172 "./syntax.y"
+#line 172 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("5Stmt"); }
-#line 1628 "./syntax.tab.c"
+#line 1628 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 46: /* DefList: Def DefList  */
-#line 177 "./syntax.y"
+#line 177 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"DefList",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1634 "./syntax.tab.c"
+#line 1634 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 47: /* DefList: %empty  */
-#line 178 "./syntax.y"
+#line 178 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; }
-#line 1640 "./syntax.tab.c"
+#line 1640 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 48: /* Def: Specifier DecList SEMI  */
-#line 180 "./syntax.y"
+#line 180 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Def",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1646 "./syntax.tab.c"
+#line 1646 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 49: /* Def: Specifier error SEMI  */
-#line 181 "./syntax.y"
+#line 181 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("Def"); }
-#line 1652 "./syntax.tab.c"
+#line 1652 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 50: /* Def: Specifier DecList error SEMI  */
-#line 182 "./syntax.y"
+#line 182 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("Def"); }
-#line 1658 "./syntax.tab.c"
+#line 1658 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 51: /* DecList: Dec  */
-#line 184 "./syntax.y"
+#line 184 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"DecList",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1664 "./syntax.tab.c"
+#line 1664 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 52: /* DecList: Dec COMMA DecList  */
-#line 185 "./syntax.y"
+#line 185 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"DecList",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1670 "./syntax.tab.c"
+#line 1670 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 53: /* Dec: VarDec  */
-#line 187 "./syntax.y"
+#line 187 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Dec",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1676 "./syntax.tab.c"
+#line 1676 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 54: /* Dec: VarDec ASSIGNOP Exp  */
-#line 188 "./syntax.y"
+#line 188 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Dec",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1682 "./syntax.tab.c"
+#line 1682 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 55: /* Exp: Exp ASSIGNOP Exp  */
-#line 193 "./syntax.y"
+#line 193 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1688 "./syntax.tab.c"
+#line 1688 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 56: /* Exp: Exp AND Exp  */
-#line 194 "./syntax.y"
+#line 194 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1694 "./syntax.tab.c"
+#line 1694 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 57: /* Exp: Exp OR Exp  */
-#line 195 "./syntax.y"
+#line 195 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1700 "./syntax.tab.c"
+#line 1700 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 58: /* Exp: Exp RELOP Exp  */
-#line 196 "./syntax.y"
+#line 196 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1706 "./syntax.tab.c"
+#line 1706 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 59: /* Exp: Exp PLUS Exp  */
-#line 197 "./syntax.y"
+#line 197 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1712 "./syntax.tab.c"
+#line 1712 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 60: /* Exp: Exp MINUS Exp  */
-#line 198 "./syntax.y"
+#line 198 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1718 "./syntax.tab.c"
+#line 1718 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 61: /* Exp: Exp STAR Exp  */
-#line 199 "./syntax.y"
+#line 199 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1724 "./syntax.tab.c"
+#line 1724 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 62: /* Exp: Exp DIV Exp  */
-#line 200 "./syntax.y"
+#line 200 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1730 "./syntax.tab.c"
+#line 1730 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 63: /* Exp: LP Exp RP  */
-#line 201 "./syntax.y"
+#line 201 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1736 "./syntax.tab.c"
+#line 1736 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 64: /* Exp: MINUS Exp  */
-#line 202 "./syntax.y"
+#line 202 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1742 "./syntax.tab.c"
+#line 1742 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 65: /* Exp: NOT Exp  */
-#line 203 "./syntax.y"
+#line 203 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,2,(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1748 "./syntax.tab.c"
+#line 1748 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 66: /* Exp: ID LP Args RP  */
-#line 204 "./syntax.y"
+#line 204 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,4,(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1754 "./syntax.tab.c"
+#line 1754 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 67: /* Exp: ID LP RP  */
-#line 205 "./syntax.y"
+#line 205 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1760 "./syntax.tab.c"
+#line 1760 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 68: /* Exp: Exp LB Exp RB  */
-#line 206 "./syntax.y"
+#line 206 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,4,(yyvsp[-3].node),(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1766 "./syntax.tab.c"
+#line 1766 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 69: /* Exp: Exp DOT ID  */
-#line 207 "./syntax.y"
+#line 207 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1772 "./syntax.tab.c"
+#line 1772 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 70: /* Exp: ID  */
-#line 208 "./syntax.y"
+#line 208 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1778 "./syntax.tab.c"
+#line 1778 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 71: /* Exp: INT  */
-#line 209 "./syntax.y"
+#line 209 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1784 "./syntax.tab.c"
+#line 1784 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 72: /* Exp: FLOAT  */
-#line 210 "./syntax.y"
+#line 210 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Exp",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1790 "./syntax.tab.c"
+#line 1790 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 73: /* Args: Exp COMMA Args  */
-#line 212 "./syntax.y"
+#line 212 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Args",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
-#line 1796 "./syntax.tab.c"
+#line 1796 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 74: /* Args: Exp  */
-#line 213 "./syntax.y"
+#line 213 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Args",(yyloc).first_line,1,(yyvsp[0].node)); }
-#line 1802 "./syntax.tab.c"
+#line 1802 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
   case 75: /* Args: error Args  */
-#line 214 "./syntax.y"
+#line 214 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
                                     { (yyval.node) = NULL; yyerror("Wrong Args"); }
-#line 1808 "./syntax.tab.c"
+#line 1808 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
     break;
 
 
-#line 1812 "./syntax.tab.c"
+#line 1812 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.tab.c"
 
       default: break;
     }
@@ -2006,7 +2006,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 217 "./syntax.y"
+#line 217 "/home/ppx/zhaochaoyi/Compiler/Lab2/Code/syntax.y"
 
 
 

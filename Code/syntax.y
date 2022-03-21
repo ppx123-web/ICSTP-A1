@@ -29,7 +29,7 @@
 
 /* declared types */
 %union {
-    struct __Tree_node_t * node;
+    struct Tree_node_t * node;
 }
 
 /* declared tokens */

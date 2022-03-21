@@ -6,12 +6,12 @@
 #include "data.h"
 #include "debug.h"
 
-static MultiwayTree_t * __MultiwayTree_init(MultiwayTree_t * t) {
+static MultiwayTree_t * MultiwayTree_init(MultiwayTree_t * t) {
     t->root = tree->Node_alloc("begin",0);
     return t;
 }
 
-static Node_t * __MultiwayTree_leftmostinsert(Node_t * cur ,Node_t * node) {
+static Node_t * MultiwayTree_leftmostinsert(Node_t * cur ,Node_t * node) {
     Node_t * lastleft = cur->lchild;
     if (lastleft == NULL) {
         cur->lchild = cur->rchild = node;
@@ -23,7 +23,7 @@ static Node_t * __MultiwayTree_leftmostinsert(Node_t * cur ,Node_t * node) {
     return cur;
 }
 
-static Node_t * __MultiwayTree_rightmostinsert(Node_t * cur ,Node_t * node) {
+static Node_t * MultiwayTree_rightmostinsert(Node_t * cur ,Node_t * node) {
     assert(cur != NULL);
     Node_t * lastright = cur->rchild;
     if (lastright == NULL) {
@@ -37,12 +37,12 @@ static Node_t * __MultiwayTree_rightmostinsert(Node_t * cur ,Node_t * node) {
     return cur;
 }
 
-static Node_t * __MultiwayTree_remove(Node_t * cur ,Node_t * node) {
+static Node_t * MultiwayTree_remove(Node_t * cur ,Node_t * node) {
     assert(0);
     return cur;
 }
 
-static Node_t * __MultiwayTree_Node_alloc(char * content,int line) {
+static Node_t * MultiwayTree_Node_alloc(char * content,int line) {
     Node_t * new_node = (Node_t*)malloc(sizeof(Node_t));
 
     char * newstr = (char *)malloc(strlen(content)+5);
@@ -59,7 +59,7 @@ static Node_t * __MultiwayTree_Node_alloc(char * content,int line) {
     return new_node;
 }
 
-static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
+static void MultiwayTree_Traverse(Node_t * cur,int deep) {
     if (cur == NULL) return;
     for (int i = 0;i < deep;i++) {
         printf("  ");
@@ -83,29 +83,29 @@ static void __MultiwayTree_Traverse(Node_t * cur,int deep) {
     if (cur->lchild != NULL) {
         Node_t * child = cur->lchild;
         do {
-            __MultiwayTree_Traverse(child,deep + 1);
+            MultiwayTree_Traverse(child,deep + 1);
             child = child->right;
         }while (child != NULL);
     }
 }
 
-void __MultiwayTree_insert_all(Node_t* cur,int argc,Node_t* childs[]) {
+void MultiwayTree_insert_all(Node_t* cur,int argc,Node_t* childs[]) {
     for(int i = 0; i < argc;i++) {
         tree->rminsert(cur,childs[i]);
     }
 }//注意，argc为childs数组参数的数量，同时注意可变参数的数量
 
 extern MultiwayTree_t * tree;
-MultiwayTree_t __Multiwaytree = {
-    .init = __MultiwayTree_init,
-    .lminsert = __MultiwayTree_leftmostinsert,
-    .rminsert = __MultiwayTree_rightmostinsert,
-    .Node_alloc = __MultiwayTree_Node_alloc,
-    .remove = __MultiwayTree_remove,
-    .traverse = __MultiwayTree_Traverse,
-    .insert_all = __MultiwayTree_insert_all,
+MultiwayTree_t Multiwaytree = {
+    .init = MultiwayTree_init,
+    .lminsert = MultiwayTree_leftmostinsert,
+    .rminsert = MultiwayTree_rightmostinsert,
+    .Node_alloc = MultiwayTree_Node_alloc,
+    .remove = MultiwayTree_remove,
+    .traverse = MultiwayTree_Traverse,
+    .insert_all = MultiwayTree_insert_all,
 };
-MultiwayTree_t * tree = &__Multiwaytree;
+MultiwayTree_t * tree = &Multiwaytree;
 
 Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {
     cur = tree->Node_alloc(content,line);
