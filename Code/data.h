@@ -141,6 +141,41 @@ extern SymbolStack_t * symbol_stack;
 
 */
 
+typedef struct Typr_ Type;
+typedef struct FieldList_ FieldList;
+
+struct Type_ {
+    enum {
+        BASIC, ARRAY, STRUCTURE
+    } kind;
+    union {
+        int basic;
+        struct {
+            Type * elem;
+            int size;
+        } array;
+        FieldList * structure;
+    } u;
+};
+
+struct FieldList_ {
+    char * name;
+    Type * type;
+    FieldList * tail;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 #define MODULE_DEF(type,name)                       \
         extern type  name ## _mod_t;                \
         extern type * name;                         \

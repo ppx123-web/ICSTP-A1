@@ -1,6 +1,7 @@
 #include "data.h"
 
 //都应该使用static
+static void node_init();
 
 static void SymbolInfoList_insert(SymbolInfoList_t * list,Symbol_Node_t * cur,Symbol_Node_t * new);
 static void SymbolInfoList_remove(SymbolInfoList_t * list,Symbol_Node_t * cur);
