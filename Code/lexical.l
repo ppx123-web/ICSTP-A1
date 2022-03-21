@@ -7,11 +7,11 @@
 
     int Iscomments = 0;
     extern int syntax;
-    int last_lineno = 0;
+    int last_lineno = 0,cur_lineno = 0;
     static Node_t* add_node_text(char * content,char *text,int len);
 %}
 
-FLOAT   ([0-9]*(\.)[0-9]+([eE][+-]?[0-9]+)?|[0-9]+(\.)[0-9]*([eE][+-]?[0-9]+)?)
+FLOAT   ([0-9]+(\.)[0-9]+)|([0-9]*(\.)[0-9]+([eE][+-]?[0-9]+)|[0-9]+(\.)[0-9]*([eE][+-]?[0-9]+))
 INT (([0-9])|([1-9][0-9]+)|(0[xX][0-9A-Fa-f]+)|(0[0-7]+))
 ID  [A-Za-z_]+[0-9A-Za-z_]*
 SEMI    ;

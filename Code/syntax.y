@@ -67,7 +67,7 @@
 %left OR AND
 %left RELOP
 %left PLUS MINUS
-/* 两个负号，一个减法，一个取负，需要分开https://blog.csdn.net/sirouni2003/article/details/400672#SEC85 */
+
 %left STAR DIV
 %right NOT SMINUS
 %left DOT LB RB LP RP
@@ -178,8 +178,8 @@ DefList : Def DefList               { $$ = Operator($$,"DefList",@$.first_line,2
     |                               { $$ = NULL; }
     ;
 Def : Specifier DecList SEMI        { $$ = Operator($$,"Def",@$.first_line,3,$1,$2,$3); }
-    | Specifier error SEMI          { $$ = NULL; yyerror("Def,missing ;"); }
-    | Specifier DecList error SEMI  { $$ = NULL; yyerror("Def,missing ;"); }
+    | Specifier error SEMI          { $$ = NULL; yyerror("Def"); }
+    | Specifier DecList error SEMI  { $$ = NULL; yyerror("Def"); }
     ;
 DecList : Dec                       { $$ = Operator($$,"DecList",@$.first_line,1,$1); }
     | Dec COMMA DecList             { $$ = Operator($$,"DecList",@$.first_line,3,$1,$2,$3); }
@@ -209,20 +209,6 @@ Exp : Exp ASSIGNOP Exp              { $$ = Operator($$,"Exp",@$.first_line,3,$1,
     | INT                           { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     | FLOAT                         { $$ = Operator($$,"Exp",@$.first_line,1,$1); }
     ;
-//    | Exp ASSIGNOP error            { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp RELOP error               { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp PLUS error                { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp MINUS error               { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp STAR error                { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp DIV error                 { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp AND error                 { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp OR error                  { $$ = NULL; yyerror("Wrong Exp"); }
-//    | MINUS error                   { $$ = NULL; yyerror("Wrong Exp"); }
-//    | NOT error                     { $$ = NULL; yyerror("Wrong Exp"); }
-//    | ID LP error RP                { $$ = NULL; yyerror("Wrong Exp"); }
-//    | LP error RP 	              { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp LB error RB               { $$ = NULL; yyerror("Wrong Exp"); }
-//    | Exp DOT error                 { $$ = NULL; yyerror("Wrong Exp"); }
 Args : Exp COMMA Args               { $$ = Operator($$,"Args",@$.first_line,3,$1,$2,$3); }
     | Exp                           { $$ = Operator($$,"Args",@$.first_line,1,$1); }
     | error Args                    { $$ = NULL; yyerror("Wrong Args"); }

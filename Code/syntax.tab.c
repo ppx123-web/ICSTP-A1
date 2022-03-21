@@ -573,7 +573,7 @@ static const yytype_uint8 yyrline[] =
      167,   168,   169,   170,   171,   172,   177,   178,   180,   181,
      182,   184,   185,   187,   188,   193,   194,   195,   196,   197,
      198,   199,   200,   201,   202,   203,   204,   205,   206,   207,
-     208,   209,   210,   226,   227,   228
+     208,   209,   210,   212,   213,   214
 };
 #endif
 
@@ -1647,13 +1647,13 @@ yyreduce:
 
   case 49: /* Def: Specifier error SEMI  */
 #line 181 "./syntax.y"
-                                    { (yyval.node) = NULL; yyerror("Def,missing ;"); }
+                                    { (yyval.node) = NULL; yyerror("Def"); }
 #line 1652 "./syntax.tab.c"
     break;
 
   case 50: /* Def: Specifier DecList error SEMI  */
 #line 182 "./syntax.y"
-                                    { (yyval.node) = NULL; yyerror("Def,missing ;"); }
+                                    { (yyval.node) = NULL; yyerror("Def"); }
 #line 1658 "./syntax.tab.c"
     break;
 
@@ -1790,19 +1790,19 @@ yyreduce:
     break;
 
   case 73: /* Args: Exp COMMA Args  */
-#line 226 "./syntax.y"
+#line 212 "./syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Args",(yyloc).first_line,3,(yyvsp[-2].node),(yyvsp[-1].node),(yyvsp[0].node)); }
 #line 1796 "./syntax.tab.c"
     break;
 
   case 74: /* Args: Exp  */
-#line 227 "./syntax.y"
+#line 213 "./syntax.y"
                                     { (yyval.node) = Operator((yyval.node),"Args",(yyloc).first_line,1,(yyvsp[0].node)); }
 #line 1802 "./syntax.tab.c"
     break;
 
   case 75: /* Args: error Args  */
-#line 228 "./syntax.y"
+#line 214 "./syntax.y"
                                     { (yyval.node) = NULL; yyerror("Wrong Args"); }
 #line 1808 "./syntax.tab.c"
     break;
@@ -2006,7 +2006,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 231 "./syntax.y"
+#line 217 "./syntax.y"
 
 
 

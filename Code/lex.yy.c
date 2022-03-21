@@ -366,8 +366,8 @@ static const flex_int16_t yy_accept[85] =
         0,    0,   35,   33,   29,   30,   30,   28,   21,   33,
        22,   23,   16,   14,   11,   15,   20,   17,    7,    7,
        10,   13,   12,   13,    9,   24,   25,    9,    9,    9,
-        9,    9,    9,   26,   33,   27,   13,   18,    8,   32,
-       31,    8,    7,    0,    0,    7,    9,    9,    9,    9,
+        9,    9,    9,   26,   33,   27,   13,   18,    0,   32,
+       31,    0,    7,    0,    0,    7,    9,    9,    9,    9,
         3,    9,    9,    9,    9,   19,    0,    8,    0,    7,
         9,    9,    6,    9,    9,    9,    0,    8,    0,    0,
         8,    4,    9,    9,    9,    9,    0,    8,    9,    9,
@@ -533,7 +533,7 @@ char *yytext;
 
     int Iscomments = 0;
     extern int syntax;
-    int last_lineno = 0;
+    int last_lineno = 0,cur_lineno = 0;
     static Node_t* add_node_text(char * content,char *text,int len);
 #line 538 "./lex.yy.c"
 #line 539 "./lex.yy.c"

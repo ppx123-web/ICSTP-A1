@@ -1,11 +1,5 @@
-struct node {
-    int a,b;
-}
-
-int main() {
-    int a = ---b;
-    int a = a[a *(b+a)];
-    int b = a(;
-    int c = (;
-    int c = ;
+int main()
+{
+	int i = .9;
+	int j = 0.321;
 }

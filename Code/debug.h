@@ -19,7 +19,10 @@
 #ifdef SCANNER_DEBUG
     #define ELEMENT(_S_) {printf("TYPE =( %s ),content=( %s )\n",_S_,yytext);yylval.node = add_node_text(_S_,yytext,yyleng);}
 #else
-    #define ELEMENT(_S_) { yylval.node = add_node_text(_S_,yytext,yyleng);strcat(linetext,yytext);}
+    #define ELEMENT(_S_) { \
+                    yylval.node = add_node_text(_S_,yytext,yyleng); \
+                    strcat(linetext,yytext);                        \
+                    }
 #endif
 
 //用于最后的输出
