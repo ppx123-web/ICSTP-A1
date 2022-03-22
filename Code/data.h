@@ -43,16 +43,44 @@ extern MultiwayTree_t * tree;
 
  */
 
-typedef struct SymbolInfoList_t SymbolInfoList_t;
+typedef struct Typr_ Type;
+typedef struct FieldList_ FieldList;
 
+struct Type_ {
+    enum {
+        BASIC, ARRAY, STRUCTURE
+    } kind;
+    union {
+        int basic;
+        struct {
+            Type * elem;
+            int size;
+        } array;
+        FieldList * structure;
+    } u;
+};
+
+struct FieldList_ {
+    char * name;
+    Type * type;
+    FieldList * tail;
+};
+
+
+
+
+typedef struct SymbolInfoList_t SymbolInfoList_t;
 
 
 //哈希表用到的结构
 typedef struct Symbol_Node_t {
-    char * name;
-    int type;
+    char *  name;
+    FieldList field;
     int deep;
-    //类型待处理，0为保留属性，不允许使用，用作head，tail，last,first等属性
+    enum {
+        HASHLIST,STACKLIST,STACKNODE,INFONODE,
+    }type;
+    //类型待处理，列出的为保留属性，不允许使用，用作head，tail，last,first等属性
     SymbolInfoList_t * list; //在hash table中每个slot中的每个节点所以在list
 
     //维护数据结构需要的信息
@@ -60,27 +88,25 @@ typedef struct Symbol_Node_t {
     struct Symbol_Node_t * scope_prev, * scope_next;
 }Symbol_Node_t;
 
-typedef void (*SymbolInfoList_Api_insert)(SymbolInfoList_t * list,Symbol_Node_t * cur,Symbol_Node_t * new);
-typedef void (*SymbolInfoList_Api_remove)(SymbolInfoList_t * list,Symbol_Node_t * cur);
 
 struct SymbolInfoList_t {
     Symbol_Node_t head,tail;
 
-    void (*init)(SymbolInfoList_Api_insert a,SymbolInfoList_Api_remove b);                                 //初始化
-    SymbolInfoList_Api_insert insert;               //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
-    SymbolInfoList_Api_remove remove;               //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
+    //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
+    //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
 };
 
 typedef int (*HashFun)(char * name);
 
 typedef struct SymbolTable_t {
-    SymbolInfoList_t * table;
-    int table_size;
+    SymbolInfoList_t ** table;
+    int table_size; //表的总大小，不是元素个数
+    int cnt;
     HashFun hash;
     //Api
     Symbol_Node_t * (* node_alloc)();
 
-    void (*init)(int,HashFun);           //初始化哈希表
+    void (*init)(int);           //初始化哈希表
     void (*insert)(Symbol_Node_t *);        //插入节点
     void (*remove)(Symbol_Node_t *);        //删除节点
 
@@ -91,17 +117,28 @@ extern SymbolTable_t * symbol_table;
 
 
 //作用域用到的栈结构
+/*
+ * 在stack中，node的指针作用
+ * scope,用于纵向连接hash table中元素
+ * hash，用于在stack中连接栈中的元素
+*/
+typedef struct SymbolStack_ele_t {
+    Symbol_Node_t head;
+    Symbol_Node_t tail;
+    struct SymbolStack_ele_t * prev, * next;
+}SymbolStack_ele_t;
+
 
 typedef struct SymbolStack_t {
-    Symbol_Node_t last,first;
+    SymbolStack_ele_t last,first;                   //first栈顶，last是栈底
     int stack_size;
 
-    Symbol_Node_t * (* node_alloc)();           //分配栈中的节点，由于也是链表，需要分配两个head和tail
+    SymbolStack_ele_t * (* node_alloc)();           //分配栈中的节点，由于也是链表，需要分配两个head和tail
 
     void (*init)();                             //初始化栈
-    void (*push)(Symbol_Node_t * );         //在push前应调用stack的node_alloc来分配栈中的节点
+    void (*push)(SymbolStack_ele_t * );         //在push前应调用stack的node_alloc来分配栈中的节点
     void (*pop)();                              //在pop时free掉所有这一层作用域申请的节点
-    Symbol_Node_t * (*top)();
+    SymbolStack_ele_t * (*top)();
 }SymbolStack_t;
 
 extern SymbolStack_t * symbol_stack;
@@ -140,37 +177,6 @@ extern SymbolStack_t * symbol_stack;
         然后free当前节点，然后删除下一个节点，知道end，最后只剩下push时申请的head和end，在stack的链表中删除并free
 
 */
-
-typedef struct Typr_ Type;
-typedef struct FieldList_ FieldList;
-
-struct Type_ {
-    enum {
-        BASIC, ARRAY, STRUCTURE
-    } kind;
-    union {
-        int basic;
-        struct {
-            Type * elem;
-            int size;
-        } array;
-        FieldList * structure;
-    } u;
-};
-
-struct FieldList_ {
-    char * name;
-    Type * type;
-    FieldList * tail;
-};
-
-
-
-
-
-
-
-
 
 
 
