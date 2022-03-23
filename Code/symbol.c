@@ -11,20 +11,35 @@ typedef SymbolInfoList_t list_t;
 typedef struct SymbolStack_ele_t stack_ele_t;
 
 //都应该使用static
+
 static void node_init();
 static void node_delete(void * cur,int mode);
+static bool node_equal(unit_t*,unit_t*);
+
+static struct Info_Node_Ops {
+    void (*init)();
+    void (*delete)(void *,int);
+    bool (*equal)(unit_t*,unit_t*);
+}InfoNodeOp = {
+        .init = node_init,
+        .delete = node_delete,
+        .equal = node_equal,
+};
+
+struct Info_Node_Ops * nodeop = &InfoNodeOp;
+
 
 static void SymbolInfoList_insert(list_t * list,unit_t * cur,unit_t * new);
 static void SymbolInfoList_remove(list_t * list,unit_t * cur);
 static void SymbolInfoList_init(list_t * list);
-static unit_t * SymbolInfoList_find(unit_t * cur);
+static unit_t * SymbolInfoList_find(list_t * list,char * name);
 static list_t * SymbolInfoList_alloc();
 
 static struct Hash_List_Ops {
     void (*insert)(list_t * list,unit_t * cur,unit_t * new); //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
     void (*remove)(list_t * list,unit_t * cur);              //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
     void (*init)(list_t * list);                             //初始化
-    unit_t * (* find)(unit_t * cur);
+    unit_t * (* find)(list_t * list,char * name);
     list_t * (*alloc)();
 }listop = {
         .insert = SymbolInfoList_insert,
@@ -38,10 +53,11 @@ static struct Hash_List_Ops {
 //hash table list 接口
 
 
-static void SymbolTable_init(int size);
 static unit_t * SymbolTable_node_alloc();
+static void SymbolTable_init(int size);
 static void SymbolTable_insert(unit_t * cur);
 static void SymbolTable_remove(unit_t * cur);
+static unit_t * SymbolTable_find(char *);
 
 //SymbolTable API
 
@@ -59,6 +75,7 @@ MODULE_DEF(SymbolTable_t,symbol_table) = {
         .init = SymbolTable_init,
         .insert = SymbolTable_insert,
         .remove = SymbolTable_remove,
+        .find = SymbolTable_find,
 };
 
 
@@ -130,6 +147,16 @@ static void SymbolTable_remove(unit_t * cur) {
     symbol_table->cnt--;
 }//说明见最后，这里不free
 //Symbol Table
+
+static unit_t * SymbolTable_find(char * name) {
+    int id = symbol_table->hash(name);
+    list_t * list = symbol_table->table[id];
+    if(list == NULL) {
+        return NULL;
+    } else {
+        return listop.find(list,name);
+    }
+}
 
 
 /*
@@ -207,7 +234,6 @@ static stack_ele_t * SymbolStack_top() {
     } else {
         Log("The Symbol Stack is empty!");
         assert(0);
-        return NULL;
     }
 }
 //Symbol Stack
@@ -215,13 +241,22 @@ static stack_ele_t * SymbolStack_top() {
 
 //Symbol List
 static void SymbolInfoList_insert(list_t * list,unit_t * cur,unit_t * new) {
-    unit_t * next = cur->hash_next, * prev = cur->hash_prev;
-    prev->hash_next = next;
-    next->hash_prev = prev;
+    unit_t * next = cur->hash_next;
+    cur->hash_next = new;
+    new->hash_next = next;
+    next->hash_prev = new;
+    new->hash_prev = cur;
+    list->list_cnt++;
 }
 
 static void SymbolInfoList_init(list_t * list) {
+    list->list_cnt = 0;
+    list->head.hash_next = &list->tail;
+    list->tail.hash_prev = &list->head;
 
+    list->head.hash_prev = list->tail.hash_next = NULL;
+
+    list->head.type = list->tail.type = HASHLIST;
 }
 
 static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
@@ -229,9 +264,10 @@ static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
     assert(prev != NULL && next != NULL);
     prev->hash_next = next;
     next->hash_prev = prev;
+    list->list_cnt++;
 }
 
-static unit_t * SymbolInfoList_find(unit_t * cur) {
+static unit_t * SymbolInfoList_find(list_t * list,char * name) {
 
 }
 
@@ -240,6 +276,20 @@ static list_t * SymbolInfoList_alloc() {
 }
 //Symbol List
 
+
+//Symbol Info node ops
+static void node_init() {
+
+}
+
+static void node_delete(void * cur,int mode) {
+
+}
+
+static bool node_equal(unit_t* n1,unit_t* n2) {
+
+}
+//Symbol Info node
 
 /*
 每次向散列表中插入元素时，总是将新插入的元素放到该槽下挂的链表以及该层

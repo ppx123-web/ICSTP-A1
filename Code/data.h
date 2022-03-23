@@ -1,7 +1,7 @@
 #ifndef STRUCT_H
 #define STRUCT_H
 
-
+#include <stdbool.h>
 //语法树结构
 
 typedef struct Tree_node_t {
@@ -88,10 +88,12 @@ typedef struct Symbol_Node_t {
     struct Symbol_Node_t * scope_prev, * scope_next;
 }Symbol_Node_t;
 
+extern struct Info_Node_Ops * nodeop;
+
 
 struct SymbolInfoList_t {
     Symbol_Node_t head,tail;
-
+    int list_cnt;
     //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
     //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
 };
@@ -106,9 +108,10 @@ typedef struct SymbolTable_t {
     //Api
     Symbol_Node_t * (* node_alloc)();
 
-    void (*init)(int);           //初始化哈希表
+    void (*init)(int);                      //初始化哈希表
     void (*insert)(Symbol_Node_t *);        //插入节点
     void (*remove)(Symbol_Node_t *);        //删除节点
+    Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
 
 }SymbolTable_t;
 
