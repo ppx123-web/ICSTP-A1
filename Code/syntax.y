@@ -1,5 +1,3 @@
-%locations
-
 %{
     int yycolumn = 1;
     char linetext[128];

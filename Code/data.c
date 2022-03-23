@@ -1,7 +1,3 @@
-#include <malloc.h>
-#include <assert.h>
-#include <string.h>
-#include <stdarg.h>
 #include <stdlib.h>
 #include "data.h"
 #include "debug.h"
@@ -95,16 +91,17 @@ void MultiwayTree_insert_all(Node_t* cur,int argc,Node_t* childs[]) {
     }
 }//注意，argc为childs数组参数的数量，同时注意可变参数的数量
 
-extern MultiwayTree_t * tree;
+
 MultiwayTree_t Multiwaytree = {
-    .init = MultiwayTree_init,
-    .lminsert = MultiwayTree_leftmostinsert,
-    .rminsert = MultiwayTree_rightmostinsert,
-    .Node_alloc = MultiwayTree_Node_alloc,
-    .remove = MultiwayTree_remove,
-    .traverse = MultiwayTree_Traverse,
-    .insert_all = MultiwayTree_insert_all,
+        .init = MultiwayTree_init,
+        .lminsert = MultiwayTree_leftmostinsert,
+        .rminsert = MultiwayTree_rightmostinsert,
+        .Node_alloc = MultiwayTree_Node_alloc,
+        .remove = MultiwayTree_remove,
+        .traverse = MultiwayTree_Traverse,
+        .insert_all = MultiwayTree_insert_all,
 };
+
 MultiwayTree_t * tree = &Multiwaytree;
 
 Node_t * Operator(Node_t * cur,char * content,int line,int argc,...) {

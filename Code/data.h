@@ -2,6 +2,11 @@
 #define STRUCT_H
 
 #include <stdbool.h>
+#include <malloc.h>
+#include <assert.h>
+#include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 //语法树结构
 
 typedef struct Tree_node_t {
@@ -75,13 +80,14 @@ typedef struct SymbolInfoList_t SymbolInfoList_t;
 //哈希表用到的结构
 typedef struct Symbol_Node_t {
     char *  name;
-    FieldList field;
     int deep;
     enum {
         HASHLIST,STACKLIST,STACKNODE,INFONODE,
     }type;
+    FieldList field;
     //类型待处理，列出的为保留属性，不允许使用，用作head，tail，last,first等属性
-    SymbolInfoList_t * list; //在hash table中每个slot中的每个节点所以在list
+
+    //SymbolInfoList_t * list; //在hash table中每个slot中的每个节点所在list
 
     //维护数据结构需要的信息
     struct Symbol_Node_t * hash_prev, * hash_next;
@@ -141,6 +147,7 @@ typedef struct SymbolStack_t {
     void (*init)();                             //初始化栈
     void (*push)(SymbolStack_ele_t * );         //在push前应调用stack的node_alloc来分配栈中的节点
     void (*pop)();                              //在pop时free掉所有这一层作用域申请的节点
+    bool (*empty)();
     SymbolStack_ele_t * (*top)();
 }SymbolStack_t;
 

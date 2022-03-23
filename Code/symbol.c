@@ -1,10 +1,8 @@
-#include <malloc.h>
-#include <stdio.h>
-#include <assert.h>
 #include "data.h"
 #include "debug.h"
 
-#define NONE_INFO_NAME_LENGTH 32
+#define NAME_LENGTH 32
+
 
 typedef Symbol_Node_t unit_t;
 typedef SymbolInfoList_t list_t;
@@ -12,18 +10,18 @@ typedef struct SymbolStack_ele_t stack_ele_t;
 
 //都应该使用static
 
-static void node_init();
+static void node_init(unit_t * cur,int argc,...);
 static void node_delete(void * cur,int mode);
-static bool node_equal(unit_t*,unit_t*);
+static bool struct_node_equal(unit_t*,unit_t*);
 
 static struct Info_Node_Ops {
-    void (*init)();
+    void (*init)(unit_t * cur,int,...); //argc,char * name,deep,Type
     void (*delete)(void *,int);
     bool (*equal)(unit_t*,unit_t*);
 }InfoNodeOp = {
         .init = node_init,
         .delete = node_delete,
-        .equal = node_equal,
+        .equal = struct_node_equal,
 };
 
 struct Info_Node_Ops * nodeop = &InfoNodeOp;
@@ -32,6 +30,7 @@ struct Info_Node_Ops * nodeop = &InfoNodeOp;
 static void SymbolInfoList_insert(list_t * list,unit_t * cur,unit_t * new);
 static void SymbolInfoList_remove(list_t * list,unit_t * cur);
 static void SymbolInfoList_init(list_t * list);
+static void SymbolInfoList_delete(list_t * list);
 static unit_t * SymbolInfoList_find(list_t * list,char * name);
 static list_t * SymbolInfoList_alloc();
 
@@ -39,6 +38,7 @@ static struct Hash_List_Ops {
     void (*insert)(list_t * list,unit_t * cur,unit_t * new); //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
     void (*remove)(list_t * list,unit_t * cur);              //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
     void (*init)(list_t * list);                             //初始化
+    void (*delete)(list_t * list);
     unit_t * (* find)(list_t * list,char * name);
     list_t * (*alloc)();
 }listop = {
@@ -48,6 +48,7 @@ static struct Hash_List_Ops {
 
         .find = SymbolInfoList_find,
         .alloc = SymbolInfoList_alloc,
+        .delete = SymbolInfoList_delete,
 };
 
 //hash table list 接口
@@ -66,6 +67,7 @@ static void SymbolStack_init();                     //初始化栈
 static void SymbolStack_push(stack_ele_t * );     //在push前应调用stack的node_alloc来分配栈中的节点
 static void SymbolStack_pop();                      //在pop时free掉所有这一层作用域申请的节点
 static stack_ele_t * SymbolStack_top();
+static bool SymbolStack_empty();
 
 
 
@@ -86,6 +88,7 @@ MODULE_DEF(SymbolStack_t,symbol_stack) = {
         .push = SymbolStack_push,
         .pop = SymbolStack_pop,
         .top = SymbolStack_top,
+        .empty = SymbolStack_empty,
 };
 
 
@@ -174,17 +177,13 @@ static stack_ele_t * SymbolStack_node_alloc() {
     unit_t * head = &node->head;
     unit_t * tail = &node->tail;
 
+    nodeop->init(head,2,"Stack node head",STACKNODE,symbol_stack->stack_size + 1);
+    nodeop->init(tail,2,"Stack node tail",STACKNODE,symbol_stack->stack_size + 1);
 
     head->hash_prev = head->hash_next = tail->hash_prev = tail->hash_next = NULL;
     head->scope_prev = NULL,tail->scope_next = NULL;
 
-    head->type = tail->type = STACKNODE;
 
-    head->name = malloc(NONE_INFO_NAME_LENGTH),tail->name = malloc(NONE_INFO_NAME_LENGTH);
-    sprintf(head->name,"Stack node deep %d",symbol_stack->stack_size + 1);
-    sprintf(tail->name,"Stack node deep %d",symbol_stack->stack_size + 1);
-
-    head->deep = tail->deep = symbol_stack->stack_size + 1;
 
     head->scope_next = tail;
     tail->scope_prev = head;
@@ -196,11 +195,8 @@ static void SymbolStack_init() {
     symbol_stack->stack_size = 0;
     stack_ele_t * first = &symbol_stack->first;
     stack_ele_t * last = &symbol_stack->last;
+
     first->prev = last->next = NULL;
-
-    first->head.type = last->head.type = STACKLIST;
-    first->head.name = "Stack List top",last->head.name = "Stack List down";
-
     first->next = last;
     last->prev = first;
 }//初始化栈中的两个节点
@@ -219,13 +215,13 @@ static void SymbolStack_pop() {
     unit_t * cur = top->head.scope_next, * temp;
     while (cur != &top->tail) {
         temp = cur->scope_next;
-        node_delete(cur,INFONODE);
+        nodeop->delete(cur,INFONODE);
         cur = temp;
     }
     stack_ele_t * head = &symbol_stack->first, * next = top->next;
     head->next = next;
     next->prev = head;
-    node_delete(top,STACKNODE);
+    nodeop->delete(top,STACKNODE);
 }
 
 static stack_ele_t * SymbolStack_top() {
@@ -235,6 +231,11 @@ static stack_ele_t * SymbolStack_top() {
         Log("The Symbol Stack is empty!");
         assert(0);
     }
+}
+
+static bool SymbolStack_empty() {
+    if(symbol_stack->stack_size == 0) return true;
+    else return false;
 }
 //Symbol Stack
 
@@ -264,30 +265,90 @@ static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
     assert(prev != NULL && next != NULL);
     prev->hash_next = next;
     next->hash_prev = prev;
-    list->list_cnt++;
+    list->list_cnt--;
+    if(list->list_cnt == 0) {
+        listop.delete(list);
+    }
+}
+
+static void SymbolInfoList_delete(list_t * list) {
+    free(list);
 }
 
 static unit_t * SymbolInfoList_find(list_t * list,char * name) {
-
+    unit_t * cur = list->head.hash_next;
+    while (cur != &list->tail) {
+        if(strcmp(name,cur->name) == 0) {
+            return cur;
+        }
+        cur = cur->hash_next;
+    }
+    return NULL;
 }
 
 static list_t * SymbolInfoList_alloc() {
-
+    list_t * list = (list_t *)malloc(sizeof(list_t));
+    listop.init(list);
+    return list;
 }
 //Symbol List
 
 
 //Symbol Info node ops
-static void node_init() {
+//argc,char * name,deep,Type
+static void node_init(unit_t * cur,int argc,...) {
+    //argc,char * name,deep,Type
+    va_list ap;
+    va_start(ap,argc);
+    if(argc >= 1) {
+        char * name = va_arg(ap,char *);
+        cur->name = malloc(NAME_LENGTH);
+        assert(NAME_LENGTH > strlen(name));
+        strcpy(cur->name,name);
+    }
+    if(argc >= 2) {
+        int deep = va_arg(ap,int);
+        cur->type = deep;
+    }
+    if(argc >= 3) {
+        int type = va_arg(ap,int);
+        cur->type = type;
+    }
+    va_end(ap);
+    //初始化目前仅涉及了
+    cur->hash_next = cur->hash_prev = cur->scope_next = cur->scope_prev = NULL;
 
 }
 
 static void node_delete(void * cur,int mode) {
-
+    unit_t * info_node = (unit_t*) cur;
+    SymbolStack_ele_t * stack_node = (SymbolStack_ele_t *) cur;
+    switch (mode) {
+        case INFONODE:
+            free(info_node->name);
+            free(info_node);
+            //存实际信息的节点
+            break;
+        case HASHLIST:
+            panic("Delete hash list node not allowed!");
+            //不允许通过该API删除
+            //hash table中每个链表的头尾节点
+            break;
+        case STACKNODE:
+            free(stack_node);
+            break;
+        case STACKLIST:
+            panic("Delete stack list node not allowed!");
+            //不允许通过该API删除
+            //stack中的
+            break;
+        default:
+            panic("Wrong mode");
+    }
 }
 
-static bool node_equal(unit_t* n1,unit_t* n2) {
-
+static bool struct_node_equal(unit_t* n1,unit_t* n2) {
+    panic("Not implemented");
 }
 //Symbol Info node
 
