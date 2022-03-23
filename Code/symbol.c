@@ -59,6 +59,7 @@ static void SymbolTable_init(int size);
 static void SymbolTable_insert(unit_t * cur);
 static void SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
+static void SymbolTable_rehash();
 
 //SymbolTable API
 
@@ -78,6 +79,7 @@ MODULE_DEF(SymbolTable_t,symbol_table) = {
         .insert = SymbolTable_insert,
         .remove = SymbolTable_remove,
         .find = SymbolTable_find,
+        .rehash = SymbolTable_rehash,
 };
 
 
@@ -161,6 +163,9 @@ static unit_t * SymbolTable_find(char * name) {
     }
 }
 
+static void SymbolTable_rehash() {
+    panic("Not implemented");
+}
 
 /*
  * 在stack中，unit_t *的指针作用

@@ -56,21 +56,22 @@ struct Type_ {
         BASIC, ARRAY, STRUCTURE
     } kind;
     union {
-        int basic;
+        int basic;              //基本类型
         struct {
             Type * elem;
             int size;
-        } array;
+        } array;                //数组类型信息以及数组大小构成
         FieldList * structure;
     } u;
 };
 
 struct FieldList_ {
-    char * name;
-    Type * type;
-    FieldList * tail;
+    char * name;                //域的名字
+    Type * type;                //域的类型
+    FieldList * tail;           //下一个域
 };
 
+//结构体类型以链表的类型存储
 
 
 
@@ -118,7 +119,7 @@ typedef struct SymbolTable_t {
     void (*insert)(Symbol_Node_t *);        //插入节点
     void (*remove)(Symbol_Node_t *);        //删除节点
     Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
-
+    void (*rehash)();
 }SymbolTable_t;
 
 extern SymbolTable_t * symbol_table;
