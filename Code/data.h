@@ -7,6 +7,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+
+#define NAME_LENGTH 32
+
 //语法树结构
 
 typedef struct Tree_node_t {
@@ -44,7 +49,7 @@ extern MultiwayTree_t * tree;
 要求：
  填表：填表前查表
 
-采用hashmap，作用解决方案：十字链表
+采用hashmap，解决方案：十字链表
 
  */
 
@@ -53,7 +58,7 @@ typedef struct FieldList_ FieldList;
 
 struct Type_ {
     enum {
-        BASIC, ARRAY, STRUCTURE
+        BASIC, ARRAY, STRUCTURE, FUNC, FUNC_DECL,
     } kind;
     union {
         int basic;              //基本类型
@@ -66,7 +71,7 @@ struct Type_ {
 };
 
 struct FieldList_ {
-    char * name;                //域的名字
+    char name[NAME_LENGTH];                //域的名字
     Type * type;                //域的类型
     FieldList * tail;           //下一个域
 };
@@ -85,16 +90,14 @@ typedef struct Symbol_Node_t {
     enum {
         HASHLIST,STACKLIST,STACKNODE,INFONODE,
     }type;
-    FieldList field;
-    //类型待处理，列出的为保留属性，不允许使用，用作head，tail，last,first等属性
-
-    //SymbolInfoList_t * list; //在hash table中每个slot中的每个节点所在list
+    FieldList * field;
 
     //维护数据结构需要的信息
     struct Symbol_Node_t * hash_prev, * hash_next;
     struct Symbol_Node_t * scope_prev, * scope_next;
 }Symbol_Node_t;
 
+typedef Symbol_Node_t unit_t;
 extern struct Info_Node_Ops * nodeop;
 
 
@@ -114,6 +117,7 @@ typedef struct SymbolTable_t {
     HashFun hash;
     //Api
     Symbol_Node_t * (* node_alloc)();
+    void (* node_init)(unit_t *,char *);
 
     void (*init)(int);                      //初始化哈希表
     void (*insert)(Symbol_Node_t *);        //插入节点

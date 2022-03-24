@@ -1,10 +1,7 @@
 #include "data.h"
 #include "debug.h"
 
-#define NAME_LENGTH 32
 
-
-typedef Symbol_Node_t unit_t;
 typedef SymbolInfoList_t list_t;
 typedef struct SymbolStack_ele_t stack_ele_t;
 
@@ -60,8 +57,20 @@ static void SymbolTable_insert(unit_t * cur);
 static void SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
 static void SymbolTable_rehash();
+static void SymbolTable_node_init(unit_t * cur,char * name);
 
 //SymbolTable API
+MODULE_DEF(SymbolTable_t,symbol_table) = {
+        .node_alloc = SymbolTable_node_alloc,
+        .node_init = SymbolTable_node_init,
+
+        .init = SymbolTable_init,
+        .insert = SymbolTable_insert,
+        .remove = SymbolTable_remove,
+        .find = SymbolTable_find,
+
+        .rehash = SymbolTable_rehash,
+};
 
 static stack_ele_t * SymbolStack_node_alloc();   //分配栈中的节点，由于也是链表，需要分配两个head和tail
 static void SymbolStack_init();                     //初始化栈
@@ -69,19 +78,6 @@ static void SymbolStack_push(stack_ele_t * );     //在push前应调用stack的n
 static void SymbolStack_pop();                      //在pop时free掉所有这一层作用域申请的节点
 static stack_ele_t * SymbolStack_top();
 static bool SymbolStack_empty();
-
-
-
-MODULE_DEF(SymbolTable_t,symbol_table) = {
-        .node_alloc = SymbolTable_node_alloc,
-
-        .init = SymbolTable_init,
-        .insert = SymbolTable_insert,
-        .remove = SymbolTable_remove,
-        .find = SymbolTable_find,
-        .rehash = SymbolTable_rehash,
-};
-
 
 MODULE_DEF(SymbolStack_t,symbol_stack) = {
         .node_alloc = SymbolStack_node_alloc,
@@ -117,9 +113,15 @@ static void SymbolTable_init(int size) {
 }
 
 static unit_t * SymbolTable_node_alloc() {
-    unit_t * ans = (Symbol_Node_t *) malloc(sizeof(unit_t));
+    unit_t * ans = (unit_t *) malloc(sizeof(unit_t));
     return ans;
 }
+
+static void SymbolTable_node_init(unit_t * cur,char * name) {
+    nodeop->init(cur,2,name,symbol_stack->stack_size);
+}
+
+
 
 static void SymbolTable_insert(unit_t * cur) {
     int id = symbol_table->hash(cur->name);
@@ -207,7 +209,7 @@ static void SymbolStack_init() {
 }//初始化栈中的两个节点
 
 static void SymbolStack_push(stack_ele_t * item) {
-    stack_ele_t * first = &symbol_stack->first, * next = symbol_stack->top();
+    stack_ele_t * first = &symbol_stack->first, * next = first->next;
     first->next = item;
     item->next = next;
     next->prev = item;
@@ -316,8 +318,7 @@ static void node_init(unit_t * cur,int argc,...) {
         cur->type = deep;
     }
     if(argc >= 3) {
-        int type = va_arg(ap,int);
-        cur->type = type;
+        panic("Not implemented");
     }
     va_end(ap);
     //初始化目前仅涉及了

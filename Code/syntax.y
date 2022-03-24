@@ -110,6 +110,7 @@ ExtDefList : ExtDef ExtDefList      { $$ = Operator($$,"ExtDefList",@$.first_lin
 ExtDef : Specifier ExtDecList SEMI  { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
     | Specifier SEMI                { $$ = Operator($$,"ExtDef",@$.first_line,2,$1,$2); }
     | Specifier FunDec CompSt       { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
+    | Specifier FunDec SEMI	    { $$ = Operator($$,"ExtDef",@$.first_line,3,$1,$2,$3); }
     | error SEMI                    { $$ = NULL;yyerror("ExtDef"); }
     | Specifier error               { $$ = NULL;yyerror("ExtDef,missing ;"); }
     | Specifier error SEMI          { $$ = NULL;yyerror("ExtDef"); }
