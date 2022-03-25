@@ -222,6 +222,7 @@ static void SymbolStack_pop() {
     unit_t * cur = top->head.scope_next, * temp;
     while (cur != &top->tail) {
         temp = cur->scope_next;
+        assert(temp->deep == top->head.deep);
         nodeop->delete(cur,INFONODE);
         cur = temp;
     }
@@ -315,7 +316,7 @@ static void node_init(unit_t * cur,int argc,...) {
     }
     if(argc >= 2) {
         int deep = va_arg(ap,int);
-        cur->type = deep;
+        cur->deep = deep;
     }
     if(argc >= 3) {
         panic("Not implemented");
@@ -391,3 +392,113 @@ static bool struct_node_equal(unit_t* n1,unit_t* n2) {
         然后free当前节点，然后删除下一个节点，知道end，最后只剩下push时申请的head和end，在stack的链表中删除并free
 
 */
+
+
+
+//需要的接口
+/*
+ * 一个类型表
+ * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
+ * 类型表的查询
+ * 类型表的插入
+ */
+
+static Type * Type_Ops_copy(Type *);
+static void Type_Ops_delete(Type *);
+static Type * Type_Ops_creat_int(Node_t *);
+static Type * Type_Ops_creat_float(Node_t *);
+static Type * Type_Ops_creat_array(Node_t *);
+static Type * Type_Ops_creat_structure(Node_t *);
+
+
+MODULE_DEF(Type_Ops_t,type_ops) = {
+        .copy = Type_Ops_copy,
+        .delete = Type_Ops_delete,
+        .creat_int = Type_Ops_creat_int,
+        .creat_float = Type_Ops_creat_float,
+        .creat_array = Type_Ops_creat_array,
+        .creat_structure = Type_Ops_creat_structure,
+};
+
+static void TypeTable_init();
+static void TypeTable_insert(Node_t *);
+static void TypeTable_remove(char *);
+static FieldList * TypeTable_find(char *);
+static FieldList * TypeTable_copy(char *);
+
+
+MODULE_DEF(TypeTable_t,type_table) = {
+        .init = TypeTable_init,
+        .insert = TypeTable_insert,
+        .remove = TypeTable_remove,
+        .find = TypeTable_find,
+        .copy = TypeTable_copy,
+};
+
+static void TypeTable_init() {
+    type_table->head.next = &type_table->tail;
+    type_table->tail.prev = &type_table->head;
+}
+
+/*
+DefList : Def DefList
+    |
+    :
+Def : Specifier DecList SEMI
+    ;
+DecList : Dec
+    | Dec COMMA DecList
+    ;
+Dec : VarDec
+    | VarDec ASSIGNOP Exp
+    ;
+ */
+static FieldList * TypeTable_Def(Node_t * cur);
+static FieldList * TypeTable_DecList(Node_t * cur,int type);
+static FieldList * TypeTable_Dec(Node_t * cur,int type);
+
+FieldList * TypeTable_DefList(Node_t * cur) {
+    if(cur == NULL) return NULL;
+    FieldList * ret = TypeTable_DefList(cur->lchild);
+    ret->tail = TypeTable_DefList(cur->rchild);
+    return ret;
+}
+
+static FieldList * TypeTable_Def(Node_t * cur) {
+
+}
+
+static FieldList * TypeTable_DecList(Node_t * cur,int type) {
+
+}
+
+static FieldList * TypeTable_Dec(Node_t * cur,int type) {
+
+}
+
+//StructSpecifier : STRUCT OptTag LC DefList RC
+static void TypeTable_insert(Node_t * cur) {
+    assert(cur->lchild->right->right != NULL);
+    TypeTableNode_t * node = new(TypeTableNode_t);
+    strcpy(node->field->name,cur->lchild->right->text);
+    node->field = TypeTable_DefList(cur->rchild->left);
+
+    TypeTableNode_t * next = type_table->head.next;
+    type_table->head.next = node;
+    node->next = next;
+    next->prev = node;
+    node->prev = &type_table->head;
+}
+
+static void TypeTable_remove(char * cur) {
+
+}
+
+static FieldList * TypeTable_find(char * name) {
+
+}
+
+static FieldList * TypeTable_copy(char * name) {
+
+}
+

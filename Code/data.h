@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+#define new(A) (A*)(malloc(sizeof(A)))
 #define NAME_LENGTH 32
 
 //语法树结构
@@ -53,7 +53,7 @@ extern MultiwayTree_t * tree;
 
  */
 
-typedef struct Typr_ Type;
+typedef struct Type_ Type;
 typedef struct FieldList_ FieldList;
 
 struct Type_ {
@@ -193,7 +193,7 @@ extern SymbolStack_t * symbol_stack;
 
 */
 
-
+#define type(A,B) (strcmp((A)->content,B) == 0)
 
 
 
@@ -204,8 +204,40 @@ extern SymbolStack_t * symbol_stack;
         type name ## _mod_t
 
 
+//需要的接口
+/*
+ * 一个类型表
+ * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
+ * 类型表的查询
+ * 类型表的插入
+ */
 
+typedef struct TypeTableNode_t {
+    FieldList * field;
+    struct TypeTableNode_t * prev, * next;
+}TypeTableNode_t;
 
+typedef struct TypeTable_t {
+    TypeTableNode_t head,tail;
+    void (*init) ();
+    void (*insert) (Node_t *);
+    void (*remove) (char *);
+    FieldList * (*find)(char *);
+    FieldList * (*copy)(char *);
+}TypeTable_t;
 
+extern TypeTable_t * type_table;
+
+typedef struct Type_Ops_t {
+    Type * (*copy)(Type *);
+    void (*delete)(Type *);
+    Type * (*creat_int)(Node_t *);
+    Type * (*creat_float)(Node_t *);
+    Type * (*creat_array)(Node_t *);
+    Type * (*creat_structure)(Node_t *);
+
+}Type_Ops_t;
+
+extern Type_Ops_t * type_ops;
 
 #endif

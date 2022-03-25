@@ -8,32 +8,18 @@
 
 #define SemanticFunc(A,...) Semantic_Check_ ## A( __VA_ARGS__)
 #define Assign(A) .A =  Semantic_Check_ ## A,
-#define type(A,B) (strcmp(A->content,B) == 0)
 
 
-static Type * Type_Copy(Type * t);
-static void Type_delete(Type * t);
+//extern
+FieldList * TypeTable_DefList(Node_t * cur);
 
-
-static struct Type_Ops_t {
-    Type * (*copy)(Type *);
-    void (*delete)(Type *);
-    Type * (*creat_array)(Node_t *);
-    Type * (*creat_structure)(Node_t *);
-}typeops = {
-
-};
-
-
-
-
+//extern
 
 
 
 void SemanticFunc(init);
 void SemanticFunc(main,Node_t * root);
 static void SemanticFunc(ExtDef,Node_t * root);
-static void SemanticFunc(Def,Node_t * root);
 static void SemanticFunc(Exp,Node_t * root);
 static void SemanticFunc(CompSt,Node_t * root);
 static void SemanticFunc(Struct,Node_t * root);
@@ -44,29 +30,31 @@ static struct Semantic_Check_t {
     void (*init)();
     void (*main)(Node_t * );
     void (*ExtDef)(Node_t * );
-    void (*Def)(Node_t * );
     void (*Exp)(Node_t * );
     void (*CompSt)(Node_t * );
     void (*Struct)(Node_t * );
     unit_t *  (*VarDec)(Node_t * ,int,char *);
     void (*ExtDecList)(Node_t *,int,char *);
+    FieldList * (*DefList)(Node_t *);
 }Semantic_Check = {
         Assign(init)
         Assign(main)
         Assign(ExtDef)
-        Assign(Def)
         Assign(Exp)
         Assign(CompSt)
         Assign(Struct)
         Assign(VarDec)
         Assign(ExtDecList)
+
+        .DefList = TypeTable_DefList,
 };
 
 void SemanticFunc(main,Node_t * root) {
     if(type(root,"ExtDef")) {
         Semantic_Check.ExtDef(root);
-    } else if(type(root,"Def")) {
-        Semantic_Check.Def(root);
+    } else if(type(root,"DefList")) {
+        FieldList * field = Semantic_Check.DefList(root);
+        //TODO 解析field,与类型表共用同一个函数
     } else if(type(root,"Exp")) {
         Semantic_Check.Exp(root);
     } else if(type(root,"CompSt")) {
@@ -131,12 +119,45 @@ static unit_t * SemanticFunc(VarDec,Node_t * root,int type,char * specifier) {
 
     int cnt = 0,nums[10] = {0};
     char * s;
-    for(Node_t * cur = root->lchild;cur->lchild != NULL;cur = cur->lchild) {
+    for(Node_t * cur = root->lchild;cur != NULL;cur = cur->lchild) {
         nums[cnt] = (int)strtol(cur->rchild->left->text,&s,0);
         cnt++;
     }
-    //to do
+    var_field->type = new(Type);
+    Type * var_type = var_field->type;
+    int i = 0;
+    do {
+        if(i + 1 == cnt) {
+            var_type->kind = type;
+            if(type == BASIC) {
+                if(strcmp(specifier,"INT") == 0) {
+                    var_type->u.basic = 0;
+                } else {
+                    var_type->u.basic = 1;
+                }
+            } else {
+
+            }
+        } else {
+            var_type->kind = ARRAY;
+            var_type->u.array.size = nums[i];
+            var_type->u.array.elem = new(Type);
+            var_type = var_type->u.array.elem;
+
+        }
+        i++;
+    } while (i < cnt);
+    //TODO
 }
+
+//需要的接口
+/*
+ * 一个类型表
+ * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
+ * 类型表的查询
+ * 类型表的插入
+ */
+
 
 static void SemanticFunc(ExtDecList,Node_t * root,int type,char * specifier) {
     if(type == BASIC || type == STRUCTURE) {
