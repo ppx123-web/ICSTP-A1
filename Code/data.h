@@ -58,10 +58,10 @@ typedef struct FieldList_ FieldList;
 
 struct Type_ {
     enum {
-        BASIC, ARRAY, STRUCTURE, FUNC, FUNC_DECL,
+        BASIC, ARRAY, STRUCTURE, FUNC_IMPL, FUNC_DECL,
     } kind;
     union {
-        int basic;              //基本类型
+        int basic;              //基本类型 0 int, 1 float
         struct {
             Type * elem;
             int size;
@@ -71,7 +71,7 @@ struct Type_ {
 };
 
 struct FieldList_ {
-    char name[NAME_LENGTH];                //域的名字
+    char name[NAME_LENGTH];     //域的名字，指每个成员的名字，不是类型名
     Type * type;                //域的类型
     FieldList * tail;           //下一个域
 };
@@ -124,8 +124,8 @@ typedef struct SymbolTable_t {
     void (*remove)(Symbol_Node_t *);        //删除节点
     Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
     void (*rehash)();
+    void (*display_node)(unit_t *);
 }SymbolTable_t;
-
 extern SymbolTable_t * symbol_table;
 
 
@@ -155,7 +155,6 @@ typedef struct SymbolStack_t {
     bool (*empty)();
     SymbolStack_ele_t * (*top)();
 }SymbolStack_t;
-
 extern SymbolStack_t * symbol_stack;
 
 
@@ -220,24 +219,51 @@ typedef struct TypeTableNode_t {
 typedef struct TypeTable_t {
     TypeTableNode_t head,tail;
     void (*init) ();
-    void (*insert) (Node_t *);
+    void (*insert) (FieldList *);
     void (*remove) (char *);
     FieldList * (*find)(char *);
-    FieldList * (*copy)(char *);
-}TypeTable_t;
 
+}TypeTable_t;
 extern TypeTable_t * type_table;
 
 typedef struct Type_Ops_t {
-    Type * (*copy)(Type *);
-    void (*delete)(Type *);
+    Type * (*type_copy)(const Type *);
+    FieldList * (*field_copy)(const FieldList *);
+    void (*type_delete)(Type *);
+    void (*field_delete)(FieldList *);
+
     Type * (*creat_int)(Node_t *);
     Type * (*creat_float)(Node_t *);
     Type * (*creat_array)(Node_t *);
     Type * (*creat_structure)(Node_t *);
 
+    void (*print_field)(FieldList *,int);
+    void (*print_type)(Type *,int);
 }Type_Ops_t;
-
 extern Type_Ops_t * type_ops;
+
+
+typedef struct Semantic_Check_t {
+    void (*init)();
+    void (*main)(Node_t * );
+    FieldList * (*gettype)(Node_t *);
+
+    void (*CompSt)(Node_t * );
+
+    void (*Exp)(Node_t * );
+
+    void (*ExtDefList)(Node_t * );
+    void (*ExtDef)(Node_t * );
+    FieldList * (*ExtDecList)(Node_t *,const FieldList * );
+    FieldList * (*ExtDec)(Node_t *,const FieldList * );
+
+    FieldList * (*DefList)(Node_t * cur);
+    FieldList * (*Def)(Node_t * cur);
+    FieldList * (*DecList)(Node_t * cur,const FieldList * type);
+    FieldList * (*Dec)(Node_t * cur,const FieldList *  type);
+    FieldList * (*VarDec)(Node_t * root,const FieldList *  type);
+    FieldList * (*Struct)(Node_t * );
+}Semantic_Check_t;
+extern Semantic_Check_t * semantic_check;
 
 #endif

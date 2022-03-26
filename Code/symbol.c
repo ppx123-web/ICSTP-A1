@@ -56,8 +56,9 @@ static void SymbolTable_init(int size);
 static void SymbolTable_insert(unit_t * cur);
 static void SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
-static void SymbolTable_rehash();
 static void SymbolTable_node_init(unit_t * cur,char * name);
+static void SymbolTable_rehash();
+static void SymbolTable_display_node(unit_t *);
 
 //SymbolTable API
 MODULE_DEF(SymbolTable_t,symbol_table) = {
@@ -70,6 +71,7 @@ MODULE_DEF(SymbolTable_t,symbol_table) = {
         .find = SymbolTable_find,
 
         .rehash = SymbolTable_rehash,
+        .display_node = SymbolTable_display_node,
 };
 
 static stack_ele_t * SymbolStack_node_alloc();   //分配栈中的节点，由于也是链表，需要分配两个head和tail
@@ -91,6 +93,11 @@ MODULE_DEF(SymbolStack_t,symbol_stack) = {
 
 
 //Symbol Table
+static void SymbolTable_display_node(unit_t * cur) {
+    printf("Name: %s, deep: %d\n",cur->name,cur->deep);
+    type_ops->print_field(cur->field,0);
+}
+
 static int SymbolTable_hashFun(char * name) {
     int val = 0,i;
     for(; *name; ++name) {
@@ -184,8 +191,8 @@ static stack_ele_t * SymbolStack_node_alloc() {
     unit_t * head = &node->head;
     unit_t * tail = &node->tail;
 
-    nodeop->init(head,2,"Stack node head",STACKNODE,symbol_stack->stack_size + 1);
-    nodeop->init(tail,2,"Stack node tail",STACKNODE,symbol_stack->stack_size + 1);
+    nodeop->init(head,3,"Stack node head",symbol_stack->stack_size + 1,STACKNODE);
+    nodeop->init(tail,3,"Stack node tail",symbol_stack->stack_size + 1,STACKNODE);
 
     head->hash_prev = head->hash_next = tail->hash_prev = tail->hash_next = NULL;
     head->scope_prev = NULL,tail->scope_next = NULL;
@@ -319,7 +326,7 @@ static void node_init(unit_t * cur,int argc,...) {
         cur->deep = deep;
     }
     if(argc >= 3) {
-        panic("Not implemented");
+        cur->type = va_arg(ap,int );
     }
     va_end(ap);
     //初始化目前仅涉及了
@@ -395,36 +402,119 @@ static bool struct_node_equal(unit_t* n1,unit_t* n2) {
 
 
 
-//需要的接口
 /*
  * 一个类型表
  * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
  * 类型表的查询
  * 类型表的插入
  */
+//需要的接口
 
-static Type * Type_Ops_copy(Type *);
-static void Type_Ops_delete(Type *);
+static void print_field(FieldList *,int);
+static void print_type(Type *,int);
+static Type * Type_Ops_Type_copy(const Type *);
+static FieldList * Type_Ops_Field_Copy(const FieldList *);
+static void Type_Ops_Type_delete(Type *);
+static void Type_Ops_Field_delete(FieldList *);
 static Type * Type_Ops_creat_int(Node_t *);
 static Type * Type_Ops_creat_float(Node_t *);
 static Type * Type_Ops_creat_array(Node_t *);
+
 static Type * Type_Ops_creat_structure(Node_t *);
 
-
 MODULE_DEF(Type_Ops_t,type_ops) = {
-        .copy = Type_Ops_copy,
-        .delete = Type_Ops_delete,
+        .print_field = print_field,
+        .print_type = print_type,
+
+        .type_copy = Type_Ops_Type_copy,
+        .field_copy = Type_Ops_Field_Copy,
+
+        .type_delete = Type_Ops_Type_delete,
+        .field_delete = Type_Ops_Field_delete,
+
         .creat_int = Type_Ops_creat_int,
         .creat_float = Type_Ops_creat_float,
         .creat_array = Type_Ops_creat_array,
         .creat_structure = Type_Ops_creat_structure,
+
 };
 
+static void print_field(FieldList * field,int deep) {
+    for (int i = 0;i < deep;i++) {
+        printf("  ");
+    }
+    printf("%s\n",field->name);
+    print_type(field->type,deep + 1);
+    if(field->tail) {
+        print_field(field->tail,deep);
+    }
+}
+
+static void print_type(Type * type,int deep) {
+    for (int i = 0;i < deep;i++) {
+        printf("  ");
+    }
+    printf("type : %d ",type->kind);
+    if(type->kind == BASIC) {
+        printf("BASIC : %d\n",type->u.basic);
+    } else if(type->kind == ARRAY) {
+        printf("Array : size=%d ->",type->u.array.size);
+        print_type(type->u.array.elem,deep + 1);
+    } else {
+        printf("\n");
+        print_field(type->u.structure,deep + 1);
+    }
+}
+
+static Type * Type_Ops_Type_copy(const Type * type) {
+    Type * ret = new(Type);
+    ret->kind = type->kind;
+    ret->u = type->u;
+    if(type->kind == STRUCTURE) {
+        ret->u.structure = type_ops->field_copy(type->u.structure);
+    }
+    return ret;
+}
+
+static FieldList * Type_Ops_Field_Copy(const FieldList * field) {
+    FieldList * ret = new(FieldList);
+    strcpy(ret->name,field->name);
+    ret->type = type_ops->type_copy(field->type);
+    if(field->tail) {
+        ret->tail = type_ops->field_copy(field->tail);
+    }
+    return ret;
+}
+
+static void Type_Ops_Type_delete(Type * type) {
+    panic("Not implemented");
+}
+
+static void Type_Ops_Field_delete(FieldList * field) {
+    panic("Not implemented");
+}
+
+static Type * Type_Ops_creat_int(Node_t * cur) {
+    panic("Not implemented");
+}
+
+static Type * Type_Ops_creat_float(Node_t *cur) {
+    panic("Not implemented");
+}
+
+static Type * Type_Ops_creat_array(Node_t *cur) {
+    panic("Not implemented");
+}
+
+static Type * Type_Ops_creat_structure(Node_t *cur) {
+    panic("Not implemented");
+}
+
+
 static void TypeTable_init();
-static void TypeTable_insert(Node_t *);
+static void TypeTable_insert(FieldList *);
 static void TypeTable_remove(char *);
 static FieldList * TypeTable_find(char *);
-static FieldList * TypeTable_copy(char *);
 
 
 MODULE_DEF(TypeTable_t,type_table) = {
@@ -432,7 +522,6 @@ MODULE_DEF(TypeTable_t,type_table) = {
         .insert = TypeTable_insert,
         .remove = TypeTable_remove,
         .find = TypeTable_find,
-        .copy = TypeTable_copy,
 };
 
 static void TypeTable_init() {
@@ -440,49 +529,17 @@ static void TypeTable_init() {
     type_table->tail.prev = &type_table->head;
 }
 
-/*
-DefList : Def DefList
-    |
-    :
-Def : Specifier DecList SEMI
-    ;
-DecList : Dec
-    | Dec COMMA DecList
-    ;
-Dec : VarDec
-    | VarDec ASSIGNOP Exp
-    ;
- */
-static FieldList * TypeTable_Def(Node_t * cur);
-static FieldList * TypeTable_DecList(Node_t * cur,int type);
-static FieldList * TypeTable_Dec(Node_t * cur,int type);
-
-FieldList * TypeTable_DefList(Node_t * cur) {
-    if(cur == NULL) return NULL;
-    FieldList * ret = TypeTable_DefList(cur->lchild);
-    ret->tail = TypeTable_DefList(cur->rchild);
-    return ret;
-}
-
-static FieldList * TypeTable_Def(Node_t * cur) {
-
-}
-
-static FieldList * TypeTable_DecList(Node_t * cur,int type) {
-
-}
-
-static FieldList * TypeTable_Dec(Node_t * cur,int type) {
-
-}
-
 //StructSpecifier : STRUCT OptTag LC DefList RC
-static void TypeTable_insert(Node_t * cur) {
-    assert(cur->lchild->right->right != NULL);
+static void TypeTable_insert(FieldList * cur) {
+    assert(cur->type->kind == STRUCTURE);
+    assert(cur->tail == NULL);
+    FieldList * find = type_table->find(cur->name);
+    if(find) {
+        Log("Struct redefinition:%s",cur->name);
+        return;
+    }
     TypeTableNode_t * node = new(TypeTableNode_t);
-    strcpy(node->field->name,cur->lchild->right->text);
-    node->field = TypeTable_DefList(cur->rchild->left);
-
+    node->field = cur;
     TypeTableNode_t * next = type_table->head.next;
     type_table->head.next = node;
     node->next = next;
@@ -491,14 +548,18 @@ static void TypeTable_insert(Node_t * cur) {
 }
 
 static void TypeTable_remove(char * cur) {
-
+    panic("Not implemented");
 }
 
 static FieldList * TypeTable_find(char * name) {
-
+    TypeTableNode_t * cur = type_table->head.next;
+    while (cur != &type_table->tail) {
+        if(strcmp(cur->field->name,name) == 0) {
+            return cur->field;
+        }
+        cur = cur->next;
+    }
+    return NULL;
 }
 
-static FieldList * TypeTable_copy(char * name) {
-
-}
 

@@ -7,9 +7,6 @@ int yyparse (void);
 int yylex(void);
 void yyerror(char* s);
 
-void Semantic_Check_init();
-void Semantic_Check_main(Node_t * root);
-
 int syntax = 0;
 extern int yycolumn,yylineno;
 
@@ -36,9 +33,11 @@ int main(int argc,char *argv[]) {
         yyparse();
         fclose(f);
         if (syntax == 0) {
+            semantic_check->init();
             tree->traverse(tree->root,0);
-            Semantic_Check_init();
-            Semantic_Check_main(tree->root);
+            semantic_check->main(tree->root);
+
+            test->main();
         }
 #ifndef FINAL
         if(syntax != 0)

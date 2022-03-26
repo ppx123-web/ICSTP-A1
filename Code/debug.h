@@ -50,4 +50,17 @@
 
 #define panic(A) panic_on(A,0)
 
+
+typedef struct Test_t {
+    void (*main)();
+    void (*Struct)();
+    void (*display_symbol_table)();
+    void (*display_symbol_stack)();
+}Test_t;
+
+extern Test_t * test;
+
+
+
+
 #endif
