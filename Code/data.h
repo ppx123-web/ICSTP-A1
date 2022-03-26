@@ -15,12 +15,9 @@
 //语法树结构
 
 typedef struct Tree_node_t {
-    char * content;
-    enum {
-        NONE,Sentinel,
-    }type;
+    char  content[NAME_LENGTH];
     int line;
-    char text[32];
+    char text[NAME_LENGTH];
     struct Tree_node_t * lchild,* rchild,* left,* right;
 }Node_t;
 

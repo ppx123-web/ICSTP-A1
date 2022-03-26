@@ -9,7 +9,7 @@ void yyerror(char* s);
 
 int syntax = 0;
 extern int yycolumn,yylineno;
-void end_free();
+static void end_free();
 
 
 int main(int argc,char *argv[]) {
@@ -40,15 +40,23 @@ int main(int argc,char *argv[]) {
             test->main();
         }
         end_free();
-#ifndef FINAL
-        if(syntax != 0)
-            tree->traverse(tree->root,0);
-#endif
     }
     return 0;
 }
 
-void end_free() {
+
+static void free_Traverse(Node_t * cur) {
+    if (cur == NULL) return;
+    Node_t * child = cur->lchild, * temp;
+    while (child != NULL) {
+        temp = child->right;
+        free_Traverse(child);
+        child = temp;
+    }
+    free(cur);
+}
+
+static void end_free() {
     for(int i = 0;i < symbol_table->table_size;i++) {
         if(symbol_table->table[i]) {
             free(symbol_table->table[i]->head.name);
@@ -56,4 +64,6 @@ void end_free() {
             free(symbol_table->table[i]);
         }
     }
+    free(symbol_table->table);
+    free_Traverse(tree->root);
 }

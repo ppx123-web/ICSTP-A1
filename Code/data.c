@@ -2,7 +2,7 @@
 #include "debug.h"
 
 static MultiwayTree_t * MultiwayTree_init(MultiwayTree_t * t) {
-    t->root = tree->Node_alloc("begin",0);
+//    t->root = tree->Node_alloc("begin",0);
     return t;
 }
 
@@ -14,6 +14,7 @@ static Node_t * MultiwayTree_leftmostinsert(Node_t * cur ,Node_t * node) {
         cur->lchild = node;
         node->right = lastleft;
         lastleft->left = node;
+        node->left = NULL;
     }
     return cur;
 }
@@ -28,6 +29,7 @@ static Node_t * MultiwayTree_rightmostinsert(Node_t * cur ,Node_t * node) {
         cur->rchild = node;
         node->left = lastright;
         lastright->right = node;
+        node->right = NULL;
     }
     return cur;
 }
@@ -39,17 +41,14 @@ static Node_t * MultiwayTree_remove(Node_t * cur ,Node_t * node) {
 
 static Node_t * MultiwayTree_Node_alloc(char * content,int line) {
     Node_t * new_node = (Node_t*)malloc(sizeof(Node_t));
+    //char * newstr = (char *)malloc(strlen(content)+5);
 
-    char * newstr = (char *)malloc(strlen(content)+5);
-    
-    new_node->text[0] = 0;
+    memset(new_node->text,0,NAME_LENGTH);
     // Log("%s %d",content,line);
-    strcpy(newstr,content);
-    new_node->content = newstr;
+    strcpy(new_node->content,content);
     new_node->line = line;
-    new_node->type = NONE;
-    new_node->rchild = new_node->lchild = new_node->right = new_node->left = NULL;
 
+    new_node->rchild = new_node->lchild = new_node->right = new_node->left = NULL;
 
     return new_node;
 }
