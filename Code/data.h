@@ -108,12 +108,17 @@ struct SymbolInfoList_t {
     //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
 };
 
+/*
+ * 插入接口说明，每次插入插入的实际是指针，即要求插入的node都必须使用malloc分配内存
+ * 不可以使用临时变量
+ */
+
 typedef int (*HashFun)(char * name);
 
 typedef struct SymbolTable_t {
     SymbolInfoList_t ** table;
-    int table_size; //表的总大小，不是元素个数
-    int cnt;
+    int table_size;     //表的总大小，不是元素个数
+    int cnt;            //元素个数
     HashFun hash;
     //Api
     Symbol_Node_t * (* node_alloc)();

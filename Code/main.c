@@ -9,7 +9,7 @@ void yyerror(char* s);
 
 int syntax = 0;
 extern int yycolumn,yylineno;
-
+void end_free();
 
 
 int main(int argc,char *argv[]) {
@@ -35,10 +35,11 @@ int main(int argc,char *argv[]) {
         if (syntax == 0) {
             semantic_check->init();
             tree->traverse(tree->root,0);
-            semantic_check->main(tree->root);
+            //semantic_check->main(tree->root);
 
             test->main();
         }
+        end_free();
 #ifndef FINAL
         if(syntax != 0)
             tree->traverse(tree->root,0);
@@ -47,3 +48,12 @@ int main(int argc,char *argv[]) {
     return 0;
 }
 
+void end_free() {
+    for(int i = 0;i < symbol_table->table_size;i++) {
+        if(symbol_table->table[i]) {
+            free(symbol_table->table[i]->head.name);
+            free(symbol_table->table[i]->tail.name);
+            free(symbol_table->table[i]);
+        }
+    }
+}

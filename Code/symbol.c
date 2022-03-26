@@ -125,7 +125,7 @@ static unit_t * SymbolTable_node_alloc() {
 }
 
 static void SymbolTable_node_init(unit_t * cur,char * name) {
-    nodeop->init(cur,2,name,symbol_stack->stack_size);
+    nodeop->init(cur,3,name,symbol_stack->stack_size,INFONODE);
 }
 
 
@@ -136,9 +136,8 @@ static void SymbolTable_insert(unit_t * cur) {
     if(symbol_table->table[id] != NULL) {
         listop.insert(list,&list->head,cur);
     } else {
-        symbol_table->table[id] = listop.alloc();
-        list = symbol_table->table[id];
-        listop.init(list);
+        list = listop.alloc();
+        symbol_table->table[id] = list;
         listop.insert(list,&list->head,cur);
     }
     symbol_table->cnt++;
@@ -230,6 +229,7 @@ static void SymbolStack_pop() {
     while (cur != &top->tail) {
         temp = cur->scope_next;
         assert(temp->deep == top->head.deep);
+        listop.remove(symbol_table->table[symbol_table->hash(cur->name)],cur);
         nodeop->delete(cur,INFONODE);
         cur = temp;
     }
@@ -266,6 +266,9 @@ static void SymbolInfoList_insert(list_t * list,unit_t * cur,unit_t * new) {
 }
 
 static void SymbolInfoList_init(list_t * list) {
+    nodeop->init(&list->head,1,"HASH LIST HEAD");
+    nodeop->init(&list->tail,1,"HASH LIST TAIL");
+
     list->list_cnt = 0;
     list->head.hash_next = &list->tail;
     list->tail.hash_prev = &list->head;
@@ -273,6 +276,8 @@ static void SymbolInfoList_init(list_t * list) {
     list->head.hash_prev = list->tail.hash_next = NULL;
 
     list->head.type = list->tail.type = HASHLIST;
+
+
 }
 
 static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
@@ -281,13 +286,15 @@ static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
     prev->hash_next = next;
     next->hash_prev = prev;
     list->list_cnt--;
-    if(list->list_cnt == 0) {
-        listop.delete(list);
-    }
+    symbol_table->cnt--;
+//    if(list->list_cnt == 0) {
+//        listop.delete(list);
+//    }
+//在这里不删除，最后统一删除
 }
 
 static void SymbolInfoList_delete(list_t * list) {
-    free(list);
+    panic("Not implemented");
 }
 
 static unit_t * SymbolInfoList_find(list_t * list,char * name) {
@@ -340,6 +347,7 @@ static void node_delete(void * cur,int mode) {
     switch (mode) {
         case INFONODE:
             free(info_node->name);
+            type_ops->field_delete(info_node->field);
             free(info_node);
             //存实际信息的节点
             break;
@@ -349,6 +357,8 @@ static void node_delete(void * cur,int mode) {
             //hash table中每个链表的头尾节点
             break;
         case STACKNODE:
+            free(stack_node->head.name);
+            free(stack_node->tail.name);
             free(stack_node);
             break;
         case STACKLIST:
@@ -487,11 +497,38 @@ static FieldList * Type_Ops_Field_Copy(const FieldList * field) {
 }
 
 static void Type_Ops_Type_delete(Type * type) {
-    panic("Not implemented");
+    if(type == NULL) return;
+    else {
+        switch (type->kind) {
+            case BASIC:
+                free(type);
+                break;
+            case ARRAY:
+                Type_Ops_Type_delete(type->u.array.elem);
+                break;
+            case STRUCTURE:
+                Type_Ops_Field_delete(type->u.structure);
+                break;
+            case FUNC_IMPL:
+                panic("Not implemented");
+                break;
+            case FUNC_DECL:
+                panic("Not implemented");
+                break;
+            default:
+                panic("Wrong");
+        }
+        free(type);
+    }
 }
 
 static void Type_Ops_Field_delete(FieldList * field) {
-    panic("Not implemented");
+    if(field == NULL) return;
+    Type_Ops_Type_delete(field->type);
+    if(field->tail != NULL) {
+        Type_Ops_Field_delete(field->tail);
+    }
+    free(field);
 }
 
 static Type * Type_Ops_creat_int(Node_t * cur) {

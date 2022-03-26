@@ -56,6 +56,7 @@ typedef struct Test_t {
     void (*Struct)();
     void (*display_symbol_table)();
     void (*display_symbol_stack)();
+    void (*symbol_table)();
 }Test_t;
 
 extern Test_t * test;
