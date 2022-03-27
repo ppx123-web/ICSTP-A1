@@ -221,21 +221,6 @@ extern SymbolStack_t * symbol_stack;
  * 类型表的插入
  */
 
-//typedef struct TypeTableNode_t {
-//    FieldList * field;
-//    struct TypeTableNode_t * prev, * next;
-//}TypeTableNode_t;
-//
-//typedef struct TypeTable_t {
-//    TypeTableNode_t head,tail;
-//    void (*init) ();
-//    void (*insert) (FieldList *);
-//    void (*remove) (char *);
-//    FieldList * (*find)(char *);
-//
-//}TypeTable_t;
-//extern TypeTable_t * type_table;
-
 typedef struct Type_Ops_t {
     Type * (*type_copy)(const Type *);
     FieldList * (*field_copy)(const FieldList *);
