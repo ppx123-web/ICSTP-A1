@@ -64,6 +64,10 @@ struct Type_ {
             int size;
         } array;                //数组类型信息以及数组大小构成
         FieldList * structure;
+        struct  {
+            FieldList * ret_type;
+            FieldList * var_list;
+        } func;
     } u;
 };
 
@@ -71,6 +75,7 @@ struct FieldList_ {
     char name[NAME_LENGTH];     //域的名字，指每个成员的名字，不是类型名
     Type * type;                //域的类型
     FieldList * tail;           //下一个域
+    int line;
 };
 
 //结构体类型以链表的类型存储
@@ -141,6 +146,9 @@ extern SymbolTable_t * symbol_table;
 typedef struct SymbolStack_ele_t {
     Symbol_Node_t head;
     Symbol_Node_t tail;
+    enum {
+        GLOB_FIELD,FUNC_FIELD,STRUCT_FIELD,COMPST_FIELD
+    }field_type;
     struct SymbolStack_ele_t * prev, * next;
 }SymbolStack_ele_t;
 
@@ -149,7 +157,7 @@ typedef struct SymbolStack_t {
     SymbolStack_ele_t last,first;                   //first栈顶，last是栈底
     int stack_size;
 
-    SymbolStack_ele_t * (* node_alloc)();           //分配栈中的节点，由于也是链表，需要分配两个head和tail
+    SymbolStack_ele_t * (* node_alloc)(int);           //分配栈中的节点，由于也是链表，需要分配两个head和tail
 
     void (*init)();                             //初始化栈
     void (*push)(SymbolStack_ele_t * );         //在push前应调用stack的node_alloc来分配栈中的节点
@@ -213,20 +221,20 @@ extern SymbolStack_t * symbol_stack;
  * 类型表的插入
  */
 
-typedef struct TypeTableNode_t {
-    FieldList * field;
-    struct TypeTableNode_t * prev, * next;
-}TypeTableNode_t;
-
-typedef struct TypeTable_t {
-    TypeTableNode_t head,tail;
-    void (*init) ();
-    void (*insert) (FieldList *);
-    void (*remove) (char *);
-    FieldList * (*find)(char *);
-
-}TypeTable_t;
-extern TypeTable_t * type_table;
+//typedef struct TypeTableNode_t {
+//    FieldList * field;
+//    struct TypeTableNode_t * prev, * next;
+//}TypeTableNode_t;
+//
+//typedef struct TypeTable_t {
+//    TypeTableNode_t head,tail;
+//    void (*init) ();
+//    void (*insert) (FieldList *);
+//    void (*remove) (char *);
+//    FieldList * (*find)(char *);
+//
+//}TypeTable_t;
+//extern TypeTable_t * type_table;
 
 typedef struct Type_Ops_t {
     Type * (*type_copy)(const Type *);
@@ -250,14 +258,14 @@ typedef struct Semantic_Check_t {
     void (*main)(Node_t * );
     FieldList * (*gettype)(Node_t *);
 
-    void (*CompSt)(Node_t * );
-
-    void (*Exp)(Node_t * );
-
-    void (*ExtDefList)(Node_t * );
-    void (*ExtDef)(Node_t * );
-    FieldList * (*ExtDecList)(Node_t *,const FieldList * );
-    FieldList * (*ExtDec)(Node_t *,const FieldList * );
+//    void (*CompSt)(Node_t * );
+//
+//    void (*Exp)(Node_t * );
+//
+//    void (*ExtDefList)(Node_t * );
+//    void (*ExtDef)(Node_t * );
+//    FieldList * (*ExtDecList)(Node_t *,const FieldList * );
+//    FieldList * (*ExtDec)(Node_t *,const FieldList * );
 
     FieldList * (*DefList)(Node_t * cur);
     FieldList * (*Def)(Node_t * cur);
@@ -265,6 +273,9 @@ typedef struct Semantic_Check_t {
     FieldList * (*Dec)(Node_t * cur,const FieldList *  type);
     FieldList * (*VarDec)(Node_t * root,const FieldList *  type);
     FieldList * (*Struct)(Node_t * );
+
+    void (*ErrorHandling)(int ,int );
+
 }Semantic_Check_t;
 extern Semantic_Check_t * semantic_check;
 

@@ -21,7 +21,8 @@ static void test_Struct(Node_t * cur,int deep) {
 }
 
 static void test_main() {
-    test->symbol_table();
+    //test->symbol_table();
+    //test_Struct(tree->root,0);
 }
 
 static void test_display_symbol_table() {
@@ -55,7 +56,6 @@ static void test_symbol_table() {
         //printf("%s\n",symbol_table->find(name)->name);
         assert(strcmp(symbol_table->find(name)->name,name) == 0);
     }
-    symbol_stack->pop();
     assert(symbol_table->cnt == 0);
 }
 

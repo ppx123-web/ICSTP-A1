@@ -1,8 +1,11 @@
-struct asda
+struct type
 {
-    int a[23][345][43];
+    int a;
     float b;
-} s1[3], s2;
+    int a;
+};
+
+struct type s3;
 /*
 Program (1)
   ExtDefList (1)
