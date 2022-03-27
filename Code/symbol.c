@@ -11,11 +11,7 @@ static void node_init(unit_t * cur,int argc,...);
 static void node_delete(void * cur,int mode);
 static bool struct_node_equal(unit_t*,unit_t*);
 
-static struct Info_Node_Ops {
-    void (*init)(unit_t * cur,int,...); //argc,char * name,deep,Type
-    void (*delete)(void *,int);
-    bool (*equal)(unit_t*,unit_t*);
-}InfoNodeOp = {
+static struct Info_Node_Ops InfoNodeOp = {
         .init = node_init,
         .delete = node_delete,
         .equal = struct_node_equal,
@@ -53,8 +49,8 @@ static struct Hash_List_Ops {
 
 static unit_t * SymbolTable_node_alloc();
 static void SymbolTable_init(int size);
-static void SymbolTable_insert(unit_t * cur);
-static void SymbolTable_remove(unit_t * cur);
+static int SymbolTable_insert(unit_t * cur);
+static int SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
 static void SymbolTable_node_init(unit_t * cur,char * name);
 static void SymbolTable_rehash();
@@ -130,7 +126,7 @@ static void SymbolTable_node_init(unit_t * cur,char * name) {
 
 
 
-static void SymbolTable_insert(unit_t * cur) {
+static int SymbolTable_insert(unit_t * cur) {
     int id = symbol_table->hash(cur->name),insert = 0;
     list_t * list = symbol_table->table[id];
     if(symbol_table->table[id] != NULL) {
@@ -155,6 +151,7 @@ static void SymbolTable_insert(unit_t * cur) {
     } else {
         insert = 1;
         list = listop.alloc();
+        listop.init(list);
         symbol_table->table[id] = list;
         listop.insert(list,&list->head,cur);
     }
@@ -162,7 +159,7 @@ static void SymbolTable_insert(unit_t * cur) {
     if(insert) {
         printf("---\nSymbol Table Insert: %s deep:%d\n",cur->name,cur->deep);
         type_ops->print_field(cur->field,0);
-
+        printf("field finish\n");
         //还需在纵向的十字链表插入头部
         unit_t * scope = &symbol_stack->top()->head;
         unit_t * next = scope->scope_next;
@@ -172,9 +169,11 @@ static void SymbolTable_insert(unit_t * cur) {
         next->scope_prev = cur;
         cur->scope_prev = scope;
     }
+    return insert;
 }
+//插入失败不会删除
 
-static void SymbolTable_remove(unit_t * cur) {
+static int SymbolTable_remove(unit_t * cur) {
     int id = symbol_table->hash(cur->name);
     list_t * list = symbol_table->table[id];
     assert(list != NULL);
@@ -182,6 +181,7 @@ static void SymbolTable_remove(unit_t * cur) {
     symbol_table->cnt--;
     printf("---\nSymbol Table remove: %s %d\n",cur->name,cur->deep);
     type_ops->print_field(cur->field,0);
+    return 1;
 }//说明见最后，这里不free
 //Symbol Table
 
@@ -331,7 +331,6 @@ static unit_t * SymbolInfoList_find(list_t * list,char * name) {
 
 static list_t * SymbolInfoList_alloc() {
     list_t * list = (list_t *)malloc(sizeof(list_t));
-    listop.init(list);
     return list;
 }
 //Symbol List
@@ -345,7 +344,6 @@ static void node_init(unit_t * cur,int argc,...) {
     va_start(ap,argc);
     if(argc >= 1) {
         char * name = va_arg(ap,char *);
-        cur->name = malloc(NAME_LENGTH);
         assert(NAME_LENGTH > strlen(name));
         strcpy(cur->name,name);
     }
@@ -367,7 +365,6 @@ static void node_delete(void * cur,int mode) {
     SymbolStack_ele_t * stack_node = (SymbolStack_ele_t *) cur;
     switch (mode) {
         case INFONODE:
-            free(info_node->name);
             type_ops->field_delete(info_node->field);
             free(info_node);
             //存实际信息的节点
@@ -378,8 +375,6 @@ static void node_delete(void * cur,int mode) {
             //hash table中每个链表的头尾节点
             break;
         case STACKNODE:
-            free(stack_node->head.name);
-            free(stack_node->tail.name);
             free(stack_node);
             break;
         case STACKLIST:
@@ -474,7 +469,7 @@ static void print_field(FieldList * field,int deep) {
     for (int i = 0;i < deep;i++) {
         printf("  ");
     }
-    printf("%s\n",field->name);
+    printf("%s line:%d\n",field->name,field->line);
     print_type(field->type,deep + 1);
     if(field->tail) {
         print_field(field->tail,deep);
@@ -491,9 +486,13 @@ static void print_type(Type * type,int deep) {
     } else if(type->kind == ARRAY) {
         printf("Array : size=%d ->",type->u.array.size);
         print_type(type->u.array.elem,deep + 1);
-    } else {
+    } else if(type->kind == STRUCTURE){
         printf("\n");
         print_field(type->u.structure,deep + 1);
+    } else if(type->kind == FUNC_DECL || type->kind == FUNC_IMPL ) {
+        print_field(type->u.func.ret_type,deep + 1);
+        printf("\n");
+        print_field(type->u.func.var_list,deep + 1);
     }
 }
 
@@ -514,6 +513,8 @@ static FieldList * Type_Ops_Field_Copy(const FieldList * field) {
     ret->line = field->line;
     if(field->tail) {
         ret->tail = type_ops->field_copy(field->tail);
+    } else {
+        ret->tail = NULL;
     }
     return ret;
 }

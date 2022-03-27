@@ -87,7 +87,7 @@ typedef struct SymbolInfoList_t SymbolInfoList_t;
 
 //哈希表用到的结构
 typedef struct Symbol_Node_t {
-    char *  name;
+    char  name[NAME_LENGTH];
     int deep;
     enum {
         HASHLIST,STACKLIST,STACKNODE,INFONODE,
@@ -101,6 +101,12 @@ typedef struct Symbol_Node_t {
 
 typedef Symbol_Node_t unit_t;
 extern struct Info_Node_Ops * nodeop;
+
+struct Info_Node_Ops {
+    void (*init)(unit_t * cur,int,...); //argc,char * name,deep,Type
+    void (*delete)(void *,int);
+    bool (*equal)(unit_t*,unit_t*);
+};
 
 
 struct SymbolInfoList_t {
@@ -127,8 +133,8 @@ typedef struct SymbolTable_t {
     void (* node_init)(unit_t *,char *);
 
     void (*init)(int);                      //初始化哈希表
-    void (*insert)(Symbol_Node_t *);        //插入节点
-    void (*remove)(Symbol_Node_t *);        //删除节点
+    int (*insert)(Symbol_Node_t *);        //插入节点
+    int (*remove)(Symbol_Node_t *);        //删除节点
     Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
     void (*rehash)();
     void (*display_node)(unit_t *);

@@ -20,7 +20,7 @@ static void ErrorHandling(int type,int line) {
         case 2:
             break;
         case 3:
-            printf("Error type 15 at Line %d: redefinition\n", line);
+            Log("Error type 15 at Line %d: redefinition\n", line);
             break;
         case 4:
             break;
@@ -45,7 +45,7 @@ static void ErrorHandling(int type,int line) {
         case 14:
             break;
         case 15:
-            printf("Error type 15 at Line %d: struct field\n", line);
+            Log("Error type 15 at Line %d: struct field\n", line);
             break;
         case 16:
             break;
@@ -67,7 +67,7 @@ static void Semantic_Check_CompSt(Node_t * root);
 
 static void Semantic_Check_ExtDefList(Node_t * root);
 static void Semantic_Check_ExtDef(Node_t * root);
-static FieldList * Semantic_Check_ExtDecList(Node_t * root,const FieldList * );
+static void Semantic_Check_ExtDecList(Node_t * root,const FieldList * );
 static FieldList * Semantic_Check_ExtDec(Node_t *,const FieldList * );
 static unit_t * Semantic_Check_FunDec(Node_t *,const FieldList * field);
 static FieldList * Semantic_Check_VarList(Node_t * root);
@@ -144,10 +144,11 @@ static FieldList *  Semantic_Check_gettype(Node_t * cur) {
         } else if(strcmp(cur->lchild->text,"float") == 0) {
             ret = & Float_Field;
         } else {
-            assert(0);
+            panic("Wrong TYPE");
         }
     } else if(type(cur->lchild->lchild,"STRUCT")) {
         if(type(cur->lchild->rchild,"RC")) {
+            //是结构体的定义，增加stack，完成检查后pop
             symbol_stack->push(symbol_stack->node_alloc(STRUCT_FIELD));
             ret = Semantic_Check_Struct(cur->lchild);
             symbol_stack->pop();
@@ -195,23 +196,17 @@ static void Semantic_Check_ExtDef(Node_t * root) {
     FieldList * field = Semantic_Check_gettype(specifier);
     if(type(cur,"ExtDecList")) {
         //Var Dec list
-        FieldList * list = Semantic_Check_ExtDecList(cur,field);
-        while (list) {
-            unit_t * node = new(unit_t);
-            symbol_table->node_init(node,list->name);
-            node->field = list;
-            symbol_table->insert(node);
-            list = list->tail;
-        }
+        Semantic_Check_ExtDecList(cur,field);
     } else if(type(cur,"SEMI")) {
-        //struct Defination
-        if(type(root->lchild->lchild,"TYPE")) return;
-        //int;
+        //struct Definition
+        if(type(root->lchild->lchild,"TYPE")) return;  //int;
         //以结构体的名称作为索引插入符号表
         unit_t * node = symbol_table->node_alloc();
         symbol_table->node_init(node,field->name);
-        node->field = type_ops->field_copy(field);
-        symbol_table->insert(node);
+        node->field = field;
+        if(!symbol_table->insert(node)) {
+            nodeop->delete(node,INFONODE);
+        }
     } else if(type(cur,"FunDec")) {
         Semantic_Check_FunDec(root->lchild->right,field);
         if(type(cur->right,"CompSt")) {
@@ -226,16 +221,19 @@ static void Semantic_Check_ExtDef(Node_t * root) {
     }
 }
 
-static FieldList * Semantic_Check_ExtDecList(Node_t * root,const FieldList * field) {
+static void Semantic_Check_ExtDecList(Node_t * root,const FieldList * field) {
     FieldList * ret = Semantic_Check_VarDec(root->lchild,field);
-    FieldList * temp = ret;
-    while (temp->tail) {
-        temp = temp->tail;
+
+    unit_t * node = symbol_table->node_alloc();
+    symbol_table->node_init(node,ret->name);
+    node->field = ret;
+
+    if(!symbol_table->insert(node)) {
+        nodeop->delete(node,INFONODE);
     }
     if(root->rchild != root->lchild) {
-        temp->tail = Semantic_Check_ExtDecList(root->rchild,field);
+        Semantic_Check_ExtDecList(root->rchild,field);
     }
-    return ret;
 }
 
 static FieldList * Semantic_Check_ExtDec(Node_t * root,const FieldList * field) {
@@ -259,6 +257,7 @@ static unit_t * Semantic_Check_FunDec(Node_t * root,const FieldList * field) {
     } else {
         ret->field->type->u.func.var_list = NULL;
     }
+    return ret;
 }
 
 static FieldList * Semantic_Check_VarList(Node_t * root) {
@@ -336,7 +335,9 @@ static FieldList * Semantic_Check_Dec(Node_t * cur,const FieldList * field) {
     } else {
         node->field = ret;
     }
-    symbol_table->insert(node);
+    if(!symbol_table->insert(node)) {
+        nodeop->delete(node,INFONODE);
+    }
     return ret;
 }
 
@@ -393,5 +394,6 @@ static FieldList * Semantic_Check_Struct(Node_t * root) {
     } else {
         strcpy(field->name,root->lchild->right->lchild->text);
     }
+    field->line = root->lchild->line;
     return field;
 }

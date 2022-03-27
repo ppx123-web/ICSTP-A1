@@ -43,7 +43,7 @@
 
 #define panic_on(A,expr)            \
             do {                    \
-                if(!expr) { break;} \
+                if(!(expr)) { break;} \
                 assert(0);          \
             } while(1)
 

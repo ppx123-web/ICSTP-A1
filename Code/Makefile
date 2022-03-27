@@ -44,7 +44,9 @@ syntax-c: $(YFILE)
 TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 
 # 定义的一些伪目标
-.PHONY: clean test
+.PHONY: clean test valgrind
+valgrind: parser
+	valgrind --track-origins=yes ./parser ../Test/test1.cmm > a.txt
 test: parser
 	./parser $(TESTFILE) > a.txt
 	@rm *.o

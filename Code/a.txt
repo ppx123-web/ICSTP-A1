@@ -1,52 +1,89 @@
-Program (1)
-  ExtDefList (1)
-    ExtDef (1)
-      Specifier (1)
-        StructSpecifier (1)
-          STRUCT
-          OptTag (1)
-            ID: asda
-          LC
-          DefList (3)
-            Def (3)
-              Specifier (3)
-                TYPE: int
-              DecList (3)
-                Dec (3)
-                  VarDec (3)
-                    VarDec (3)
-                      VarDec (3)
-                        VarDec (3)
-                          ID: a
-                        LB
-                        INT: 23
-                        RB
-                      LB
-                      INT: 345
-                      RB
-                    LB
-                    INT: 43
-                    RB
-              SEMI
-            DefList (4)
-              Def (4)
-                Specifier (4)
-                  TYPE: float
-                DecList (4)
-                  Dec (4)
-                    VarDec (4)
-                      ID: b
-                SEMI
-          RC
-      ExtDecList (5)
-        VarDec (5)
-          VarDec (5)
-            ID: s1
-          LB
-          INT: 3
-          RB
-        COMMA
-        ExtDecList (5)
-          VarDec (5)
-            ID: s2
-      SEMI
+---
+Symbol Table Insert: a deep:2
+a line:3
+  type : 0 BASIC : 0
+field finish
+---
+Symbol Table Insert: b deep:2
+b line:4
+  type : 0 BASIC : 1
+field finish
+---
+Symbol Table remove: b 2
+b line:4
+  type : 0 BASIC : 1
+---
+Symbol Table remove: a 2
+a line:3
+  type : 0 BASIC : 0
+---
+Symbol Table Insert: type deep:1
+type line:1
+  type : 2 
+    a line:3
+      type : 0 BASIC : 0
+    b line:4
+      type : 0 BASIC : 1
+    a line:5
+      type : 0 BASIC : 0
+field finish
+---
+Symbol Table Insert: s1 deep:1
+s1 line:7
+  type : 2 
+    type line:1
+      type : 2 
+        a line:3
+          type : 0 BASIC : 0
+        b line:4
+          type : 0 BASIC : 1
+        a line:5
+          type : 0 BASIC : 0
+field finish
+---
+Symbol Table Insert: s2 deep:1
+s2 line:7
+  type : 2 
+    type line:1
+      type : 2 
+        a line:3
+          type : 0 BASIC : 0
+        b line:4
+          type : 0 BASIC : 1
+        a line:5
+          type : 0 BASIC : 0
+field finish
+---
+Symbol Table remove: s2 1
+s2 line:7
+  type : 2 
+    type line:1
+      type : 2 
+        a line:3
+          type : 0 BASIC : 0
+        b line:4
+          type : 0 BASIC : 1
+        a line:5
+          type : 0 BASIC : 0
+---
+Symbol Table remove: s1 1
+s1 line:7
+  type : 2 
+    type line:1
+      type : 2 
+        a line:3
+          type : 0 BASIC : 0
+        b line:4
+          type : 0 BASIC : 1
+        a line:5
+          type : 0 BASIC : 0
+---
+Symbol Table remove: type 1
+type line:1
+  type : 2 
+    a line:3
+      type : 0 BASIC : 0
+    b line:4
+      type : 0 BASIC : 1
+    a line:5
+      type : 0 BASIC : 0

@@ -58,15 +58,13 @@ static void free_Traverse(Node_t * cur) {
 
 static void end_free() {
     //yylex bison自己会申请空间，但是不释放，共计3次  16458 bytes
+    symbol_stack->pop();//先pop
     for(int i = 0;i < symbol_table->table_size;i++) {
         if(symbol_table->table[i]) {
-            free(symbol_table->table[i]->head.name);
-            free(symbol_table->table[i]->tail.name);
             free(symbol_table->table[i]);
         }
     }
     free(symbol_table->table);
     free_Traverse(tree->root);
-    symbol_stack->pop();
     panic_on("Error",symbol_table->cnt != 0);
 }

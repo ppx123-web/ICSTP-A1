@@ -46,7 +46,6 @@ static void test_symbol_table() {
         unit_t * n1 = new(unit_t);
         n1->deep = 1;
         n1->field = NULL;
-        n1->name = malloc(NAME_LENGTH);
         sprintf(n1->name,"node%d",i);
         symbol_table->insert(n1);
     }
