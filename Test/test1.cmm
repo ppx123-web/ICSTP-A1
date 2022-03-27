@@ -4,8 +4,8 @@ struct type
     float b;
     int a;
 };
+struct type s1,s2,s3;
 struct type s1,s2,s1;
-
 /*
 Program (1)
   ExtDefList (1)

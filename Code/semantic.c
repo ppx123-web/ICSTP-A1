@@ -300,6 +300,7 @@ Dec : VarDec
 static FieldList * Semantic_Check_DefList(Node_t * cur) {
     if(cur == NULL) return NULL;
     FieldList * ret = Semantic_Check_Def(cur->lchild);
+    if(!ret) return NULL;
     FieldList * temp = ret;
     while (temp->tail) {
         temp = temp->tail;
@@ -317,9 +318,15 @@ static FieldList * Semantic_Check_Def(Node_t * cur) {
 static FieldList * Semantic_Check_DecList(Node_t * cur,const FieldList * field) {
     if(cur == NULL) return NULL;
     FieldList * ret = Semantic_Check_Dec(cur->lchild,field);
-    if(cur->rchild != cur->lchild)
-        ret->tail = Semantic_Check_DecList(cur->rchild,field);
-    return ret;
+    if(cur->rchild != cur->lchild) {
+        if(ret) {
+            ret->tail = Semantic_Check_DecList(cur->rchild,field);
+        } else {
+            return Semantic_Check_DecList(cur->rchild,field);
+        }
+    } else {
+        return ret;
+    }
 }
 
 static FieldList * Semantic_Check_Dec(Node_t * cur,const FieldList * field) {
@@ -337,6 +344,8 @@ static FieldList * Semantic_Check_Dec(Node_t * cur,const FieldList * field) {
     }
     if(!symbol_table->insert(node)) {
         nodeop->delete(node,INFONODE);
+        type_ops->field_delete(ret);
+        return NULL;
     }
     return ret;
 }
