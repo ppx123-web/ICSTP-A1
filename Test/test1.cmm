@@ -1,11 +1,5 @@
-struct type
-{
-    int a;
-    float b;
-    int a;
-};
-struct type s1,s2,s3;
-struct type s1,s2,s1;
+int main(int a,int a);
+
 /*
 Program (1)
   ExtDefList (1)
