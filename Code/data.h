@@ -12,6 +12,9 @@
 #define new(A) (A*)(malloc(sizeof(A)))
 #define NAME_LENGTH 32
 
+typedef struct Type_ Type;
+typedef struct FieldList_ FieldList;
+
 //语法树结构
 
 typedef struct Tree_node_t {
@@ -19,6 +22,7 @@ typedef struct Tree_node_t {
     int line;
     char text[NAME_LENGTH];
     struct Tree_node_t * lchild,* rchild,* left,* right;
+    const Type * inh, * syn;
 }Node_t;
 
 typedef Node_t* (* Multiway_Api_)(Node_t * cur,Node_t* node);
@@ -50,12 +54,10 @@ extern MultiwayTree_t * tree;
 
  */
 
-typedef struct Type_ Type;
-typedef struct FieldList_ FieldList;
 
 struct Type_ {
     enum {
-        BASIC, ARRAY, STRUCTURE, FUNC,
+        REMAINED,BASIC, ARRAY, STRUCTURE, FUNC_DECL, FUNC_IMPL,
     } kind;
     union {
         int basic;              //基本类型 0 int, 1 float
@@ -65,7 +67,7 @@ struct Type_ {
         } array;                //数组类型信息以及数组大小构成
         FieldList * structure;
         struct  {
-            FieldList * ret_type;
+            Type * ret_type;
             FieldList * var_list;
         } func;
     } u;
@@ -88,11 +90,11 @@ typedef struct SymbolInfoList_t SymbolInfoList_t;
 //哈希表用到的结构
 typedef struct Symbol_Node_t {
     char  name[NAME_LENGTH];
-    int deep;
+    int deep,line;
     enum {
         HASHLIST,STACKLIST,STACKNODE,INFONODE,
-    }type;
-    FieldList * field;
+    }node_type;
+    Type * type;
 
     //维护数据结构需要的信息
     struct Symbol_Node_t * hash_prev, * hash_next;
@@ -233,13 +235,12 @@ typedef struct Type_Ops_t {
     void (*type_delete)(Type *);
     void (*field_delete)(FieldList *);
 
-    Type * (*creat_int)(Node_t *);
-    Type * (*creat_float)(Node_t *);
-    Type * (*creat_array)(Node_t *);
-    Type * (*creat_structure)(Node_t *);
+    void (*print_field)(const FieldList *,int);
+    void (*print_type)(const Type *,int);
 
-    void (*print_field)(FieldList *,int);
-    void (*print_type)(Type *,int);
+    Type * (*type_alloc_init)(int);
+    FieldList * (*field_alloc_init)(char *,int,const Type *);
+    //传入field 的name，line，以及Type，type会复制一份
 }Type_Ops_t;
 extern Type_Ops_t * type_ops;
 
@@ -247,27 +248,42 @@ extern Type_Ops_t * type_ops;
 typedef struct Semantic_Check_t {
     void (*init)();
     void (*main)(Node_t * );
-    FieldList * (*gettype)(Node_t *);
-
-//    void (*CompSt)(Node_t * );
-//
-//    void (*Exp)(Node_t * );
-//
-//    void (*ExtDefList)(Node_t * );
-//    void (*ExtDef)(Node_t * );
-//    FieldList * (*ExtDecList)(Node_t *,const FieldList * );
-//    FieldList * (*ExtDec)(Node_t *,const FieldList * );
-
-    FieldList * (*DefList)(Node_t * cur);
-    FieldList * (*Def)(Node_t * cur);
-    FieldList * (*DecList)(Node_t * cur,const FieldList * type);
-    FieldList * (*Dec)(Node_t * cur,const FieldList *  type);
-    FieldList * (*VarDec)(Node_t * root,const FieldList *  type);
-    FieldList * (*Struct)(Node_t * );
 
     void (*ErrorHandling)(int ,int );
-
 }Semantic_Check_t;
 extern Semantic_Check_t * semantic_check;
+
+
+static Type Int_Type = {
+        .kind = BASIC,
+        .u.basic = 0,
+};
+
+static FieldList Int_Field = {
+        .name[0] = '\0',
+        .type = &Int_Type,
+        .tail = NULL,
+};
+
+static Type Float_Type = {
+        .kind = BASIC,
+        .u.basic = 1,
+};
+
+static FieldList Float_Field = {
+        .name[0] = '\0',
+        .type = &Float_Type,
+        .tail = NULL,
+};
+
+
+
+
+
+
+
+
+
+
 
 #endif

@@ -5,19 +5,7 @@
 #define ASSIGN(A) .A = TEST(A),
 
 static void test_Struct(Node_t * cur,int deep) {
-    if (cur == NULL) return;
-    if(type(cur,"StructSpecifier")) {
-        FieldList * field = semantic_check->Struct(cur);
-        type_ops->print_field(field,0);
-        return;
-    }
-    if (cur->lchild != NULL) {
-        Node_t * child = cur->lchild;
-        do {
-            test_Struct(child,deep + 1);
-            child = child->right;
-        }while (child != NULL);
-    }
+
 }
 
 static void test_main() {
@@ -45,7 +33,7 @@ static void test_symbol_table() {
     for(int i = 0;i < size;i++) {
         unit_t * n1 = new(unit_t);
         n1->deep = 1;
-        n1->field = NULL;
+        n1->type = NULL;
         sprintf(n1->name,"node%d",i);
         symbol_table->insert(n1);
     }

@@ -1,5 +1,10 @@
-int main(int a,int a);
+struct tt {
+    int a,b;
+};
 
+int main(int a,int b) {
+
+}
 /*
 Program (1)
   ExtDefList (1)

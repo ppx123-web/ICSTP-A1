@@ -91,7 +91,7 @@ MODULE_DEF(SymbolStack_t,symbol_stack) = {
 //Symbol Table
 static void SymbolTable_display_node(unit_t * cur) {
     printf("Name: %s, deep: %d\n",cur->name,cur->deep);
-    type_ops->print_field(cur->field,0);
+    type_ops->print_type(cur->type,0);
 }
 
 static int SymbolTable_hashFun(char * name) {
@@ -127,49 +127,34 @@ static void SymbolTable_node_init(unit_t * cur,char * name) {
 
 
 static int SymbolTable_insert(unit_t * cur) {
-    int id = symbol_table->hash(cur->name),insert = 0;
+    int id = symbol_table->hash(cur->name);
     list_t * list = symbol_table->table[id];
     if(symbol_table->table[id] != NULL) {
         unit_t * find = symbol_table->find(cur->name);
         if(find && find->deep == cur->deep) {
-            switch (symbol_stack->top()->field_type) {
-                case GLOB_FIELD:
-                case FUNC_FIELD:
-                case COMPST_FIELD:
-                    semantic_check->ErrorHandling(3,cur->field->line);
-                    break;
-                case STRUCT_FIELD:
-                    semantic_check->ErrorHandling(15,cur->field->line);
-                    break;
-                default:
-                    panic("Error field type");
-            }
+            return 0;
         } else {
             listop.insert(list,&list->head,cur);
-            insert = 1;
         }
     } else {
-        insert = 1;
         list = listop.alloc();
         listop.init(list);
         symbol_table->table[id] = list;
         listop.insert(list,&list->head,cur);
     }
-    symbol_table->cnt += insert;
-    if(insert) {
-        printf("---\nSymbol Table Insert: %s deep:%d\n",cur->name,cur->deep);
-        type_ops->print_field(cur->field,0);
-        printf("field finish\n");
-        //还需在纵向的十字链表插入头部
-        unit_t * scope = &symbol_stack->top()->head;
-        unit_t * next = scope->scope_next;
-        assert(scope->type == STACKNODE);
-        scope->scope_next = cur;
-        cur->scope_next = next;
-        next->scope_prev = cur;
-        cur->scope_prev = scope;
-    }
-    return insert;
+    symbol_table->cnt += 1;
+    printf("---\nSymbol Table Insert: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
+    type_ops->print_type(cur->type,0);
+
+    //还需在纵向的十字链表插入头部
+    unit_t * scope = &symbol_stack->top()->head;
+    unit_t * next = scope->scope_next;
+    assert(scope->node_type == STACKNODE);
+    scope->scope_next = cur;
+    cur->scope_next = next;
+    next->scope_prev = cur;
+    cur->scope_prev = scope;
+    return 1;
 }
 //插入失败不会删除
 
@@ -179,8 +164,8 @@ static int SymbolTable_remove(unit_t * cur) {
     assert(list != NULL);
     listop.remove(list,cur);
     symbol_table->cnt--;
-    printf("---\nSymbol Table remove: %s %d\n",cur->name,cur->deep);
-    type_ops->print_field(cur->field,0);
+    printf("---\nSymbol Table remove: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
+    type_ops->print_type(cur->type,0);
     return 1;
 }//说明见最后，这里不free
 //Symbol Table
@@ -300,7 +285,7 @@ static void SymbolInfoList_init(list_t * list) {
 
     list->head.hash_prev = list->tail.hash_next = NULL;
 
-    list->head.type = list->tail.type = HASHLIST;
+    list->head.node_type = list->tail.node_type = HASHLIST;
 
 
 }
@@ -352,7 +337,7 @@ static void node_init(unit_t * cur,int argc,...) {
         cur->deep = deep;
     }
     if(argc >= 3) {
-        cur->type = va_arg(ap,int );
+        cur->node_type = va_arg(ap,int );
     }
     va_end(ap);
     //初始化目前仅涉及了
@@ -365,7 +350,7 @@ static void node_delete(void * cur,int mode) {
     SymbolStack_ele_t * stack_node = (SymbolStack_ele_t *) cur;
     switch (mode) {
         case INFONODE:
-            type_ops->field_delete(info_node->field);
+            type_ops->type_delete(info_node->type);
             free(info_node);
             //存实际信息的节点
             break;
@@ -436,17 +421,14 @@ static bool struct_node_equal(unit_t* n1,unit_t* n2) {
  */
 //需要的接口
 
-static void print_field(FieldList *,int);
-static void print_type(Type *,int);
+static void print_field(const FieldList *,int);
+static void print_type(const Type *,int);
 static Type * Type_Ops_Type_copy(const Type *);
 static FieldList * Type_Ops_Field_Copy(const FieldList *);
 static void Type_Ops_Type_delete(Type *);
 static void Type_Ops_Field_delete(FieldList *);
-static Type * Type_Ops_creat_int(Node_t *);
-static Type * Type_Ops_creat_float(Node_t *);
-static Type * Type_Ops_creat_array(Node_t *);
-
-static Type * Type_Ops_creat_structure(Node_t *);
+Type * Type_Ops_Type_alloc_init(int kind);
+FieldList * Type_Ops_Field_alloc_init(char *,int,const Type*);
 
 MODULE_DEF(Type_Ops_t,type_ops) = {
         .print_field = print_field,
@@ -458,14 +440,12 @@ MODULE_DEF(Type_Ops_t,type_ops) = {
         .type_delete = Type_Ops_Type_delete,
         .field_delete = Type_Ops_Field_delete,
 
-        .creat_int = Type_Ops_creat_int,
-        .creat_float = Type_Ops_creat_float,
-        .creat_array = Type_Ops_creat_array,
-        .creat_structure = Type_Ops_creat_structure,
-
+        .type_alloc_init = Type_Ops_Type_alloc_init,
+        .field_alloc_init = Type_Ops_Field_alloc_init,
 };
 
-static void print_field(FieldList * field,int deep) {
+static void print_field(const FieldList * field,int deep) {
+    if(field == NULL) return;
     for (int i = 0;i < deep;i++) {
         printf("  ");
     }
@@ -476,11 +456,12 @@ static void print_field(FieldList * field,int deep) {
     }
 }
 
-static void print_type(Type * type,int deep) {
+static void print_type(const Type * type,int deep) {
+    if(type == NULL) return;
     for (int i = 0;i < deep;i++) {
         printf("  ");
     }
-    printf("type : %d ",type->kind);
+    printf("Type : %d ",type->kind);
     if(type->kind == BASIC) {
         printf("BASIC : %d\n",type->u.basic);
     } else if(type->kind == ARRAY) {
@@ -489,9 +470,9 @@ static void print_type(Type * type,int deep) {
     } else if(type->kind == STRUCTURE){
         printf("\n");
         print_field(type->u.structure,deep + 1);
-    } else if(type->kind == FUNC ) {
+    } else if(type->kind == FUNC_DECL || type->kind == FUNC_IMPL ) {
         printf("return tyep:\n");
-        print_field(type->u.func.ret_type,deep + 1);
+        print_type(type->u.func.ret_type,deep + 1);
         printf("\n var type");
         print_field(type->u.func.var_list,deep + 1);
     }
@@ -511,7 +492,8 @@ static Type * Type_Ops_Type_copy(const Type * type) {
         case STRUCTURE:
             ret->u.structure = Type_Ops_Field_Copy(type->u.structure);
             break;
-        case FUNC:
+        case FUNC_IMPL:
+        case FUNC_DECL:
             panic("Not Implemented");
             break;
         default:
@@ -547,15 +529,10 @@ static void Type_Ops_Type_delete(Type * type) {
             case STRUCTURE:
                 Type_Ops_Field_delete(type->u.structure);
                 break;
-            case FUNC:
-                Type_Ops_Field_delete(type->u.func.ret_type);
-                FieldList * temp = type->u.func.var_list,* temp1;
-                while (temp) {
-                    temp1 = temp->tail;
-                    Type_Ops_Field_delete(temp);
-                    temp = temp1;
-                }
-//                panic("Not implemented");
+            case FUNC_DECL:
+            case FUNC_IMPL:
+                Type_Ops_Type_delete(type->u.func.ret_type);
+                Type_Ops_Field_delete(type->u.func.var_list);
                 break;
             default:
                 panic("Wrong");
@@ -573,18 +550,20 @@ static void Type_Ops_Field_delete(FieldList * field) {
     free(field);
 }
 
-static Type * Type_Ops_creat_int(Node_t * cur) {
-    panic("Not implemented");
+Type * Type_Ops_Type_alloc_init(int kind) {
+    Type * ret = new(Type);
+    memset(ret,0, sizeof(Type));
+    ret->kind = kind;
+    return ret;
 }
 
-static Type * Type_Ops_creat_float(Node_t *cur) {
-    panic("Not implemented");
+FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * type) {
+    FieldList * ret = new(FieldList);
+    memset(ret,0, sizeof(FieldList));
+    strcpy(ret->name,name);
+    ret->line = line;
+    ret->tail = NULL;
+    ret->type = type_ops->type_copy(type);
+    return ret;
 }
 
-static Type * Type_Ops_creat_array(Node_t *cur) {
-    panic("Not implemented");
-}
-
-static Type * Type_Ops_creat_structure(Node_t *cur) {
-    panic("Not implemented");
-}

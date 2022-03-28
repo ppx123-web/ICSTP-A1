@@ -46,7 +46,7 @@ TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 # 定义的一些伪目标
 .PHONY: clean test valgrind
 valgrind: parser
-	valgrind --track-origins=yes ./parser ../Test/test1.cmm > a.txt
+	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all ./parser ../Test/test1.cmm
 test: parser
 	./parser $(TESTFILE) > a.txt
 	@rm *.o
