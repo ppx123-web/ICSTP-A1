@@ -252,7 +252,7 @@ static void SymbolStack_pop() {
     unit_t * cur = top->head.scope_next, * temp;
     while (cur != &top->tail) {
         temp = cur->scope_next;
-        assert(temp->deep == top->head.deep);
+        assert(cur->deep == top->head.deep);
         symbol_table->remove(cur);
         nodeop->delete(cur,INFONODE);
         cur = temp;
@@ -489,24 +489,39 @@ static void print_type(Type * type,int deep) {
     } else if(type->kind == STRUCTURE){
         printf("\n");
         print_field(type->u.structure,deep + 1);
-    } else if(type->kind == FUNC_DECL || type->kind == FUNC_IMPL ) {
+    } else if(type->kind == FUNC ) {
+        printf("return tyep:\n");
         print_field(type->u.func.ret_type,deep + 1);
-        printf("\n");
+        printf("\n var type");
         print_field(type->u.func.var_list,deep + 1);
     }
 }
 
 static Type * Type_Ops_Type_copy(const Type * type) {
+    if(!type) return NULL;
     Type * ret = new(Type);
     ret->kind = type->kind;
-    ret->u = type->u;
-    if(type->kind == STRUCTURE) {
-        ret->u.structure = type_ops->field_copy(type->u.structure);
+    switch (type->kind) {
+        case BASIC:
+            ret->u.basic = type->u.basic;
+            break;
+        case ARRAY:
+            ret->u.array.size = type->u.array.size;
+            break;
+        case STRUCTURE:
+            ret->u.structure = Type_Ops_Field_Copy(type->u.structure);
+            break;
+        case FUNC:
+            panic("Not Implemented");
+            break;
+        default:
+            panic("Wrong");
     }
     return ret;
 }
 
 static FieldList * Type_Ops_Field_Copy(const FieldList * field) {
+    if(!field) return NULL;
     FieldList * ret = new(FieldList);
     strcpy(ret->name,field->name);
     ret->type = type_ops->type_copy(field->type);
@@ -532,11 +547,15 @@ static void Type_Ops_Type_delete(Type * type) {
             case STRUCTURE:
                 Type_Ops_Field_delete(type->u.structure);
                 break;
-            case FUNC_IMPL:
-                panic("Not implemented");
-                break;
-            case FUNC_DECL:
-                panic("Not implemented");
+            case FUNC:
+                Type_Ops_Field_delete(type->u.func.ret_type);
+                FieldList * temp = type->u.func.var_list,* temp1;
+                while (temp) {
+                    temp1 = temp->tail;
+                    Type_Ops_Field_delete(temp);
+                    temp = temp1;
+                }
+//                panic("Not implemented");
                 break;
             default:
                 panic("Wrong");

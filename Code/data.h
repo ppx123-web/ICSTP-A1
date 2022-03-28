@@ -55,7 +55,7 @@ typedef struct FieldList_ FieldList;
 
 struct Type_ {
     enum {
-        BASIC, ARRAY, STRUCTURE, FUNC_IMPL, FUNC_DECL,
+        BASIC, ARRAY, STRUCTURE, FUNC,
     } kind;
     union {
         int basic;              //基本类型 0 int, 1 float

@@ -20,7 +20,7 @@ static void ErrorHandling(int type,int line) {
         case 2:
             break;
         case 3:
-            Log("Error type 15 at Line %d: redefinition\n", line);
+            Log("Error type 3 at Line %d: redefinition\n", line);
             break;
         case 4:
             break;
@@ -81,6 +81,7 @@ static FieldList * Semantic_Check_Dec(Node_t * cur,const FieldList * );
 static FieldList * Semantic_Check_VarDec(Node_t * root,const FieldList * );
 static FieldList * Semantic_Check_Struct(Node_t * root);
 
+//所有的field实例产生于VarDec，局部变量在Dec处插入，当是 struct的定义中，需要赋值FieldList插入
 
 static Semantic_Check_t Semantic_Check = {
         Assign(init)
@@ -154,7 +155,7 @@ static FieldList *  Semantic_Check_gettype(Node_t * cur) {
             symbol_stack->pop();
         } else {
             unit_t * temp = symbol_table->find(cur->rchild->lchild->right->lchild->text);
-            if(temp == NULL) {
+            if(temp == NULL || strcmp(temp->name,temp->field->name) ) {
                 panic("Not Find definition");
             } else {
                 ret = temp->field;
@@ -201,20 +202,34 @@ static void Semantic_Check_ExtDef(Node_t * root) {
         //struct Definition
         if(type(root->lchild->lchild,"TYPE")) return;  //int;
         //以结构体的名称作为索引插入符号表
-        unit_t * node = symbol_table->node_alloc();
-        symbol_table->node_init(node,field->name);
-        node->field = field;
-        if(!symbol_table->insert(node)) {
-            nodeop->delete(node,INFONODE);
+        unit_t * find = symbol_table->find(field->name);
+        if(!find || find->deep != symbol_stack->stack_size) {
+            unit_t * node = symbol_table->node_alloc();
+            symbol_table->node_init(node,field->name);
+            node->field = field;
+            symbol_table->insert(node);
+        } else {
+            type_ops->field_delete(field);
         }
     } else if(type(cur,"FunDec")) {
-        Semantic_Check_FunDec(root->lchild->right,field);
+        symbol_stack->push(symbol_stack->node_alloc(FUNC));
+
+        //TODO
+        unit_t * node = Semantic_Check_FunDec(root->lchild->right,field);
+        node->deep--;
+        symbol_stack->pop();
+        if(!symbol_table->find(field->name)) {
+            symbol_table->insert(node);
+        } else {
+            nodeop->delete(node,INFONODE);
+        }
         if(type(cur->right,"CompSt")) {
             Semantic_Check_CompSt(root->rchild);
+
         } else if(type(cur->right,"SEMI")) {
             //Func Declaration
-            //TODO()
-            panic("Not implemented");
+        } else {
+            panic("Wrong");
         }
     } else {
         panic("Wrong");
@@ -249,29 +264,49 @@ static unit_t * Semantic_Check_FunDec(Node_t * root,const FieldList * field) {
     ret->field = new(FieldList);
     ret->field->type = new(Type);
     symbol_table->node_init(ret,root->lchild->text);
-    ret->field->tail = NULL;
     strcpy(ret->field->name,root->lchild->text);
+    strcpy(ret->name,root->lchild->text);
+    ret->field->tail = NULL;
+    ret->field->type->kind = FUNC;
     ret->field->type->u.func.ret_type = type_ops->field_copy(field);
+    ret->field->line = root->lchild->line;
     if(type(root->rchild->left,"VarList")) {
         ret->field->type->u.func.var_list = Semantic_Check_VarList(root->rchild->left);
     } else {
         ret->field->type->u.func.var_list = NULL;
     }
+    //TODO
     return ret;
 }
 
 static FieldList * Semantic_Check_VarList(Node_t * root) {
     FieldList * ret = Semantic_Check_ParamDec(root->lchild);
+    if(!ret)  {
+        if(root->lchild != root->rchild) return Semantic_Check_VarList(root->rchild);
+        else return NULL;
+    }
     if(root->lchild != root->rchild) {
         ret->tail = Semantic_Check_VarList(root->rchild);
     } else {
         ret->tail = NULL;
     }
+    return ret;
 }
 
 static FieldList * Semantic_Check_ParamDec(Node_t * root) {
     FieldList * field = Semantic_Check_gettype(root->lchild);
-    return Semantic_Check_VarDec(root->rchild,field);
+    FieldList * ret = Semantic_Check_VarDec(root->rchild,field);
+    unit_t * find = symbol_table->find(ret->name);
+    if(find && find->deep == symbol_stack->stack_size) {
+        type_ops->field_delete(ret);
+        return NULL;
+    } else {
+        unit_t * node = symbol_table->node_alloc();
+        symbol_table->node_init(node,ret->name);
+        node->field = type_ops->field_copy(ret);
+        symbol_table->insert(node);
+    }
+    return ret;
 }
 
 /*
@@ -392,6 +427,7 @@ static FieldList * Semantic_Check_VarDec(Node_t * root,const FieldList * field) 
 StructSpecifier : STRUCT OptTag LC DefList RC
 */
 static FieldList * Semantic_Check_Struct(Node_t * root) {
+    static int anonymous = 1;
     assert(type(root->lchild,"STRUCT") && type(root->rchild,"RC"));
     FieldList * field = new(FieldList);
     field->type = new(Type);
@@ -399,7 +435,7 @@ static FieldList * Semantic_Check_Struct(Node_t * root) {
     field->type->kind = STRUCTURE;
     field->type->u.structure = Semantic_Check_DefList(root->rchild->left);
     if(type(root->lchild->right,"LC")) {
-        field->name[0] = '\0';
+        sprintf(field->name,"-%d-",anonymous++);
     } else {
         strcpy(field->name,root->lchild->right->lchild->text);
     }

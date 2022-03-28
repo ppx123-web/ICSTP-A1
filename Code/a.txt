@@ -1,98 +1,28 @@
 ---
 Symbol Table Insert: a deep:2
-a line:3
+a line:1
   type : 0 BASIC : 0
 field finish
----
-Symbol Table Insert: b deep:2
-b line:4
-  type : 0 BASIC : 1
-field finish
----
-Symbol Table remove: b 2
-b line:4
-  type : 0 BASIC : 1
 ---
 Symbol Table remove: a 2
-a line:3
+a line:1
   type : 0 BASIC : 0
 ---
-Symbol Table Insert: type deep:1
-type line:1
-  type : 2 
-    a line:3
+Symbol Table Insert: main deep:1
+main line:1
+  type : 3 return tyep:
+     line:0
       type : 0 BASIC : 0
-    b line:4
-      type : 0 BASIC : 1
-field finish
----
-Symbol Table Insert: s1 deep:1
-s1 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
-field finish
----
-Symbol Table Insert: s2 deep:1
-s2 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
-field finish
----
-Symbol Table Insert: s3 deep:1
-s3 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
-field finish
----
-Symbol Table remove: s3 1
-s3 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
----
-Symbol Table remove: s2 1
-s2 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
----
-Symbol Table remove: s1 1
-s1 line:7
-  type : 2 
-    type line:1
-      type : 2 
-        a line:3
-          type : 0 BASIC : 0
-        b line:4
-          type : 0 BASIC : 1
----
-Symbol Table remove: type 1
-type line:1
-  type : 2 
-    a line:3
+
+ var type    a line:1
       type : 0 BASIC : 0
-    b line:4
-      type : 0 BASIC : 1
+field finish
+---
+Symbol Table remove: main 1
+main line:1
+  type : 3 return tyep:
+     line:0
+      type : 0 BASIC : 0
+
+ var type    a line:1
+      type : 0 BASIC : 0
