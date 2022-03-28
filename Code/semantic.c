@@ -60,11 +60,17 @@ static void ErrorHandling(int type,int line) {
         case 14:
             break;
         case 15:
-            Log("Error type 15 at Line %d: struct field", line);
+            Log("Error type %d at Line %d: struct field", type, line);
             break;
         case 16:
             break;
         case 17:
+            Log("Error type %d at Line %d: None Defined Struct", type, line);
+            break;
+        case 18:
+            break;
+        case 19:
+            Log("Error type %d at Line %d: Function Definition Conflict", type, line);
             break;
         default:
             panic("Wrong error type");
@@ -131,12 +137,25 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
     if(find && find->deep == symbol_stack->stack_size) {
         switch (symbol_stack->top()->field_type) {
             case GLOB_FIELD:
-                ErrorHandling(3,cur->line);
+                if(cur->type->kind == FUNC_IMPL || cur->type->kind == FUNC_DECL) {
+                    if(find->type->kind != FUNC_IMPL || cur->type->kind != FUNC_IMPL) {
+                        if(nodeop->equal(find,cur)) {
+                            find->type->kind = cur->type->kind;
+                        } else {
+                            ErrorHandling(19,cur->line);
+                        }
+                    } else {
+                        ErrorHandling(4,cur->line);
+                    }
+                } else {
+                    ErrorHandling(3,cur->line);
+                }
                 break;
             case STRUCT_FIELD:
                 ErrorHandling(15,cur->line);
                 break;
             case FUNC_FIELD:
+                ErrorHandling(3,cur->line);
                 break;
             default:
                 panic("Wrong Field");
@@ -144,6 +163,7 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
         nodeop->delete(cur,cur->node_type);
         return 0;
     } else {
+        ReInsert:
         panic_on("Insert Fail",symbol_table->insert(cur) != 1);
         return 1;
     }
@@ -273,8 +293,16 @@ static Type * Semantic_Check_gettype(Node_t * root) {
             if(temp != NULL && temp->type->kind == STRUCTURE && strcmp(temp->name,temp->type->u.structure->name) == 0 ) {
                 ret = temp->type;
             } else {
-                ErrorHandling(0,0);
-                panic("Not Implemented");
+                ret = NULL;
+                if(temp == NULL) {
+                    ErrorHandling(17,root->lchild->lchild->line);
+                } else if(temp->type->kind != STRUCTURE) {
+                    ErrorHandling(17,root->lchild->lchild->line);
+                } else {
+                    panic("Wrong Error");
+                }
+
+
             }
         }
     } else {
@@ -291,15 +319,6 @@ static void Semantic_Check_main(Node_t * root) {
     }
 }
 
-static void Semantic_Check_Exp(Node_t * root) {
-    panic("Not implemented");
-}
-
-static void Semantic_Check_CompSt(Node_t * root) {
-    panic("Not implemented");
-}
-
-
 static void Semantic_Check_ExtDefList(Node_t * root) {
     Semantic_Check_ExtDef(root->lchild);
     if(root->lchild->right) {
@@ -310,9 +329,11 @@ static void Semantic_Check_ExtDefList(Node_t * root) {
 static void Semantic_Check_ExtDef(Node_t * root) {
     Node_t * cur = root->lchild->right;
     Node_t * specifier = root->lchild;
-    Type * field = Semantic_Check_gettype(specifier);
-    cur->inh = field;
+    Type * type = Semantic_Check_gettype(specifier);
+    if(!type) type = &Wrong_Type;
+    cur->inh = type;
     if(type(cur,"ExtDecList")) {//Ext Var Dec list
+
         VarList_t * head = Semantic_Check_ExtDecList(cur);
         Semantic_Handle_VarList(head,GLOB_FIELD);
     } else if(type(cur,"SEMI")) {//struct Definition
@@ -455,7 +476,7 @@ static unit_t * Semantic_Check_VarDec(Node_t * root) {
                 var_type->kind = BASIC;
                 var_type->u.basic = root->inh->u.basic;
             } else {
-                var_type->kind = STRUCTURE;
+                var_type->kind = root->inh->kind;
                 var_type->u.structure = type_ops->field_copy(root->inh->u.structure);
             }
         } else {
@@ -494,3 +515,14 @@ static Type * Semantic_Check_StructSpecifier(Node_t * root) {
     Semantic_Check_Insert_Node(node);
     return type;
 }
+
+
+static void Semantic_Check_CompSt(Node_t * root) {
+    panic("Not implemented");
+}
+
+static void Semantic_Check_Exp(Node_t * root) {
+    panic("Not implemented");
+}
+
+

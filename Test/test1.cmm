@@ -1,10 +1,7 @@
-struct tt {
-    int a,b;
-};
+struct t2 sda;
+int main();
+int main(int a);
 
-int main(int a,int b) {
-
-}
 /*
 Program (1)
   ExtDefList (1)

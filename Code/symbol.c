@@ -373,7 +373,9 @@ static void node_delete(void * cur,int mode) {
 }
 
 static bool struct_node_equal(unit_t* n1,unit_t* n2) {
-    panic("Not implemented");
+    if(strcmp(n1->name,n2->name) != 0) return false;
+    if(!type_ops->type_equal(n1->type,n2->type)) return false;
+    return true;
 }
 //Symbol Info node
 
@@ -427,8 +429,11 @@ static Type * Type_Ops_Type_copy(const Type *);
 static FieldList * Type_Ops_Field_Copy(const FieldList *);
 static void Type_Ops_Type_delete(Type *);
 static void Type_Ops_Field_delete(FieldList *);
-Type * Type_Ops_Type_alloc_init(int kind);
-FieldList * Type_Ops_Field_alloc_init(char *,int,const Type*);
+static Type * Type_Ops_Type_alloc_init(int kind);
+static FieldList * Type_Ops_Field_alloc_init(char *,int,const Type*);
+
+static bool Type_Ops_Type_Equal(Type *,Type *);
+static bool Type_Ops_Field_Equal(FieldList *,FieldList *);
 
 MODULE_DEF(Type_Ops_t,type_ops) = {
         .print_field = print_field,
@@ -442,6 +447,9 @@ MODULE_DEF(Type_Ops_t,type_ops) = {
 
         .type_alloc_init = Type_Ops_Type_alloc_init,
         .field_alloc_init = Type_Ops_Field_alloc_init,
+
+        .type_equal = Type_Ops_Type_Equal,
+        .field_equal = Type_Ops_Field_Equal,
 };
 
 static void print_field(const FieldList * field,int deep) {
@@ -475,6 +483,10 @@ static void print_type(const Type * type,int deep) {
         print_type(type->u.func.ret_type,deep + 1);
         printf("\n var type");
         print_field(type->u.func.var_list,deep + 1);
+    } else if(type->kind) {
+        printf("Wrong type\n");
+    } else if(type->kind == REMAINED) {
+        panic("Wrong Remained Modified Type");
     }
 }
 
@@ -495,6 +507,10 @@ static Type * Type_Ops_Type_copy(const Type * type) {
         case FUNC_IMPL:
         case FUNC_DECL:
             panic("Not Implemented");
+            break;
+        case REMAINED:
+            panic("Wrong Remained Modified Type");
+        case WRONG:
             break;
         default:
             panic("Wrong");
@@ -534,6 +550,10 @@ static void Type_Ops_Type_delete(Type * type) {
                 Type_Ops_Type_delete(type->u.func.ret_type);
                 Type_Ops_Field_delete(type->u.func.var_list);
                 break;
+            case REMAINED:
+                panic("Wrong Remained Modified Type");
+            case WRONG:
+                break;
             default:
                 panic("Wrong");
         }
@@ -550,14 +570,14 @@ static void Type_Ops_Field_delete(FieldList * field) {
     free(field);
 }
 
-Type * Type_Ops_Type_alloc_init(int kind) {
+static Type * Type_Ops_Type_alloc_init(int kind) {
     Type * ret = new(Type);
     memset(ret,0, sizeof(Type));
     ret->kind = kind;
     return ret;
 }
 
-FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * type) {
+static FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * type) {
     FieldList * ret = new(FieldList);
     memset(ret,0, sizeof(FieldList));
     strcpy(ret->name,name);
@@ -565,5 +585,43 @@ FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * type) {
     ret->tail = NULL;
     ret->type = type_ops->type_copy(type);
     return ret;
+}
+
+static bool Type_Ops_Type_Equal(Type * t1,Type * t2) {
+    if(t1 == NULL && t2 == NULL) return true;
+    if(t1 && !t2 ) return false;
+    if(!t1 && t2 ) return false;
+    if(t1->kind != t2->kind) {
+        return false;
+    }
+    switch (t1->kind) {
+        case REMAINED:
+            panic("Wrong");
+        case WRONG:
+            return true;
+        case BASIC:
+            return t1->u.basic == t2->u.basic;
+        case ARRAY:
+            if(t1->u.array.size != t2->u.array.size) return false;
+            return Type_Ops_Type_Equal(t1->u.array.elem,t2->u.array.elem);
+        case STRUCTURE:
+            return Type_Ops_Field_Equal(t1->u.structure,t2->u.structure);
+        case FUNC_DECL:
+        case FUNC_IMPL:
+            if(!Type_Ops_Type_Equal(t1->u.func.ret_type,t2->u.func.ret_type)) return false;
+            return Type_Ops_Field_Equal(t1->u.func.var_list,t2->u.func.var_list);
+    }
+}
+
+static bool Type_Ops_Field_Equal(FieldList * f1,FieldList * f2) {
+    if(f1 == NULL && f2 == NULL) return true;
+    if(f1 && !f2 ) return false;
+    if(!f1 && f2 ) return false;
+    if(strcmp(f1->name,f2->name) != 0) {
+        return false;
+    }
+    if(!Type_Ops_Type_Equal(f1->type,f2->type)) return false;
+    if(!Type_Ops_Field_Equal(f1->tail,f2->tail)) return false;
+    return true;
 }
 

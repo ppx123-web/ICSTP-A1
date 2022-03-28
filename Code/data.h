@@ -57,7 +57,7 @@ extern MultiwayTree_t * tree;
 
 struct Type_ {
     enum {
-        REMAINED,BASIC, ARRAY, STRUCTURE, FUNC_DECL, FUNC_IMPL,
+        REMAINED, WRONG ,BASIC, ARRAY, STRUCTURE, FUNC_DECL, FUNC_IMPL,
     } kind;
     union {
         int basic;              //基本类型 0 int, 1 float
@@ -241,6 +241,10 @@ typedef struct Type_Ops_t {
     Type * (*type_alloc_init)(int);
     FieldList * (*field_alloc_init)(char *,int,const Type *);
     //传入field 的name，line，以及Type，type会复制一份
+
+    bool (*type_equal)(Type *,Type *);
+    bool (*field_equal)(FieldList *,FieldList *);
+
 }Type_Ops_t;
 extern Type_Ops_t * type_ops;
 
@@ -274,6 +278,10 @@ static FieldList Float_Field = {
         .name[0] = '\0',
         .type = &Float_Type,
         .tail = NULL,
+};
+
+static Type Wrong_Type = {
+        .kind = WRONG,
 };
 
 
