@@ -242,8 +242,8 @@ typedef struct Type_Ops_t {
     FieldList * (*field_alloc_init)(char *,int,const Type *);
     //传入field 的name，line，以及Type，type会复制一份
 
-    bool (*type_equal)(Type *,Type *);
-    bool (*field_equal)(FieldList *,FieldList *);
+    bool (*type_equal)(const Type *,const Type *);
+    bool (*field_equal)(const FieldList *,const FieldList *);
 
 }Type_Ops_t;
 extern Type_Ops_t * type_ops;

@@ -8,12 +8,19 @@
 #define DEBUG_H
 
 //通用的Log
+#ifndef FINAL
 #define Log(format, ...) \
     _Log("\33[1;34m[%s,%d,%s] " format "\33[0m\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
 #define _Log(...) \
     fprintf(stderr,## __VA_ARGS__)
+#else
+    #define Log(format, ...) \
+        printf(format"\n",## __VA_ARGS__)
+
+#endif
+
 
 //用于检测词法分析
 #ifdef SCANNER_DEBUG

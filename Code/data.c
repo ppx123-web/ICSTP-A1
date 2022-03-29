@@ -50,6 +50,7 @@ static Node_t * MultiwayTree_Node_alloc(char * content,int line) {
 
     new_node->rchild = new_node->lchild = new_node->right = new_node->left = NULL;
 
+    new_node->syn = new_node->inh = NULL;
     return new_node;
 }
 

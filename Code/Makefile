@@ -43,15 +43,20 @@ syntax-c: $(YFILE)
 
 TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
 
+FILENUM = `expr $(shell ls -l ../Test/ | grep "^-" | wc -l) - 2`
 # 定义的一些伪目标
 .PHONY: clean test valgrind
 valgrind: parser
 	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all ./parser ../Test/test1.cmm
 test: parser
-	./parser $(TESTFILE) > a.txt
+	@echo $(FILENUM)
+	number=1; while [[ $$number -le $(FILENUM) ]]; do \
+  		./parser ../Test/test$$number.cmm; \
+  		((number = number + 1)); \
+	done
 	@rm *.o
 zero: parser
-	./parser ../Test/test0.cmm
+	./parser ../Test/test.cmm
 	@rm *.o
 
 clean:

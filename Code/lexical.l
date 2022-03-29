@@ -111,6 +111,12 @@ static Node_t* add_node_text(char * content,char *text,int len) {
     Node_t * cur = tree->Node_alloc(content,yylloc.first_line);
     strncpy(cur->text,text,len);
     Treedebug("\t\t%s %s\n",content,text);
+    if(strcmp(content,"INT") == 0) {
+        cur->syn = &Int_Type;
+    }
+    if(strcmp(content,"FLOAT") == 0) {
+        cur->syn = &Float_Type;
+    }
     return cur;
 }
 

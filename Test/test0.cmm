@@ -1,5 +1,4 @@
-/** Testbench by Tao Zhou */
-
+/*
 int global1, global2;
 
 int;
@@ -136,3 +135,4 @@ int extra()
     float f3 = 0.77e111;
     float f4 = 7.0e11;
 }
+*/

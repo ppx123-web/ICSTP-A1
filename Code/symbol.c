@@ -143,8 +143,8 @@ static int SymbolTable_insert(unit_t * cur) {
         listop.insert(list,&list->head,cur);
     }
     symbol_table->cnt += 1;
-    printf("---\nSymbol Table Insert: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
-    type_ops->print_type(cur->type,0);
+    //printf("---\nSymbol Table Insert: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
+    //type_ops->print_type(cur->type,0);
 
     //还需在纵向的十字链表插入头部
     unit_t * scope = &symbol_stack->top()->head;
@@ -164,8 +164,8 @@ static int SymbolTable_remove(unit_t * cur) {
     assert(list != NULL);
     listop.remove(list,cur);
     symbol_table->cnt--;
-    printf("---\nSymbol Table remove: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
-    type_ops->print_type(cur->type,0);
+    //printf("---\nSymbol Table remove: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
+    //type_ops->print_type(cur->type,0);
     return 1;
 }//说明见最后，这里不free
 //Symbol Table
@@ -432,8 +432,8 @@ static void Type_Ops_Field_delete(FieldList *);
 static Type * Type_Ops_Type_alloc_init(int kind);
 static FieldList * Type_Ops_Field_alloc_init(char *,int,const Type*);
 
-static bool Type_Ops_Type_Equal(Type *,Type *);
-static bool Type_Ops_Field_Equal(FieldList *,FieldList *);
+static bool Type_Ops_Type_Equal(const Type *,const Type *);
+static bool Type_Ops_Field_Equal(const FieldList *,const FieldList *);
 
 MODULE_DEF(Type_Ops_t,type_ops) = {
         .print_field = print_field,
@@ -479,9 +479,9 @@ static void print_type(const Type * type,int deep) {
         printf("\n");
         print_field(type->u.structure,deep + 1);
     } else if(type->kind == FUNC_DECL || type->kind == FUNC_IMPL ) {
-        printf("return tyep:\n");
+        printf("return type:\n");
         print_type(type->u.func.ret_type,deep + 1);
-        printf("\n var type");
+        printf("var type:\n");
         print_field(type->u.func.var_list,deep + 1);
     } else if(type->kind) {
         printf("Wrong type\n");
@@ -587,7 +587,7 @@ static FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * t
     return ret;
 }
 
-static bool Type_Ops_Type_Equal(Type * t1,Type * t2) {
+static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
     if(t1 == NULL && t2 == NULL) return true;
     if(t1 && !t2 ) return false;
     if(!t1 && t2 ) return false;
@@ -613,7 +613,7 @@ static bool Type_Ops_Type_Equal(Type * t1,Type * t2) {
     }
 }
 
-static bool Type_Ops_Field_Equal(FieldList * f1,FieldList * f2) {
+static bool Type_Ops_Field_Equal(const FieldList * f1,const FieldList * f2) {
     if(f1 == NULL && f2 == NULL) return true;
     if(f1 && !f2 ) return false;
     if(!f1 && f2 ) return false;

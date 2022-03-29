@@ -1,42 +1,5 @@
-struct t2 sda;
-int main();
-int main(int a);
-
-/*
-Program (1)
-  ExtDefList (1)
-    ExtDef (1)
-      Specifier (1)
-        StructSpecifier (1)
-          STRUCT
-          OptTag (1)
-            ID: asda
-          LC
-          DefList (3)
-            Def (3)
-              Specifier (3)
-                TYPE: int
-              DecList (3)
-                Dec (3)
-                  VarDec (3)
-                    ID: field1
-              SEMI
-            DefList (4)
-              Def (4)
-                Specifier (4)
-                  TYPE: float
-                DecList (4)
-                  Dec (4)
-                    VarDec (4)
-                      ID: field2
-                SEMI
-          RC
-      ExtDecList (5)
-        VarDec (5)
-          ID: s1
-        COMMA
-        ExtDecList (5)
-          VarDec (5)
-            ID: s2
-      SEMI
-*/
+int main()
+{
+int i = 0;
+j = i + 1;
+}

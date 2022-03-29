@@ -17,9 +17,8 @@ int main(int argc,char *argv[]) {
         printf("Usage:%s $FILE\n",argv[0]);
     }
     for (int i = 1;i < argc;i++) {
-    #ifndef FINAL
-        printf("\n\n\n");
-        printf("%s:\n",argv[i]);
+    #ifndef FINAL \
+        Log("\n\n\n%s:\n",argv[i]);
     #endif
         syntax = 0;
         yycolumn = 1;
@@ -37,7 +36,7 @@ int main(int argc,char *argv[]) {
             //tree->traverse(tree->root,0);
             semantic_check->main(tree->root);
 
-            test->main();
+            //test->main();
         }
         end_free();
     }
