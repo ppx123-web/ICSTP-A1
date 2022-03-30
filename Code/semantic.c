@@ -79,14 +79,12 @@ static void ErrorHandling(int type,int line) {
             Log("Error type %d at Line %d: None Defined Struct", type, line);
             break;
         case 18:
-            Log("Error type %d at Line %d: Function declared not implemented", type, line);
+            Log("Error type %d at Line %d: Undefined function", type, line);
             break;
         case 19:
-            Log("Error type %d at Line %d: Function Definition Conflict", type, line);
+            Log("Error type %d at Line %d: Inconsistent declaration of function", type, line);
             break;
 
-        case 20://非要求
-            Log("Error type %d at Line %d: IF WHILE EXP:AND OR  not int", type, line);
         default:
             panic("Wrong error type");
     }
@@ -99,6 +97,7 @@ static Type * Semantic_Check_Specifier(Node_t * root);
 static unit_t * Semantic_Check_Creat_Node(char *,Type *,int,int);
 static int Semantic_Check_Insert_Node(unit_t *);
 static void * Semantic_Handle_VarList(VarList_t *,int );
+static void Semantic_Check_Func_Implement();
 
 static void Semantic_Check_ExtDefList(Node_t * root);
 static void Semantic_Check_ExtDef(Node_t * root);
@@ -148,7 +147,6 @@ static unit_t * Semantic_Check_Creat_Node(char * name,Type * type,int deep,int l
     node->type = type;
 }
 
-
 static int Semantic_Check_Insert_Node(unit_t * cur) {
     unit_t * find = symbol_table->find(cur->name);
     if(find && find->deep == symbol_stack->stack_size) {
@@ -165,7 +163,11 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
                         ErrorHandling(4,cur->line);
                     }
                 } else {
-                    ErrorHandling(3,cur->line);
+                    if(cur->type->kind == STRUCTURE) {
+                        ErrorHandling(16,cur->line);
+                    } else {
+                        ErrorHandling(3,cur->line);
+                    }
                 }
                 break;
             case STRUCT_FIELD:
@@ -295,6 +297,17 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
     return ret;
 }
 
+static void Semantic_Check_Func_Implement() {
+    panic_on("Wrong check or stack",symbol_stack->stack_size != 1);
+    panic_on("Not Glob field",symbol_stack->top()->field_type != GLOB_FIELD);
+    unit_t * cur = symbol_stack->top()->head.scope_next;
+    while (cur != &symbol_stack->top()->tail) {
+        if(cur->type->kind == FUNC_DECL) {
+            ErrorHandling(18,cur->line);
+        }
+        cur = cur->scope_next;
+    }
+}
 /*
 Specifier : TYPE
      | StructSpecifier
@@ -329,14 +342,12 @@ static Type * Semantic_Check_Specifier(Node_t * root) {
             if(temp != NULL && temp->type->kind == STRUCTURE && strcmp(temp->name,temp->type->u.structure->name) == 0 ) {
                 ret = temp->type;
             } else {
-                ret = NULL;
+                ret = &Wrong_Type;
                 if(temp == NULL || temp->type->kind != STRUCTURE) {
                     ErrorHandling(17,root->lchild->lchild->line);
                 }  else {
                     panic("Wrong Error");
                 }
-
-
             }
         }
     } else {
@@ -349,6 +360,7 @@ static void Semantic_Check_Program(Node_t * root) {
     panic_on("Wrong",!type(root,"Program"));
     if(root->lchild && type(root->lchild,"ExtDefList")) {
         Semantic_Check_ExtDefList(root->lchild);
+        Semantic_Check_Func_Implement();
     } else {
         return;
     }
@@ -517,7 +529,7 @@ static unit_t * Semantic_Check_VarDec(Node_t * root) {
     for(cur = root->lchild;cur->lchild != NULL;cur = cur->lchild) {
         nums[cnt++] = (int)strtol(cur->right->right->text,&s,0);
     }
-    Type * var_type = new(Type);
+    Type * var_type = new(Type), * type_head = var_type;
     int i = 0;
     do {
         if(i == cnt) {
@@ -536,7 +548,7 @@ static unit_t * Semantic_Check_VarDec(Node_t * root) {
         }
         i++;
     } while (i <= cnt);
-    unit_t * ret = Semantic_Check_Creat_Node(cur->text,var_type,0,cur->line);
+    unit_t * ret = Semantic_Check_Creat_Node(cur->text,type_head,0,cur->line);
     return ret;
 }
 
@@ -611,7 +623,9 @@ static void Semantic_Check_Stmt(Node_t * root) {
         if(!type_ops->type_equal(exp_type,&Int_Type)) {
             ErrorHandling(7,root->lchild->right->right->line);
         }
-        Semantic_Check_Stmt(root->rchild->right->right->right->right);
+        if(root->lchild->right->right->right->right) {
+            Semantic_Check_Stmt(root->lchild->right->right->right->right);
+        }
         if(type(root->rchild->left,"ELSE")) {
             Semantic_Check_Stmt(root->rchild);
         }
@@ -629,7 +643,7 @@ static void Semantic_Check_Exp(Node_t * root) {
     panic_on("Wrong Exp", !type(root,"Exp"));
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
     const Type * ret = NULL;
-    const Type * left_type, * right_type, * mid_type;
+    const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
     if(type(left,"ID") && mid == NULL) {
         unit_t * find = symbol_table->find(left->text);
         if(!find) {
@@ -650,7 +664,7 @@ static void Semantic_Check_Exp(Node_t * root) {
         if(!type_ops->type_equal(left_type,right_type)) {
             ErrorHandling(5,mid->line);
         }
-        if(!type(left->lchild,"ID") && !type(left->rchild,"RB") && !type(left->lchild->right,"DOT")) {
+        if(!type(left->lchild,"ID") && !type(left->rchild,"RB") && !(left->lchild->right && type(left->lchild->right,"DOT"))) {
             ErrorHandling(6,mid->line);
         }
         ret = left_type;
@@ -773,7 +787,7 @@ static void Semantic_Check_Args(Node_t * root) {
     if(root->lchild != root->rchild) {
         cur = cur->rchild;
     }
-    while (cur->lchild != cur->rchild) {
+    while (type(cur,"Args")) {
         Semantic_Check_Exp(root->lchild);
         list->tail = type_ops->field_alloc_init("Exp",0,root->lchild->syn);
         cur = cur->rchild;

@@ -588,11 +588,14 @@ static FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * t
 }
 
 static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
+    if(t1 == t2) return true;
     if(t1 == NULL && t2 == NULL) return true;
     if(t1 && !t2 ) return false;
     if(!t1 && t2 ) return false;
     if(t1->kind != t2->kind) {
-        return false;
+        if((t1->kind != FUNC_IMPL && t1->kind != FUNC_DECL ) && (t2->kind != FUNC_IMPL && t2->kind != FUNC_DECL )) {
+            return false;
+        }
     }
     switch (t1->kind) {
         case REMAINED:
@@ -602,7 +605,7 @@ static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
         case BASIC:
             return t1->u.basic == t2->u.basic;
         case ARRAY:
-            if(t1->u.array.size != t2->u.array.size) return false;
+            //if(t1->u.array.size != t2->u.array.size) return false;
             return Type_Ops_Type_Equal(t1->u.array.elem,t2->u.array.elem);
         case STRUCTURE:
             return Type_Ops_Field_Equal(t1->u.structure,t2->u.structure);
@@ -617,9 +620,11 @@ static bool Type_Ops_Field_Equal(const FieldList * f1,const FieldList * f2) {
     if(f1 == NULL && f2 == NULL) return true;
     if(f1 && !f2 ) return false;
     if(!f1 && f2 ) return false;
-    if(strcmp(f1->name,f2->name) != 0) {
-        return false;
-    }
+//    if(strcmp(f1->name,f2->name) != 0 ) {
+//        if(!(f1->type->kind == STRUCTURE && f2->type->kind == STRUCTURE)) {
+//            return false;
+//        }
+//    }
     if(!Type_Ops_Type_Equal(f1->type,f2->type)) return false;
     if(!Type_Ops_Field_Equal(f1->tail,f2->tail)) return false;
     return true;

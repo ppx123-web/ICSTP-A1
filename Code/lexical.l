@@ -40,6 +40,7 @@ ELSE	else
 WHILE	while
 LINECOMMENT "//"
 LCOMMENTS   "/*"   
+NEWLINE (\n|\r|(\r\n))
 
 %%
 {STRUCT}    { ELEMENT("STRUCT"); return STRUCT; }
@@ -71,7 +72,7 @@ LCOMMENTS   "/*"
 {RC}	    { ELEMENT("RC"); return RC;}
 [ ]         { strcat(linetext," ");}
 [\t]        { yycolumn += 3; strcat(linetext,"\t");}
-[\n\r]      { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
+{NEWLINE}   { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
 {LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
 {LCOMMENTS} {   
                 char c1 = input(),c2 = input();
@@ -120,4 +121,11 @@ static Node_t* add_node_text(char * content,char *text,int len) {
     return cur;
 }
 
+void yyinit() {
+    syntax = 0;
+    yycolumn = 1;
+    yylineno = 1;
+    yylloc.first_line = yylloc.last_line = 1;
+    yylloc.first_column = yylloc.last_column = 0;
+}
 

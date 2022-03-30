@@ -1,11 +1,9 @@
-int func()
+int func(int i)
 {
-int i = 10;
-return i;
+    return i;
 }
 
 int main()
 {
-int i;
-i = func();
+    func(1, 2);
 }

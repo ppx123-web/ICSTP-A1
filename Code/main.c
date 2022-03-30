@@ -8,7 +8,7 @@ int yylex(void);
 void yyerror(char* s);
 
 int syntax = 0;
-extern int yycolumn,yylineno;
+void yyinit();
 static void end_free();
 
 
@@ -17,12 +17,11 @@ int main(int argc,char *argv[]) {
         printf("Usage:%s $FILE\n",argv[0]);
     }
     for (int i = 1;i < argc;i++) {
-    #ifndef FINAL \
+    #ifndef FINAL
         Log("\n\n\n%s:\n",argv[i]);
     #endif
-        syntax = 0;
-        yycolumn = 1;
-        yylineno = 1;
+        yyinit();
+
         FILE * f = fopen(argv[i], "r");
         if (!f) {
             perror(argv[1]);
@@ -31,8 +30,8 @@ int main(int argc,char *argv[]) {
         yyrestart(f);
         yyparse();
         fclose(f);
+        semantic_check->init();
         if (syntax == 0) {
-            semantic_check->init();
             //tree->traverse(tree->root,0);
             semantic_check->main(tree->root);
 

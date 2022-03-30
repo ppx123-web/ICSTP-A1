@@ -1,36 +1,39 @@
----
-Symbol Table Insert: i ,deep: 2 ,line: 1
-Type : 2 BASIC : 0
----
-Symbol Table remove: i ,deep: 2 ,line: 1
-Type : 2 BASIC : 0
----
-Symbol Table Insert: func ,deep: 1 ,line: 1
-Type : 6 return type:
-  Type : 2 BASIC : 0
-var type:
-  i line:1
-    Type : 2 BASIC : 0
----
-Symbol Table Insert: i ,deep: 2 ,line: 1
-Type : 2 BASIC : 0
----
-Symbol Table remove: i ,deep: 2 ,line: 1
-Type : 2 BASIC : 0
----
-Symbol Table Insert: main ,deep: 1 ,line: 11
-Type : 6 return type:
-  Type : 2 BASIC : 0
-var type:
----
-Symbol Table remove: main ,deep: 1 ,line: 11
-Type : 6 return type:
-  Type : 2 BASIC : 0
-var type:
----
-Symbol Table remove: func ,deep: 1 ,line: 1
-Type : 6 return type:
-  Type : 2 BASIC : 0
-var type:
-  i line:1
-    Type : 2 BASIC : 0
+flex -o ./lex.yy.c ./lexical.l
+bison -o ./syntax.tab.c -d -v ./syntax.y
+gcc -c ./syntax.tab.c -o ./syntax.tab.o
+gcc -std=c99   -c -o main.o main.c
+gcc -std=c99   -c -o test.o test.c
+gcc -std=c99   -c -o data.o data.c
+gcc -std=c99   -c -o semantic.o semantic.c
+gcc -std=c99   -c -o symbol.o symbol.c
+gcc -o parser ./main.o ./test.o ./data.o ./semantic.o ./symbol.o ./syntax.tab.o -lfl -ly
+23
+number=1; while [[ $number -le `expr 25 - 2` ]]; do \
+  		./parser ../Test/test$number.cmm; \
+  		((number = number + 1)); \
+done
+Error type 1 at Line 4: Undefined variable
+Error type 5 at Line 4: Type mismatched for assignment
+Error type 2 at Line 4: Undefined function
+Error type 3 at Line 4: Redefined variable
+Error type 4 at Line 6: Redefined function
+Error type 5 at Line 4: Type mismatched for assignment
+Error type 6 at Line 4: The left-hand side of an assignment must be a variable
+Error type 7 at Line 4: Type mismatched for operands
+Error type 8 at Line 4: Type mismatched for return
+Error type 9 at Line 8: Function is not applicable for arguments
+Error type 10 at Line 4: Variable is not an array
+Error type 11 at Line 4: Not a function
+Error type 12 at Line 4: Not an integer
+Error type 13 at Line 9: Illegal use of "."
+Error type 14 at Line 9: Non-existent field
+Error type 7 at Line 9: Type mismatched for operands
+Error type 7 at Line 9: Type mismatched for operands
+Error type 15 at Line 4: Struct redefined field
+Error type 16 at Line 6: Duplicated name struct
+Error type 17 at Line 3: None Defined Struct
+Error type 19 at Line 8: Inconsistent declaration of function
+Error type 18 at Line 6: Undefined function
+Error type 3 at Line 10: Redefined variable
+Error type 5 at Line 17: Type mismatched for assignment
+Error type 5 at Line 16: Type mismatched for assignment
