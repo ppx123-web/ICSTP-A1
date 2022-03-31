@@ -1,7 +1,7 @@
 #include "data.h"
 #include "debug.h"
 
-
+static char * empty = "";
 /*
  * 代码要求：
  *      所有unit_t的实例在VarDec中创建，在stack.pop()中free，里面的type指针也同样
@@ -17,6 +17,8 @@
  *              遇到Exp检查是否有语义错误
  */
 
+
+//临时的返回链表
 typedef struct VarList_t {
     unit_t * node;
     struct VarList_t * next;
@@ -25,64 +27,64 @@ typedef struct VarList_t {
 
 
 
-static void ErrorHandling(int type,int line) {
+static void ErrorHandling(int type,int line,char * msg) {
     switch (type) {
         case 1:
-            Log("Error type %d at Line %d: Undefined variable", type, line);
+            Log("Error type %d at Line %d: Undefined variable \"%s\"", type, line,msg);
             break;
         case 2:
-            Log("Error type %d at Line %d: Undefined function", type, line);
+            Log("Error type %d at Line %d: Undefined function \"%s\"", type, line,msg);
             break;
         case 3:
-            Log("Error type %d at Line %d: Redefined variable", type, line);
+            Log("Error type %d at Line %d: Redefined variable \"%s\"", type, line,msg);
             break;
         case 4:
-            Log("Error type %d at Line %d: Redefined function", type, line);
+            Log("Error type %d at Line %d: Redefined function \"%s\"", type, line,msg);
             break;
         case 5:
-            Log("Error type %d at Line %d: Type mismatched for assignment", type, line);
+            Log("Error type %d at Line %d: Type mismatched for assignment \"%s\"", type, line,msg);
             break;
         case 6:
-            Log("Error type %d at Line %d: The left-hand side of an assignment must be a variable", type, line);
+            Log("Error type %d at Line %d: The left-hand side of an assignment must be a variable \"%s\"", type, line,msg);
             break;
         case 7:
-            Log("Error type %d at Line %d: Type mismatched for operands", type, line);
+            Log("Error type %d at Line %d: Type mismatched for operands \"%s\"", type, line,msg);
             break;
         case 8:
-            Log("Error type %d at Line %d: Type mismatched for return", type, line);
+            Log("Error type %d at Line %d: Type mismatched for return \"%s\"", type, line,msg);
             break;
         case 9:
-            Log("Error type %d at Line %d: Function is not applicable for arguments", type, line);
+            Log("Error type %d at Line %d: Function is not applicable for arguments \"%s\"", type, line,msg);
             break;
         case 10:
-            Log("Error type %d at Line %d: Variable is not an array", type, line);
+            Log("Error type %d at Line %d: Variable is not an array \"%s\"", type, line,msg);
             break;
         case 11:
-            Log("Error type %d at Line %d: Not a function", type, line);
+            Log("Error type %d at Line %d: Not a function \"%s\"", type, line,msg);
             break;
         case 12:
-            Log("Error type %d at Line %d: Not an integer", type, line);
+            Log("Error type %d at Line %d: Not an integer \"%s\"", type, line,msg);
             break;
         case 13:
-            Log("Error type %d at Line %d: Illegal use of \".\"", type, line);
+            Log("Error type %d at Line %d: Illegal use of \"%s\"", type, line,msg);
             break;
         case 14:
-            Log("Error type %d at Line %d: Non-existent field", type, line);
+            Log("Error type %d at Line %d: Non-existent field \"%s\"", type, line,msg);
             break;
         case 15:
-            Log("Error type %d at Line %d: Struct redefined field", type, line);
+            Log("Error type %d at Line %d: Struct redefined field \"%s\"", type, line,msg);
             break;
         case 16:
-            Log("Error type %d at Line %d: Duplicated name struct", type, line);
+            Log("Error type %d at Line %d: Duplicated name struct \"%s\"", type, line,msg);
             break;
         case 17:
-            Log("Error type %d at Line %d: None Defined Struct", type, line);
+            Log("Error type %d at Line %d: None Defined Struct \"%s\"", type, line,msg);
             break;
         case 18:
-            Log("Error type %d at Line %d: Undefined function", type, line);
+            Log("Error type %d at Line %d: Undefined function \"%s\"", type, line,msg);
             break;
         case 19:
-            Log("Error type %d at Line %d: Inconsistent declaration of function", type, line);
+            Log("Error type %d at Line %d: Inconsistent declaration of function \"%s\"", type, line,msg);
             break;
 
         default:
@@ -126,7 +128,6 @@ static Semantic_Check_t Semantic_Check = {
         .init = Semantic_Check_init,
         .main = Semantic_Check_Program,
 
-        .ErrorHandling = ErrorHandling,
 };
 
 Semantic_Check_t * semantic_check = &Semantic_Check;
@@ -157,24 +158,24 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
                         if(nodeop->equal(find,cur)) {
                             find->type->kind = cur->type->kind;
                         } else {
-                            ErrorHandling(19,cur->line);
+                            ErrorHandling(19,cur->line,cur->name);
                         }
                     } else {
-                        ErrorHandling(4,cur->line);
+                        ErrorHandling(4,cur->line,cur->name);
                     }
                 } else {
                     if(cur->type->kind == STRUCTURE) {
-                        ErrorHandling(16,cur->line);
+                        ErrorHandling(16,cur->line,cur->name);
                     } else {
-                        ErrorHandling(3,cur->line);
+                        ErrorHandling(3,cur->line,cur->name);
                     }
                 }
                 break;
             case STRUCT_FIELD:
-                ErrorHandling(15,cur->line);
+                ErrorHandling(15,cur->line,cur->name);
                 break;
             case FUNC_FIELD:
-                ErrorHandling(3,cur->line);
+                ErrorHandling(3,cur->line,cur->name);
                 break;
             default:
                 panic("Wrong Field");
@@ -199,7 +200,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
         case STRUCT_FIELD://返回FieldList *
             while (cur) {
                 if(!symbol_table->insert(cur->node)) {
-                    ErrorHandling(15,cur->node->line);
+                    ErrorHandling(15,cur->node->line,cur->node->name);
                     temp_node = cur->next;
                     nodeop->delete(cur->node,INFONODE);
                     free(cur);
@@ -207,7 +208,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
                     continue;
                 }
                 if(cur->assign) {
-                    ErrorHandling(15,cur->node->line);
+                    ErrorHandling(15,cur->node->line,cur->node->name);
                 }
                 prev->next = cur;
                 prev= prev->next;
@@ -230,7 +231,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
         case GLOB_FIELD: //仅做检查和插入符号表，返回NULL
             while (cur) {
                 if(!symbol_table->insert(cur->node)) {
-                    ErrorHandling(3,cur->node->line);
+                    ErrorHandling(3,cur->node->line,cur->node->name);
                     temp_node = cur->next;
                     nodeop->delete(cur->node,INFONODE);
                     free(cur);
@@ -246,7 +247,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
         case FUNC_FIELD: //返回FieldList构成的函数的参数链表
             while (cur) {
                 if(!symbol_table->insert(cur->node)) {
-                    ErrorHandling(3,cur->node->line);
+                    ErrorHandling(3,cur->node->line,cur->node->name);
                     temp_node = cur->next;
                     nodeop->delete(cur->node,INFONODE);
                     free(cur);
@@ -272,7 +273,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
         case COMPST_FIELD://仅做检查和插入符号表，返回NULL
             while (cur) {
                 if(!symbol_table->insert(cur->node)) {
-                    ErrorHandling(3,cur->node->line);
+                    ErrorHandling(3,cur->node->line,cur->node->name);
                     temp_node = cur->next;
                     nodeop->delete(cur->node,INFONODE);
                     free(cur);
@@ -303,7 +304,7 @@ static void Semantic_Check_Func_Implement() {
     unit_t * cur = symbol_stack->top()->head.scope_next;
     while (cur != &symbol_stack->top()->tail) {
         if(cur->type->kind == FUNC_DECL) {
-            ErrorHandling(18,cur->line);
+            ErrorHandling(18,cur->line,cur->name);
         }
         cur = cur->scope_next;
     }
@@ -344,7 +345,7 @@ static Type * Semantic_Check_Specifier(Node_t * root) {
             } else {
                 ret = &Wrong_Type;
                 if(temp == NULL || temp->type->kind != STRUCTURE) {
-                    ErrorHandling(17,root->lchild->lchild->line);
+                    ErrorHandling(17,root->lchild->lchild->line,root->lchild->lchild->right->lchild->text);
                 }  else {
                     panic("Wrong Error");
                 }
@@ -568,7 +569,7 @@ static Type * Semantic_Check_StructSpecifier(Node_t * root) {
     }
     type->u.structure =  Semantic_Handle_VarList(head,STRUCT_FIELD);
     symbol_stack->pop();
-    unit_t * node = Semantic_Check_Creat_Node("struct",type,1,root->lchild->line);
+    unit_t * node = Semantic_Check_Creat_Node("struct",type,0,root->lchild->line);
 
     if(type(root->lchild->right,"LC")) {
         sprintf(node->name,"-%d-",anonymous);
@@ -615,13 +616,13 @@ static void Semantic_Check_Stmt(Node_t * root) {
         Semantic_Check_Exp(root->lchild->right);
         const Type * ret_type = root->lchild->right->syn;
         if(!type_ops->type_equal(ret_type,symbol_stack->top()->head.type->u.func.ret_type)) {
-            ErrorHandling(8,root->lchild->line);
+            ErrorHandling(8,root->lchild->line,root->lchild->text);
         }
     } else if(type(root->lchild,"IF")) {
         Semantic_Check_Exp(root->lchild->right->right);
         const Type * exp_type = root->lchild->right->right->syn;
         if(!type_ops->type_equal(exp_type,&Int_Type)) {
-            ErrorHandling(7,root->lchild->right->right->line);
+            ErrorHandling(7,root->lchild->right->right->line,root->lchild->right->right->text);
         }
         if(root->lchild->right->right->right->right) {
             Semantic_Check_Stmt(root->lchild->right->right->right->right);
@@ -633,9 +634,9 @@ static void Semantic_Check_Stmt(Node_t * root) {
         Semantic_Check_Exp(root->lchild->right->right);
         const Type * exp_type = root->lchild->right->right->syn;
         if(!type_ops->type_equal(exp_type,&Int_Type)) {
-            ErrorHandling(7,root->lchild->right->right->line);
+            ErrorHandling(7,root->lchild->right->right->line,root->lchild->text);
         }
-        Semantic_Check_Stmt(root->rchild->right->right->right->right);
+        Semantic_Check_Stmt(root->lchild->right->right->right->right);
     }
 }
 
@@ -647,7 +648,7 @@ static void Semantic_Check_Exp(Node_t * root) {
     if(type(left,"ID") && mid == NULL) {
         unit_t * find = symbol_table->find(left->text);
         if(!find) {
-            ErrorHandling(1,left->line);
+            ErrorHandling(1,left->line,left->text);
             ret = &Wrong_Type;
         } else {
             ret = find->type;
@@ -662,10 +663,10 @@ static void Semantic_Check_Exp(Node_t * root) {
         left_type = left->syn;
         right_type = right->syn;
         if(!type_ops->type_equal(left_type,right_type)) {
-            ErrorHandling(5,mid->line);
+            ErrorHandling(5,mid->line,mid->text);
         }
         if(!type(left->lchild,"ID") && !type(left->rchild,"RB") && !(left->lchild->right && type(left->lchild->right,"DOT"))) {
-            ErrorHandling(6,mid->line);
+            ErrorHandling(6,mid->line,mid->text);
         }
         ret = left_type;
     } else if(type(mid,"AND") || type(mid,"OR")) {
@@ -674,7 +675,7 @@ static void Semantic_Check_Exp(Node_t * root) {
         left_type = left->syn;
         right_type = right->syn;
         if(!type_ops->type_equal(left_type,&Int_Type) || !type_ops->type_equal(right_type,&Int_Type)) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,mid->text);
         }
         ret = &Int_Type;
     }  else if(type(mid,"RELOP")) {
@@ -684,10 +685,10 @@ static void Semantic_Check_Exp(Node_t * root) {
         right_type = right->syn;
         if((!type_ops->type_equal(left_type,&Int_Type) && !type_ops->type_equal(left_type,&Float_Type))
             || (!type_ops->type_equal(right_type,&Int_Type) && !type_ops->type_equal(right_type,&Float_Type))) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,mid->text);
         }
         if(!type_ops->type_equal(right_type,left_type)) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,mid->text);
         }
         ret = &Int_Type;
     } else if(type(mid,"PLUS") || type(mid,"MINUS") || type(mid,"STAR") || type(mid,"DIV")) {
@@ -697,10 +698,10 @@ static void Semantic_Check_Exp(Node_t * root) {
         right_type = right->syn;
         if((!type_ops->type_equal(left_type,&Int_Type) && !type_ops->type_equal(left_type,&Float_Type))
            || (!type_ops->type_equal(right_type,&Int_Type) && !type_ops->type_equal(right_type,&Float_Type))) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,empty);
         }
         if(!type_ops->type_equal(right_type,left_type)) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,empty);
         }
         ret = left_type;
     } else if(type(left,"LP")) {
@@ -713,22 +714,22 @@ static void Semantic_Check_Exp(Node_t * root) {
         Semantic_Check_Exp(mid);
         mid_type = mid->syn;
         if(!type_ops->type_equal(mid_type,&Int_Type)) {
-            ErrorHandling(7,mid->line);
+            ErrorHandling(7,mid->line,left->text);
         }
-        mid_type = &Int_Type;
+        ret = &Int_Type;
     } else if(type(mid,"LP")) {
         unit_t * find = symbol_table->find(left->text);
         if(!find) {
-            ErrorHandling(2,left->line);
+            ErrorHandling(2,left->line,left->text);
             ret = &Wrong_Type;
         } else if(find->type->kind != FUNC_DECL && find->type->kind != FUNC_IMPL) {
-            ErrorHandling(11,left->line);
+            ErrorHandling(11,left->line,left->text);
             ret = find->type;
         } else {
             if(type(mid->right,"RP") && find->type->u.func.var_list != NULL) {
-                ErrorHandling(9,left->line);
+                ErrorHandling(9,left->line,left->text);
             } else if(type(mid->right,"Args") && find->type->u.func.var_list == NULL) {
-                ErrorHandling(9,left->line);
+                ErrorHandling(9,left->line,left->text);
             } else {
                 if(type(mid->right,"Args")) {
                     mid->right->inh = find->type;
@@ -743,11 +744,11 @@ static void Semantic_Check_Exp(Node_t * root) {
         left_type = left->syn;
         mid_type = mid->right->syn;
         if(left_type->kind != ARRAY) {
-            ErrorHandling(10,mid->line);
+            ErrorHandling(10,mid->line,mid->text);
             ret = left_type;
         } else {
             if(!type_ops->type_equal(mid_type,&Int_Type)) {
-                ErrorHandling(12,mid->line);
+                ErrorHandling(12,mid->line,mid->text);
             }
             ret = left_type->u.array.elem;
         }
@@ -755,7 +756,7 @@ static void Semantic_Check_Exp(Node_t * root) {
         Semantic_Check_Exp(left);
         left_type = left->syn;
         if(left_type->kind != STRUCTURE) {
-            ErrorHandling(13,mid->line);
+            ErrorHandling(13,mid->line,mid->text);
             ret = left_type;
         } else {
             const FieldList * temp = left_type->u.structure;
@@ -768,7 +769,7 @@ static void Semantic_Check_Exp(Node_t * root) {
             if(temp) {
                 ret = temp->type;
             } else {
-                ErrorHandling(14,mid->line);
+                ErrorHandling(14,mid->line,mid->text);
                 ret = left_type;
             }
         }
@@ -793,7 +794,7 @@ static void Semantic_Check_Args(Node_t * root) {
         cur = cur->rchild;
     }
     if(!type_ops->field_equal(root->inh->u.func.var_list,head)) {
-        ErrorHandling(9,root->lchild->right->line);
+        ErrorHandling(9,root->lchild->right->line,",");
     }
     type_ops->field_delete(head);
 }

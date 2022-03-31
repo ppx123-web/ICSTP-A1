@@ -16,8 +16,8 @@ add_custom_target(TEMP)
 
 add_custom_command(TARGET TEMP
 PRE_BUILD
-COMMAND flex -o ${PROJECT_SOURCE_DIR}/Code/lex.yy.c ${PROJECT_SOURCE_DIR}/Code/lexical.l
-COMMAND bison -o ${PROJECT_SOURCE_DIR}/Code/syntax.tab.c -d -v ${PROJECT_SOURCE_DIR}/Code/syntax.y
+COMMAND echo "FLEX" && cd ${PROJECT_SOURCE_DIR}/Code && flex lexical.l
+COMMAND echo "BISON" && cd ${PROJECT_SOURCE_DIR}/Code && bison -v -d syntax.y
 )
 
 

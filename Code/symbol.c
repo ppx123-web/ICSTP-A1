@@ -620,11 +620,12 @@ static bool Type_Ops_Field_Equal(const FieldList * f1,const FieldList * f2) {
     if(f1 == NULL && f2 == NULL) return true;
     if(f1 && !f2 ) return false;
     if(!f1 && f2 ) return false;
-//    if(strcmp(f1->name,f2->name) != 0 ) {
-//        if(!(f1->type->kind == STRUCTURE && f2->type->kind == STRUCTURE)) {
-//            return false;
-//        }
-//    }
+    /*
+    if(strcmp(f1->name,f2->name) != 0 ) {
+        if(!(f1->type->kind == STRUCTURE && f2->type->kind == STRUCTURE)) {
+            return false;
+        }
+    }*/
     if(!Type_Ops_Type_Equal(f1->type,f2->type)) return false;
     if(!Type_Ops_Field_Equal(f1->tail,f2->tail)) return false;
     return true;
