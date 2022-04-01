@@ -1,0 +1,50 @@
+/* correct Test */
+
+int a[100];
+
+int printf(int n);
+int display(struct {int a,b,c;} n);
+
+int main() {
+    int a = 0,sum = 0;
+    while (a < 1000) {
+        sum = sum + a;
+        a = a + 1;
+    }
+    if(sum > a * 1000) {
+        printf(sum);
+    }
+    return sum;
+}
+
+int func() {
+    struct t1 {
+        int x,y,z;
+    } point1,point2;
+    point1.x = point2.x = 1;
+    point1.y = point2.y = 2;
+    point1.z = point3.z = 3;
+    return display(point1);
+}
+
+int print(int n) {
+    return n;
+}
+
+int display(struct {int a,b,c;} n) {
+    int sum = 0;
+    sum = n.a + n.b + n.c;
+    if(sum > 10) {
+        int mid = sum * 10;
+        return mid/5;
+    } else if(sum < 0) {
+        return - 1;
+    } else {
+        int all = sum * 2;
+        if(all) {
+            return printf(all);
+        } else {
+            return -all;
+        }
+    }
+}

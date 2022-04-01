@@ -230,6 +230,8 @@ static void SymbolStack_push(stack_ele_t * item) {
     next->prev = item;
     item->prev = first;
     symbol_stack->stack_size++;
+
+    item->head.type = next->head.type;
 }
 
 static void SymbolStack_pop() {

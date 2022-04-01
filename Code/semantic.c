@@ -795,6 +795,8 @@ static void Semantic_Check_Args(Node_t * root) {
     head = list;
     if(root->lchild != root->rchild) {
         cur = cur->rchild;
+    } else {
+        cur = cur->lchild;
     }
     while (type(cur,"Args")) {
         Semantic_Check_Exp(cur->lchild);
@@ -803,7 +805,7 @@ static void Semantic_Check_Args(Node_t * root) {
         list = list->tail;
     }
     if(!type_ops->field_equal(root->inh->u.func.var_list,head)) {
-        ErrorHandling(9,root->lchild->right->line,",");
+        ErrorHandling(9,root->lchild->line,root->lchild->text);
     }
     type_ops->field_delete(head);
 }
