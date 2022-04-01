@@ -1,136 +1,64 @@
-int global1, global2;
+/*  Test by Zhao Chaoyi */
 
-int;
+struct {
+    int a,b;
+}a;
 
-/* anonymous structure */
-struct
-{
-    int field1;
+struct type_1 {
+    float c;
+    int d;
 };
 
-struct
-{
-    int field1;
-    float field2;
-} s1, s2;
+struct type_2 {
+    float a;
+    struct type_1 t1;
+}t1,t2,t3,t4;
 
-/* structure */
-struct Complex
-{
-    int real;
-    int imag;
-} c1, c2, carray[100], multi_dim[1][2][3];
+int func_1() {
+    return 1;
+}
 
-/* nested structure */
-struct Complex_pair
-{
-    struct Complex x;
-    struct Complex y;
-    struct withname
-    {
-        int field;
-    } s1;
-    struct
-    {
-        float field;
-    } s2;
-};
-
-// Note: function declaration not allowed
-
-int main()
-{
-    /* local variable declarations */
+int main() {
     int a;
-    int barray[10][2];
-    int i = 0;
-    int a1, a2, a3;
-    struct Complex c;
-    struct Complex_pair cp;
+    if(b > 1) {
+        non_exists_func(a,t1);
+    } else {
+        int a;
+        float a;
+    }
+    return 0;
+}
 
-    /* main body */
-    nonexist_func(1, 2, a, barray[1], barray);
-    1;
+float func_1(int c) {
+    return 0.1;
+}
+
+float func_2() {
+    int a;
+    a = 1.0;
+    1 = a;
+    t1 = t3 + t4;
+    return a;
+}
+
+int func_3(int c,int d) {
+    int d = func_1(0.1);
+    return d[1];
+}
+
+struct type_1 func_4(int d) {
+    struct type_2 t;
+    int array[100];
+    t();
+    array[1.5];
     {
-        int x;
+    int c = d.a;
+    c = t.t1.a;
     }
-
-    true = 1;
-    false = true - 1;
-    if (true) {
-        return false;
-    }
-
-    /* dangling-else problem */
-    if (a && true)
-        if (a && false)
-            return true;
-        else
-            return which_if;
-
-    while (i > 0) {
-        i = i + 1;
-        if (some_condition(1, 2, 3)) {
-            do_nothing();
-        }
-    }
-
-    /* member access */
-    c.imag = 1;
-    c.real = 2;
-    c.real = c.imag + c.real;
-    cp.s1.field = 1;
-    multi_dim[0][some_func()][0].real = 1;
-
-    /* precedence of operators */
-    non_exist_bool = true && false || (1 + 2) != (1 + 2 * 3)
-                                                 > barray[7] <= c.imag = (!a / 8) == 9;
-
-    /* associativity of operators */
-    a = -- --b;
-    a = !!!!!b;
-    a = b * c * d;
-    a = b / c / d;
-    a = b + c + d;
-    a = b - c - d;
-    a = b < c < d;
-    a = b <= c <= d;
-    a = b > c > d;
-    a = b >= c >= d;
-    a = b == c == d;
-    a = b != c != d;
-    a = b && c && d;
-    a = b || c || d;
-    a = b = c = d = 1;
-
-    return nonexist_func();
 }
 
-/*
- * block comment
- * @#$%^&*()
- */
-
-// line comment #$%^&*()~!@#$%^&*()_+
-
-/* function definition */
-int func(int ival, float fval, float arr[10])
-{
-    int a = 1;
-}
-
-/* Extra requirements */
-
-int extra()
-{
-    int oct1 = 0123;
-    int oct2 = 00000000010;
-    int oct3 = -007;
-    int hex1 = 0x3f;
-    int hex2 = 0XABCDEF;
-    int hex3 = 0xAbCdEf;
-    float f1 = 1.05e-4;
-    float f2 = 1.0e111;
-    float f3 = 0.77e111;
-    float f4 = 7.0e11;
-}
+struct type_2 {
+    float a;
+    int d = 0;
+    struct non_exist tt;
+};

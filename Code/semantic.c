@@ -289,7 +289,7 @@ static void * Semantic_Handle_VarList(VarList_t * head,int kind) {
         default:
             panic("Wrong Field");
     }
-    cur = head;
+    cur = newlist.next;
     while (cur) {
         prev = cur->next;
         free(cur);
@@ -515,6 +515,12 @@ static VarList_t * Semantic_Check_Dec(Node_t * root) {
     ret->next = NULL;
     ret->node = Semantic_Check_VarDec(root->lchild);
     ret->assign = (root->lchild != root->rchild);
+    if(ret->assign) {
+        Semantic_Check_Exp(root->rchild);
+        if(!type_ops->type_equal(root->inh,root->rchild->syn)) {
+            ErrorHandling(5,root->rchild->left->line,"=");
+        }
+    }
     return ret;
 }
 
@@ -587,7 +593,7 @@ static Type * Semantic_Check_StructSpecifier(Node_t * root) {
 
 //definition finished
 
-static void Semantic_Check_CompSt(Node_t * root) {
+static void Semantic_Check_CompSt(Node_t * root) {//在调用前，需要先push stack
     panic_on("Wrong",!type(root,"CompSt"));
     if(type(root->lchild->right,"DefList")) {
         VarList_t * head = Semantic_Check_DefList(root->lchild->right);
@@ -611,7 +617,9 @@ static void Semantic_Check_Stmt(Node_t * root) {
     if(type(root->lchild,"Exp")) {
         Semantic_Check_Exp(root->lchild);
     } else if(type(root->lchild,"CompSt")) {
+        symbol_stack->push(symbol_stack->node_alloc(COMPST_FIELD));
         Semantic_Check_CompSt(root->lchild);
+        symbol_stack->pop();
     } else if(type(root->lchild,"RETURN")) {
         Semantic_Check_Exp(root->lchild->right);
         const Type * ret_type = root->lchild->right->syn;
@@ -759,7 +767,7 @@ static void Semantic_Check_Exp(Node_t * root) {
             ErrorHandling(13,mid->line,mid->text);
             ret = left_type;
         } else {
-            const FieldList * temp = left_type->u.structure;
+            const FieldList * temp = left_type->u.structure->type->u.structure;
             while (temp) {
                 if(strcmp(temp->name,right->text) == 0) {
                     break;
@@ -769,7 +777,7 @@ static void Semantic_Check_Exp(Node_t * root) {
             if(temp) {
                 ret = temp->type;
             } else {
-                ErrorHandling(14,mid->line,mid->text);
+                ErrorHandling(14,mid->line,right->text);
                 ret = left_type;
             }
         }
@@ -789,9 +797,10 @@ static void Semantic_Check_Args(Node_t * root) {
         cur = cur->rchild;
     }
     while (type(cur,"Args")) {
-        Semantic_Check_Exp(root->lchild);
-        list->tail = type_ops->field_alloc_init("Exp",0,root->lchild->syn);
+        Semantic_Check_Exp(cur->lchild);
+        list->tail = type_ops->field_alloc_init("Exp",0,cur->lchild->syn);
         cur = cur->rchild;
+        list = list->tail;
     }
     if(!type_ops->field_equal(root->inh->u.func.var_list,head)) {
         ErrorHandling(9,root->lchild->right->line,",");
