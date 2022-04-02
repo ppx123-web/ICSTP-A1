@@ -1,11 +1,8 @@
 #include "data.h"
 #include "debug.h"
 
-
 typedef SymbolInfoList_t list_t;
 typedef struct SymbolStack_ele_t stack_ele_t;
-
-//都应该使用static
 
 static void node_init(unit_t * cur,int argc,...);
 static void node_delete(void * cur,int mode);
@@ -23,7 +20,6 @@ struct Info_Node_Ops * nodeop = &InfoNodeOp;
 static void SymbolInfoList_insert(list_t * list,unit_t * cur,unit_t * new);
 static void SymbolInfoList_remove(list_t * list,unit_t * cur);
 static void SymbolInfoList_init(list_t * list);
-static void SymbolInfoList_delete(list_t * list);
 static unit_t * SymbolInfoList_find(list_t * list,char * name);
 static list_t * SymbolInfoList_alloc();
 
@@ -31,7 +27,6 @@ static struct Hash_List_Ops {
     void (*insert)(list_t * list,unit_t * cur,unit_t * new); //在list链表节点cur之后插入新节点new         !!!注意插入节点前要先malloc一个节点
     void (*remove)(list_t * list,unit_t * cur);              //在list链表中删除cur节点,                 !!!注意：删除节点时候不free，在stack中pop的时候free;
     void (*init)(list_t * list);                             //初始化
-    void (*delete)(list_t * list);
     unit_t * (* find)(list_t * list,char * name);
     list_t * (*alloc)();
 }listop = {
@@ -41,7 +36,6 @@ static struct Hash_List_Ops {
 
         .find = SymbolInfoList_find,
         .alloc = SymbolInfoList_alloc,
-        .delete = SymbolInfoList_delete,
 };
 
 //hash table list 接口
@@ -53,7 +47,6 @@ static int SymbolTable_insert(unit_t * cur);
 static int SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
 static void SymbolTable_node_init(unit_t * cur,char * name);
-static void SymbolTable_rehash();
 static void SymbolTable_display_node(unit_t *);
 
 //SymbolTable API
@@ -66,27 +59,28 @@ MODULE_DEF(SymbolTable_t,symbol_table) = {
         .remove = SymbolTable_remove,
         .find = SymbolTable_find,
 
-        .rehash = SymbolTable_rehash,
         .display_node = SymbolTable_display_node,
 };
 
-static stack_ele_t * SymbolStack_node_alloc();   //分配栈中的节点，由于也是链表，需要分配两个head和tail
+static stack_ele_t * SymbolStack_node_alloc(int );   //分配栈中的节点，由于也是链表，需要分配两个head和tail
 static void SymbolStack_init();                     //初始化栈
-static void SymbolStack_push(stack_ele_t * );     //在push前应调用stack的node_alloc来分配栈中的节点
+static void SymbolStack_push(int);     //在push前应调用stack的node_alloc来分配栈中的节点
 static void SymbolStack_pop();                      //在pop时free掉所有这一层作用域申请的节点
 static stack_ele_t * SymbolStack_top();
 static bool SymbolStack_empty();
+static FieldList * SymbolStack_pop_var();
+static FieldList * SymbolStack_pop_type();
 
 MODULE_DEF(SymbolStack_t,symbol_stack) = {
         .node_alloc = SymbolStack_node_alloc,
-
         .init = SymbolStack_init,
         .push = SymbolStack_push,
         .pop = SymbolStack_pop,
         .top = SymbolStack_top,
         .empty = SymbolStack_empty,
+        .pop_var = SymbolStack_pop_var,
+        .pop_type = SymbolStack_pop_type,
 };
-
 
 //Symbol Table
 static void SymbolTable_display_node(unit_t * cur) {
@@ -123,8 +117,6 @@ static unit_t * SymbolTable_node_alloc() {
 static void SymbolTable_node_init(unit_t * cur,char * name) {
     nodeop->init(cur,3,name,symbol_stack->stack_size,INFONODE);
 }
-
-
 
 static int SymbolTable_insert(unit_t * cur) {
     int id = symbol_table->hash(cur->name);
@@ -180,22 +172,15 @@ static unit_t * SymbolTable_find(char * name) {
     }
 }
 
-static void SymbolTable_rehash() {
-    panic("Not implemented");
-}
-
 /*
- * 在stack中，unit_t *的指针作用
  * scope,用于纵向连接hash table中元素
  * hash，用于在stack中连接栈中的元素
 */
 //Symbol Stack
-
-static stack_ele_t * SymbolStack_node_alloc(int field_type) {
+static stack_ele_t * SymbolStack_node_alloc(int field) {
     stack_ele_t * node = (stack_ele_t *) malloc(sizeof(stack_ele_t));
 
-    node->field_type = field_type;
-
+    node->field_type = field;
     node->prev = node->next = NULL;
 
     unit_t * head = &node->head;
@@ -223,7 +208,8 @@ static void SymbolStack_init() {
     last->prev = first;
 }//初始化栈中的两个节点
 
-static void SymbolStack_push(stack_ele_t * item) {
+static void SymbolStack_push(int field) {
+    SymbolStack_ele_t * item = symbol_stack->node_alloc(field);
     stack_ele_t * first = &symbol_stack->first, * next = first->next;
     first->next = item;
     item->next = next;
@@ -264,6 +250,40 @@ static bool SymbolStack_empty() {
     if(symbol_stack->stack_size == 0) return true;
     else return false;
 }
+
+static FieldList * SymbolStack_pop_var() {
+    stack_ele_t * top = symbol_stack->top();
+    unit_t * cur = top->head.scope_next;
+    FieldList * ret = NULL, * tail = ret;
+    while (cur != &top->tail) {
+        assert(cur->deep == top->head.deep);
+        if(cur->type->kind == STRUCTURE && strcmp(cur->name,cur->type->u.structure->name) == 0) {
+            cur = cur->scope_next;
+            continue;
+        }
+        ret = type_ops->field_alloc_init(cur->name,cur->line,cur->type);
+        ret->tail = tail;
+        tail = ret;
+        cur = cur->scope_next;
+    }
+    return ret;
+}
+
+static FieldList * SymbolStack_pop_type() {
+    stack_ele_t * top = symbol_stack->top();
+    unit_t * cur = top->head.scope_next;
+    FieldList * ret = NULL, * tail = ret;
+    while (cur != &top->tail) {
+        assert(cur->deep == top->head.deep);
+        if(cur->type->kind == STRUCTURE && strcmp(cur->name,cur->type->u.structure->name) == 0) {
+            ret = type_ops->field_alloc_init(cur->name,cur->line,cur->type);
+            ret->tail = tail;
+            tail = ret;
+        }
+        cur = cur->scope_next;
+    }
+    return ret;
+}
 //Symbol Stack
 
 
@@ -301,9 +321,6 @@ static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
 //在这里不删除分配的内存，最后统一删除
 }
 
-static void SymbolInfoList_delete(list_t * list) {
-    panic("Not implemented");
-}
 
 static unit_t * SymbolInfoList_find(list_t * list,char * name) {
     unit_t * cur = list->head.hash_next;
@@ -358,17 +375,13 @@ static void node_delete(void * cur,int mode) {
             break;
         case HASHLIST:
             panic("Delete hash list node not allowed!");
-            //不允许通过该API删除
-            //hash table中每个链表的头尾节点
-            break;
+            //不允许通过该API删除hash table中每个链表的头尾节点
         case STACKNODE:
             free(stack_node);
             break;
         case STACKLIST:
             panic("Delete stack list node not allowed!");
-            //不允许通过该API删除
-            //stack中的
-            break;
+            //不允许通过该API删除stack中的
         default:
             panic("Wrong mode");
     }
@@ -502,13 +515,15 @@ static Type * Type_Ops_Type_copy(const Type * type) {
             break;
         case ARRAY:
             ret->u.array.size = type->u.array.size;
+            ret->u.array.elem = Type_Ops_Type_copy(type->u.array.elem);
             break;
         case STRUCTURE:
             ret->u.structure = Type_Ops_Field_Copy(type->u.structure);
             break;
         case FUNC_IMPL:
         case FUNC_DECL:
-            panic("Not Implemented");
+            ret->u.func.ret_type = Type_Ops_Type_copy(type->u.func.ret_type);
+            ret->u.func.var_list = Type_Ops_Field_Copy(type->u.func.var_list);
             break;
         case REMAINED:
             panic("Wrong Remained Modified Type");
@@ -539,7 +554,6 @@ static void Type_Ops_Type_delete(Type * type) {
     else {
         switch (type->kind) {
             case BASIC:
-                //do nothing
                 break;
             case ARRAY:
                 Type_Ops_Type_delete(type->u.array.elem);
@@ -591,11 +605,9 @@ static FieldList * Type_Ops_Field_alloc_init(char * name,int line,const Type * t
 
 static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
     if(t1 == t2) return true;
-    if(t1 == NULL && t2 == NULL) return true;
-    if(t1 && !t2 ) return false;
-    if(!t1 && t2 ) return false;
+    if(!t1 || !t2 ) return false;
     if(t1->kind != t2->kind) {
-        if((t1->kind != FUNC_IMPL && t1->kind != FUNC_DECL ) && (t2->kind != FUNC_IMPL && t2->kind != FUNC_DECL )) {
+        if((t1->kind != FUNC_IMPL && t1->kind != FUNC_DECL) && (t2->kind != FUNC_IMPL && t2->kind != FUNC_DECL )) {
             return false;
         }
     }
@@ -607,7 +619,6 @@ static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
         case BASIC:
             return t1->u.basic == t2->u.basic;
         case ARRAY:
-            //if(t1->u.array.size != t2->u.array.size) return false;
             return Type_Ops_Type_Equal(t1->u.array.elem,t2->u.array.elem);
         case STRUCTURE:
             return Type_Ops_Field_Equal(t1->u.structure,t2->u.structure);
@@ -619,15 +630,8 @@ static bool Type_Ops_Type_Equal(const Type * t1,const Type * t2) {
 }
 
 static bool Type_Ops_Field_Equal(const FieldList * f1,const FieldList * f2) {
-    if(f1 == NULL && f2 == NULL) return true;
-    if(f1 && !f2 ) return false;
-    if(!f1 && f2 ) return false;
-    /*
-    if(strcmp(f1->name,f2->name) != 0 ) {
-        if(!(f1->type->kind == STRUCTURE && f2->type->kind == STRUCTURE)) {
-            return false;
-        }
-    }*/
+    if(f1 == f2) return true;
+    if(!f1 || !f2) return false;
     if(!Type_Ops_Type_Equal(f1->type,f2->type)) return false;
     if(!Type_Ops_Field_Equal(f1->tail,f2->tail)) return false;
     return true;

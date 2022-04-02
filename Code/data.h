@@ -68,7 +68,7 @@ struct Type_ {
         FieldList * structure;
         struct  {
             Type * ret_type;
-            FieldList * var_list;
+            FieldList * var_list,* var_type;
         } func;
     } u;
 };
@@ -138,7 +138,6 @@ typedef struct SymbolTable_t {
     int (*insert)(Symbol_Node_t *);        //插入节点
     int (*remove)(Symbol_Node_t *);        //删除节点
     Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
-    void (*rehash)();
     void (*display_node)(unit_t *);
 }SymbolTable_t;
 extern SymbolTable_t * symbol_table;
@@ -160,21 +159,21 @@ typedef struct SymbolStack_ele_t {
     struct SymbolStack_ele_t * prev, * next;
 }SymbolStack_ele_t;
 
-
 typedef struct SymbolStack_t {
     SymbolStack_ele_t last,first;                   //first栈顶，last是栈底
     int stack_size;
 
-    SymbolStack_ele_t * (* node_alloc)(int);           //分配栈中的节点，由于也是链表，需要分配两个head和tail
+    SymbolStack_ele_t * (* node_alloc)(int );           //分配栈中的节点，由于也是链表，需要分配两个head和tail
 
     void (*init)();                             //初始化栈
-    void (*push)(SymbolStack_ele_t * );         //在push前应调用stack的node_alloc来分配栈中的节点
+    void (*push)(int);         //在push前应调用stack的node_alloc来分配栈中的节点
     void (*pop)();                              //在pop时free掉所有这一层作用域申请的节点
     bool (*empty)();
+    FieldList * (*pop_var)();
+    FieldList * (*pop_type)();
     SymbolStack_ele_t * (*top)();
 }SymbolStack_t;
 extern SymbolStack_t * symbol_stack;
-
 
 /*
 每次向散列表中插入元素时，总是将新插入的元素放到该槽下挂的链表以及该层
@@ -207,11 +206,9 @@ extern SymbolStack_t * symbol_stack;
     删除：
         通常是以作用域为单位删除：找到栈顶的作用域，沿着链表删除，先使用SymbolList中的remove删除hash table slot中的节点（这个节点不会free），
         然后free当前节点，然后删除下一个节点，知道end，最后只剩下push时申请的head和end，在stack的链表中删除并free
-
 */
 
-#define type(A,B) (strcmp((A)->content,B) == 0)
-
+#define type(A,B) ((A) && strcmp((A)->content,B) == 0)
 
 
 #define MODULE_DEF(type,name)                       \
@@ -219,15 +216,6 @@ extern SymbolStack_t * symbol_stack;
         extern type * name;                         \
         type * name = &name ## _mod_t;              \
         type name ## _mod_t
-
-
-//需要的接口
-/*
- * 一个类型表
- * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
- * 类型表的查询
- * 类型表的插入
- */
 
 typedef struct Type_Ops_t {
     Type * (*type_copy)(const Type *);
@@ -284,12 +272,7 @@ static Type Wrong_Type = {
         .kind = WRONG,
 };
 
-
-
-
-
-
-
+static char * empty = "";
 
 
 
