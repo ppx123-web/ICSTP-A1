@@ -7,11 +7,13 @@ typedef struct SymbolStack_ele_t stack_ele_t;
 static void node_init(unit_t * cur,int argc,...);
 static void node_delete(void * cur,int mode);
 static bool struct_node_equal(unit_t*,unit_t*);
+static bool IsStructDef(unit_t *);
 
 static struct Info_Node_Ops InfoNodeOp = {
         .init = node_init,
         .delete = node_delete,
         .equal = struct_node_equal,
+        .IsStructDef = IsStructDef,
 };
 
 struct Info_Node_Ops * nodeop = &InfoNodeOp;
@@ -392,6 +394,21 @@ static bool struct_node_equal(unit_t* n1,unit_t* n2) {
     if(!type_ops->type_equal(n1->type,n2->type)) return false;
     return true;
 }
+
+static bool IsStructDef(unit_t * node) {
+    if(!node || !node->type->u.structure) return false;
+    if(node->type->kind != STRUCTURE) {
+        return false;
+    } else {
+        if(strcmp(node->name,node->type->u.structure->name) != 0) {
+            return false;
+        } else if(node->type->u.structure->type->kind != STRUCTURE) {
+            return false;
+        }
+        return true;
+    }
+}
+
 //Symbol Info node
 
 /*

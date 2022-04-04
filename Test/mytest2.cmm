@@ -23,11 +23,11 @@ int func() {
     } point1,point2;
     point1.x = point2.x = 1;
     point1.y = point2.y = 2;
-    point1.z = point3.z = 3;
+    point1.z = point2.z = 3;
     return display(point1);
 }
 
-int print(int n) {
+int printf(int n) {
     return n;
 }
 

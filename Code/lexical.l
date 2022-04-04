@@ -1,4 +1,3 @@
-%option noyywrap
 %{
     #include <stdio.h>
     #include "debug.h"
@@ -71,9 +70,9 @@ NEWLINE (\n|\r|(\r\n))
 {RB}	    { ELEMENT("RB"); return RB;}
 {LC}	    { ELEMENT("LC"); return LC;}
 {RC}	    { ELEMENT("RC"); return RC;}
-[ ]         { strcat(linetext," ");}
-[\t]        { yycolumn += 3; strcat(linetext,"\t");}
-{NEWLINE}   { yycolumn = 1; yylineno += 1; memset(linetext,0,sizeof(linetext)); }
+[ ]         { }
+[\t]        { yycolumn += 3; }
+{NEWLINE}   { yycolumn = 1; yylineno += 1; }
 {LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
 {LCOMMENTS} {   
                 char c1 = input(),c2 = input();
@@ -97,6 +96,12 @@ NEWLINE (\n|\r|(\r\n))
 .           { LexicalError("%s",yytext); syntax++; }
 
 %%
+
+int yywrap()
+{
+    return 1;
+}
+
 
 extern int syntax;
 

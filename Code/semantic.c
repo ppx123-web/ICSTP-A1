@@ -140,7 +140,7 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
                         ErrorHandling(4,cur->line,cur->name);
                     }
                 } else {
-                    if(cur->type->kind == STRUCTURE) {
+                    if(nodeop->IsStructDef(cur)) {
                         ErrorHandling(16,cur->line,cur->name);
                     } else {
                         ErrorHandling(3,cur->line,cur->name);
@@ -192,7 +192,7 @@ static Type * Semantic_Check_Specifier(Node_t * root) {
             panic_on("Wrong struct",ret != NULL && ret->kind != STRUCTURE);
         } else {
             unit_t * temp = symbol_table->find(root->lchild->lchild->right->lchild->text);
-            if(temp != NULL && temp->type->kind == STRUCTURE && strcmp(temp->name,temp->type->u.structure->name) == 0 ) {
+            if(temp != NULL && nodeop->IsStructDef(temp)) {
                 ret = temp->type;
             } else {
                 ret = &Wrong_Type;
@@ -345,7 +345,7 @@ static void Semantic_Check_Dec(Node_t * root) {
 
 static unit_t * Semantic_Check_VarDec(Node_t * root) {
     panic_on("Wrong",!type(root,"VarDec"));
-    int cnt = 0,nums[10] = {0};
+    int cnt = 0,nums[100] = {0};
     char * s;
     Node_t * cur;
     for(cur = root->lchild;cur->lchild != NULL;cur = cur->lchild) {

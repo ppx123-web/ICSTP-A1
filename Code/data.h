@@ -108,6 +108,7 @@ struct Info_Node_Ops {
     void (*init)(unit_t * cur,int,...); //argc,char * name,deep,Type
     void (*delete)(void *,int);
     bool (*equal)(unit_t*,unit_t*);
+    bool (*IsStructDef)(unit_t *);
 };
 
 
@@ -166,7 +167,7 @@ typedef struct SymbolStack_t {
     SymbolStack_ele_t * (* node_alloc)(int );           //分配栈中的节点，由于也是链表，需要分配两个head和tail
 
     void (*init)();                             //初始化栈
-    void (*push)(int);         //在push前应调用stack的node_alloc来分配栈中的节点
+    void (*push)(int);                          //在push前应调用stack的node_alloc来分配栈中的节点
     void (*pop)();                              //在pop时free掉所有这一层作用域申请的节点
     bool (*empty)();
     FieldList * (*pop_var)();

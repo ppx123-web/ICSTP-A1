@@ -1,6 +1,5 @@
 %{
     int yycolumn = 1;
-    char linetext[128];
     #define YY_USER_ACTION \
                 yylloc.first_line = yylloc.last_line = yylineno; \
                 yylloc.first_column = yycolumn; \
