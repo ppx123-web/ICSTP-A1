@@ -1,3 +1,5 @@
+%option yylineno
+
 %{
     #include <stdio.h>
     #include "debug.h"
@@ -72,19 +74,17 @@ NEWLINE (\n|\r|(\r\n))
 {RC}	    { ELEMENT("RC"); return RC;}
 [ ]         { }
 [\t]        { yycolumn += 3; }
-{NEWLINE}   { yycolumn = 1; yylineno += 1; }
-{LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); } yylineno += 1; }
+{NEWLINE}   { yycolumn = 1;  }
+{LINECOMMENT} { char c = input(); while(c != '\n') { c = input(); }  }
 {LCOMMENTS} {   
                 char c1 = input(),c2 = input();
                 if (c1 == '\n') {
-                    yylineno += 1;
                     yycolumn = 1;
                 } else {
                     yycolumn += 1;
                 }
                 while (c1 != '*' || c2 != '/') {
                     if (c2 == '\n') {
-                        yylineno += 1;
                         yycolumn = 1;
                     } else {
                         yycolumn += 1;

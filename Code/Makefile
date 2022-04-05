@@ -27,6 +27,7 @@ endif
 
 parser: syntax $(filter-out $(LFO),$(OBJS))
 	$(CC) -o parser $(filter-out $(LFO),$(OBJS)) -lfl -ly
+	@rm *.o
 
 syntax: lexical syntax-c
 	$(CC) -c $(YFC) -o $(YFO)
@@ -39,11 +40,10 @@ syntax-c: $(YFILE)
 
 -include $(patsubst %.o, %.d, $(OBJS))
 
-
-
-TESTFILE = $(sort $(shell find ../Test/ -name "*.cmm"))
-
+TESTFILE = $(sort $(shell find ../Test/ -name "test*.cmm"))
 FILENUM = `expr $(shell ls -l ../Test/ | grep "^-" | wc -l) - 2`
+
+ALL_FILE = $(shell find ../Test/ -name "*.cmm")
 # 定义的一些伪目标
 .PHONY: clean test valgrind
 valgrind: parser
@@ -54,10 +54,12 @@ test: parser
   		./parser ../Test/test$$number.cmm; \
   		((number = number + 1)); \
 	done
-	@rm *.o
+testout: parser
+	for name in $(ALL_FILE); do\
+    	./parser $$name > $$(dirname $$name)/$$(basename $$name .cmm).output; 		\
+    done
 zero: parser
 	./parser ../Test/test.cmm
-	@rm *.o
 
 clean:
 	@rm -f parser lex.yy.c syntax.tab.c syntax.tab.h syntax.output
@@ -66,4 +68,5 @@ clean:
 	@rm -f *~
 	@rm -f scanner
 	@rm -f vgcore.*
+	@rm -rf *.output ../Test/*.output ../Test/*/*.output
 
