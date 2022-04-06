@@ -137,6 +137,7 @@ typedef struct SymbolTable_t {
 
     void (*init)(int);                      //初始化哈希表
     int (*insert)(Symbol_Node_t *);        //插入节点
+    int (*insert_struct)(Symbol_Node_t *);
     int (*remove)(Symbol_Node_t *);        //删除节点
     Symbol_Node_t * (*find)(char *);                   //查询元素，返回true，找到，false没有找到
     void (*display_node)(unit_t *);

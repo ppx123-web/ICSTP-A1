@@ -47,7 +47,7 @@ ALL_FILE = $(shell find ../Test/ -name "*.cmm")
 # 定义的一些伪目标
 .PHONY: clean test valgrind
 valgrind: parser
-	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all ./parser ../Test/test.cmm
+	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all -s ./parser ../Test/test.cmm
 test: parser
 	@echo $(FILENUM)
 	number=1; while [[ $$number -le $(FILENUM) ]]; do \

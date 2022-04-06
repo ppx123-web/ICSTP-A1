@@ -1,0 +1,17 @@
+struct t1{
+    int a;
+} a1;
+
+int main() {
+    struct t1{
+        int a;
+    } a1;
+
+    struct c1{
+        struct t2 {
+            int a;
+        }a;
+    } a2;
+}
+
+struct t2 cc;

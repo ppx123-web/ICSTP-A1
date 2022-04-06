@@ -58,7 +58,7 @@ static void ErrorHandling(int type,int line,char * msg) {
             Log("Error type %d at Line %d: Non-existent field \"%s\"", type, line,msg);
             break;
         case 15:
-            Log("Error type %d at Line %d: Struct redefined field \"%s\"", type, line,msg);
+            Log("Error type %d at Line %d: Struct redefined field or assign \"%s\"", type, line,msg);
             break;
         case 16:
             Log("Error type %d at Line %d: Duplicated name struct \"%s\"", type, line,msg);
@@ -117,7 +117,7 @@ static void Semantic_Check_init() {
     symbol_stack->push(GLOB_FIELD);
 }
 
-static unit_t * Semantic_Check_Creat_Node(char * name,Type * type,int line) {
+static unit_t * Semantic_Check_Creat_Node(char * name,Type * type,int line) {//不会复制type
     unit_t * node = symbol_table->node_alloc();
     symbol_table->node_init(node,name);
     node->line = line;
@@ -126,7 +126,17 @@ static unit_t * Semantic_Check_Creat_Node(char * name,Type * type,int line) {
 
 static int Semantic_Check_Insert_Node(unit_t * cur) {
     unit_t * find = symbol_table->find(cur->name);
-    if(find && find->deep == symbol_stack->stack_size) {
+    if(nodeop->IsStructDef(cur)) {
+        cur->deep = 1;
+        if(find) {
+            ErrorHandling(16,cur->line,cur->name);
+            nodeop->delete(cur,INFONODE);
+            return 0;
+        } else {
+            symbol_table->insert_struct(cur);
+            return 1;
+        }
+    } else if(find && find->deep == symbol_stack->stack_size) {
         switch (symbol_stack->top()->field_type) {
             case GLOB_FIELD:
                 if(cur->type->kind == FUNC_IMPL || cur->type->kind == FUNC_DECL) {
@@ -140,11 +150,7 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
                         ErrorHandling(4,cur->line,cur->name);
                     }
                 } else {
-                    if(nodeop->IsStructDef(cur)) {
-                        ErrorHandling(16,cur->line,cur->name);
-                    } else {
-                        ErrorHandling(3,cur->line,cur->name);
-                    }
+                    ErrorHandling(3,cur->line,cur->name);
                 }
                 break;
             case STRUCT_FIELD:
@@ -251,12 +257,6 @@ static void Semantic_Check_ExtDef(Node_t * root) {
                 Semantic_Check_Insert_Node(var);
                 temp = temp->tail;
             }//将函数参数加入符号表
-            temp = func->type->u.func.var_type;
-            while (temp) {
-                unit_t * var_type = Semantic_Check_Creat_Node(temp->name,type_ops->type_copy(temp->type),temp->line);
-                Semantic_Check_Insert_Node(var_type);
-                temp = temp->tail;
-            }
             Semantic_Check_CompSt(root->rchild);
             symbol_stack->pop();//处理结束退栈
         }
@@ -396,7 +396,7 @@ static Type * Semantic_Check_StructSpecifier(Node_t * root) {
         strcpy(node->name,root->lchild->right->lchild->text);
         strcpy(node->type->u.structure->name,root->lchild->right->lchild->text);
     }
-    return Semantic_Check_Insert_Node(node)?type:NULL;
+    return Semantic_Check_Insert_Node(node)?type:symbol_table->find(root->lchild->right->lchild->text)->type;
 }
 //definition finished
 

@@ -20,7 +20,8 @@ int func_1() {
 
 int main() {
     int a;
-    if(b > 1) {
+    b;
+    if(1) {
         non_exists_func(a,t1);
     } else {
         int a;
@@ -42,7 +43,7 @@ float func_2() {
 }
 
 int func_3(int c,int d) {
-    int d = func_1(0.1);
+    int dd = func_1(0.1);
     return d[1];
 }
 
@@ -53,7 +54,7 @@ struct type_1 func_4(int d) {
     array[1.5];
     {
     int c = d.a;
-    c = t.t1.a;
+    t.t1.a;
     }
 }
 

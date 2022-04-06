@@ -46,6 +46,7 @@ static struct Hash_List_Ops {
 static unit_t * SymbolTable_node_alloc();
 static void SymbolTable_init(int size);
 static int SymbolTable_insert(unit_t * cur);
+static int SymbolTable_insert_struct(unit_t * cur);
 static int SymbolTable_remove(unit_t * cur);
 static unit_t * SymbolTable_find(char *);
 static void SymbolTable_node_init(unit_t * cur,char * name);
@@ -55,12 +56,11 @@ static void SymbolTable_display_node(unit_t *);
 MODULE_DEF(SymbolTable_t,symbol_table) = {
         .node_alloc = SymbolTable_node_alloc,
         .node_init = SymbolTable_node_init,
-
         .init = SymbolTable_init,
         .insert = SymbolTable_insert,
+        .insert_struct = SymbolTable_insert_struct,
         .remove = SymbolTable_remove,
         .find = SymbolTable_find,
-
         .display_node = SymbolTable_display_node,
 };
 
@@ -137,13 +137,11 @@ static int SymbolTable_insert(unit_t * cur) {
         listop.insert(list,&list->head,cur);
     }
     symbol_table->cnt += 1;
-    //printf("---\nSymbol Table Insert: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
-    //type_ops->print_type(cur->type,0);
 
     //还需在纵向的十字链表插入头部
     unit_t * scope = &symbol_stack->top()->head;
     unit_t * next = scope->scope_next;
-    assert(scope->node_type == STACKNODE);
+    panic_on("Wrong Node Type",scope->node_type != STACKNODE);
     scope->scope_next = cur;
     cur->scope_next = next;
     next->scope_prev = cur;
@@ -158,8 +156,6 @@ static int SymbolTable_remove(unit_t * cur) {
     assert(list != NULL);
     listop.remove(list,cur);
     symbol_table->cnt--;
-    //printf("---\nSymbol Table remove: %s ,deep: %d ,line: %d\n",cur->name,cur->deep,cur->line);
-    //type_ops->print_type(cur->type,0);
     return 1;
 }//说明见最后，这里不free
 //Symbol Table
@@ -172,6 +168,35 @@ static unit_t * SymbolTable_find(char * name) {
     } else {
         return listop.find(list,name);
     }
+}
+
+static int SymbolTable_insert_struct(unit_t * cur) {
+    panic_on("Not Struct Def", IsStructDef(cur) != 1);
+    unit_t * find = symbol_table->find(cur->name);
+    if(find) {
+        return 0;
+    } else {
+        int id = symbol_table->hash(cur->name);
+        list_t * list = symbol_table->table[id];
+        if(symbol_table->table[id] != NULL) {
+            listop.insert(list,list->tail.hash_prev,cur);
+        } else {
+            list = listop.alloc();
+            listop.init(list);
+            symbol_table->table[id] = list;
+            listop.insert(list,list->tail.hash_prev,cur);
+        }
+        symbol_table->cnt += 1;
+    }
+
+    unit_t * scope = &symbol_stack->last.prev->head;
+    unit_t * next = scope->scope_next;
+    panic_on("Wrong Node Type",scope->node_type != STACKNODE);
+    scope->scope_next = cur;
+    cur->scope_next = next;
+    next->scope_prev = cur;
+    cur->scope_prev = scope;
+    return 1;
 }
 
 /*
@@ -308,10 +333,7 @@ static void SymbolInfoList_init(list_t * list) {
     list->tail.hash_prev = &list->head;
 
     list->head.hash_prev = list->tail.hash_next = NULL;
-
     list->head.node_type = list->tail.node_type = HASHLIST;
-
-
 }
 
 static void SymbolInfoList_remove(list_t * list,unit_t * cur) {
@@ -370,20 +392,17 @@ static void node_delete(void * cur,int mode) {
     unit_t * info_node = (unit_t*) cur;
     SymbolStack_ele_t * stack_node = (SymbolStack_ele_t *) cur;
     switch (mode) {
-        case INFONODE:
+        case INFONODE://存实际信息的节点
             type_ops->type_delete(info_node->type);
             free(info_node);
-            //存实际信息的节点
             break;
-        case HASHLIST:
+        case HASHLIST://不允许通过该API删除hash table中每个链表的头尾节点
             panic("Delete hash list node not allowed!");
-            //不允许通过该API删除hash table中每个链表的头尾节点
         case STACKNODE:
             free(stack_node);
             break;
-        case STACKLIST:
+        case STACKLIST://不允许通过该API删除stack中的
             panic("Delete stack list node not allowed!");
-            //不允许通过该API删除stack中的
         default:
             panic("Wrong mode");
     }
@@ -396,64 +415,13 @@ static bool struct_node_equal(unit_t* n1,unit_t* n2) {
 }
 
 static bool IsStructDef(unit_t * node) {
-    if(!node || !node->type->u.structure) return false;
-    if(node->type->kind != STRUCTURE) {
-        return false;
-    } else {
-        if(strcmp(node->name,node->type->u.structure->name) != 0) {
-            return false;
-        } else if(node->type->u.structure->type->kind != STRUCTURE) {
-            return false;
-        }
-        return true;
-    }
+    if(!node) return false;
+    if(node->type->kind != STRUCTURE) return false;
+    if(strcmp(node->name,node->type->u.structure->name) != 0) return false;
+    if(node->type->u.structure->type->kind != STRUCTURE) return false;
+    return true;
 }
 
-//Symbol Info node
-
-/*
-每次向散列表中插入元素时，总是将新插入的元素放到该槽下挂的链表以及该层
-所对应的链表的表头。每次查表时如果定位到某个槽，则按顺序遍历这个槽下挂的链表并返回
-这个槽中符合条件的第一个变量
-
-            stack: |  1  |  2  |  3  |
-
- |   |  -> List :  | 31  | 21  | 11  |
- |   |
- |   |
- |   |  -> List :  | 32  | 22  | 12  |
- |   |
- |   |
- |   |  -> List :  | 13  |
- |   |
-
- stack中构成的链表:
-1 :  11 -> 12 -> 13
-2 :  21 -> 22
-3 :  31 -> 32
-
- 以stack中开头的链表：纵向链表
- 以hashtable中开头的链表：横向链表
-
- 插入删除流程：
-    插入：
-        在当前作用域插入： 不需要处理stack，调用SymbolTable中的insert，insert进行hash，（分配链表，如果slot没有链表)，从头部插入hash表中的链表，也从头部插入对应作用域的纵向链表
-        插入新的作用域： stack申请新的节点（是两个节点），将head节点push进去
-    删除：
-        通常是以作用域为单位删除：找到栈顶的作用域，沿着链表删除，先使用SymbolList中的remove删除hash table slot中的节点（这个节点不会free），
-        然后free当前节点，然后删除下一个节点，知道end，最后只剩下push时申请的head和end，在stack的链表中删除并free
-
-*/
-
-
-
-/*
- * 一个类型表
- * 类型表的复制、删除（删除暂时不用实现，struct的定义一定是全局定义）
- * 类型表的查询
- * 类型表的插入
- */
-//需要的接口
 
 static void print_field(const FieldList *,int);
 static void print_type(const Type *,int);
