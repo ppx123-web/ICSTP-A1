@@ -68,7 +68,7 @@ struct Type_ {
         FieldList * structure;
         struct  {
             Type * ret_type;
-            FieldList * var_list,* var_type;
+            FieldList * var_list;
         } func;
     } u;
 };

@@ -282,7 +282,6 @@ static unit_t * Semantic_Check_FunDec(Node_t * root) {
         symbol_stack->push(FUNC_FIELD);
         Semantic_Check_VarList(root->rchild->left);
         type->u.func.var_list = symbol_stack->pop_var();
-        type->u.func.var_type = symbol_stack->pop_type();
         symbol_stack->pop();
     } else {
         type->u.func.var_list = NULL;
