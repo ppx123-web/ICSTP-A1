@@ -172,7 +172,6 @@ typedef struct SymbolStack_t {
     void (*pop)();                              //在pop时free掉所有这一层作用域申请的节点
     bool (*empty)();
     FieldList * (*pop_var)();
-    FieldList * (*pop_type)();
     SymbolStack_ele_t * (*top)();
 }SymbolStack_t;
 extern SymbolStack_t * symbol_stack;

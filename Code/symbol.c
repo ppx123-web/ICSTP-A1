@@ -71,7 +71,6 @@ static void SymbolStack_pop();                      //在pop时free掉所有这�
 static stack_ele_t * SymbolStack_top();
 static bool SymbolStack_empty();
 static FieldList * SymbolStack_pop_var();
-static FieldList * SymbolStack_pop_type();
 
 MODULE_DEF(SymbolStack_t,symbol_stack) = {
         .node_alloc = SymbolStack_node_alloc,
@@ -81,7 +80,6 @@ MODULE_DEF(SymbolStack_t,symbol_stack) = {
         .top = SymbolStack_top,
         .empty = SymbolStack_empty,
         .pop_var = SymbolStack_pop_var,
-        .pop_type = SymbolStack_pop_type,
 };
 
 //Symbol Table
@@ -291,22 +289,6 @@ static FieldList * SymbolStack_pop_var() {
         ret = type_ops->field_alloc_init(cur->name,cur->line,cur->type);
         ret->tail = tail;
         tail = ret;
-        cur = cur->scope_next;
-    }
-    return ret;
-}
-
-static FieldList * SymbolStack_pop_type() {
-    stack_ele_t * top = symbol_stack->top();
-    unit_t * cur = top->head.scope_next;
-    FieldList * ret = NULL, * tail = ret;
-    while (cur != &top->tail) {
-        assert(cur->deep == top->head.deep);
-        if(cur->type->kind == STRUCTURE && strcmp(cur->name,cur->type->u.structure->name) == 0) {
-            ret = type_ops->field_alloc_init(cur->name,cur->line,cur->type);
-            ret->tail = tail;
-            tail = ret;
-        }
         cur = cur->scope_next;
     }
     return ret;
