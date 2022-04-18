@@ -61,7 +61,8 @@
 
 
 %right ASSIGNOP
-%left OR AND
+%left OR
+%left AND
 %left RELOP
 %left PLUS MINUS
 

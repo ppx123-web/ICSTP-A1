@@ -1,0 +1,3 @@
+Error type 19 at Line 4: Inconsistent declaration of function "func1"
+Error type 18 at Line 3: Undefined function "func1"
+Error type 18 at Line 1: Undefined function "func"

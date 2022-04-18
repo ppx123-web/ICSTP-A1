@@ -50,13 +50,16 @@
     #define Treedebug(format, ...) {;}
 #endif
 
-#define panic_on(A,expr)               \
-            do {                       \
-                if(!(expr)) { break;}  \
-                Log(A);                \
-                assert(0);             \
-            } while(1)
-
+#ifndef FINAL
+    #define panic_on(A,expr)               \
+                do {                       \
+                    if(!(expr)) { break;}  \
+                    Log(A);                \
+                    assert(0);             \
+                } while(1)
+#else
+    #define panic_on(A,expr)    (expr);
+#endif
 
 #define panic(A) panic_on(A,1)
 

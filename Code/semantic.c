@@ -127,13 +127,13 @@ static unit_t * Semantic_Check_Creat_Node(char * name,Type * type,int line) {//�
 static int Semantic_Check_Insert_Node(unit_t * cur) {
     unit_t * find = symbol_table->find(cur->name);
     if(nodeop->IsStructDef(cur)) {
-        cur->deep = 1;
-        if(find) {
+//        cur->deep = 1;
+        if(find && find->deep == symbol_stack->stack_size) {
             ErrorHandling(16,cur->line,cur->name);
             nodeop->delete(cur,INFONODE);
             return 0;
         } else {
-            symbol_table->insert_struct(cur);
+            symbol_table->insert(cur);
             return 1;
         }
     } else if(find && find->deep == symbol_stack->stack_size) {
@@ -195,7 +195,7 @@ static Type * Semantic_Check_Specifier(Node_t * root) {
     } else if(type(root->lchild->lchild,"STRUCT")) {
         if(type(root->lchild->rchild,"RC")) {//是结构体的定义
             ret = Semantic_Check_StructSpecifier(root->lchild);
-            panic_on("Wrong struct",ret != NULL && ret->kind != STRUCTURE);
+            //panic_on("Wrong struct",ret != NULL && ret->kind != STRUCTURE);
         } else {
             unit_t * temp = symbol_table->find(root->lchild->lchild->right->lchild->text);
             if(temp != NULL && nodeop->IsStructDef(temp)) {
@@ -255,6 +255,13 @@ static void Semantic_Check_ExtDef(Node_t * root) {
             while (temp) {
                 unit_t * var = Semantic_Check_Creat_Node(temp->name,type_ops->type_copy(temp->type),temp->line);
                 Semantic_Check_Insert_Node(var);
+                if(temp->type->kind == STRUCTURE) {
+                    unit_t * find_struct = symbol_table->find(temp->type->u.structure->name);
+                    if(!find_struct) {
+                        unit_t * type_struct = Semantic_Check_Creat_Node(temp->type->u.structure->name,type_ops->type_copy(temp->type),temp->line);
+                        Semantic_Check_Insert_Node(type_struct);
+                    }
+                }
                 temp = temp->tail;
             }//将函数参数加入符号表
             Semantic_Check_CompSt(root->rchild);
@@ -510,8 +517,7 @@ static void Semantic_Check_Exp(Node_t * root) {
         if((!type_ops->type_equal(left_type,&Int_Type) && !type_ops->type_equal(left_type,&Float_Type))
            || (!type_ops->type_equal(right_type,&Int_Type) && !type_ops->type_equal(right_type,&Float_Type))) {
             ErrorHandling(7,mid->line,empty);
-        }
-        if(!type_ops->type_equal(right_type,left_type)) {
+        } else if(!type_ops->type_equal(right_type,left_type)) {
             ErrorHandling(7,mid->line,empty);
         }
         ret = left_type;
