@@ -108,7 +108,7 @@ extern int syntax;
 void yyerror(char* msg) {
     syntax++;
     if(strcmp(msg,"syntax error") == 0) {
-        SyntaxError("%s : %s\n\t%s\n",msg,yytext,linetext);
+        SyntaxError("%s : %s\n\t%s\n",msg,yytext);
     } else {
         //SyntaxError("(from syntax.y): %s\n",msg);
     }

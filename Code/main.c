@@ -32,7 +32,7 @@ int main(int argc,char *argv[]) {
         fclose(f);
         semantic_check->init();
         if (syntax == 0) {
-            tree->traverse(tree->root,0);
+            //tree->traverse(tree->root,0);
             semantic_check->main(tree->root);
 
             //test->main();
