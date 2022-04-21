@@ -10,7 +10,7 @@ void yyerror(char* s);
 int syntax = 0;
 void yyinit();
 static void end_free();
-
+void translate();
 
 int main(int argc,char *argv[]) {
     if (argc <= 1) {
@@ -33,8 +33,8 @@ int main(int argc,char *argv[]) {
         semantic_check->init();
         if (syntax == 0) {
             //tree->traverse(tree->root,0);
-            semantic_check->main(tree->root);
-
+            //semantic_check->main(tree->root);
+            translate();
             //test->main();
         }
         end_free();

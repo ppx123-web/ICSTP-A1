@@ -1,9 +1,9 @@
+int foo(int c) {
+    return c + read();
+}
+
 int main() {
-    int a,b,c;
-    if(a == 1 || b == 2 && c == 3) {
-        return 0;
-    }
-    if(a == 1 && b == 2 || c == 3) {
-        return 0;
-    }
+    int a;
+    a = read();
+    return a;
 }
