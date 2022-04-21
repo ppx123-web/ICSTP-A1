@@ -9,13 +9,14 @@ typedef struct InterCode InterCode;
 
 struct Operand {
     enum {
-        VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO,
+        VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN,
     } kind;
     union {
         int var_no;
         int value;
         char * f_name;
         int goto_id;
+        char * id_name;
     } var;
 };
 
@@ -37,6 +38,7 @@ struct InterCode {
         struct { Operand arg1,arg2; } a_star;
         struct { Operand arg1,arg2; } star_a;
         struct { Operand arg1; } go;
+        struct { Operand arg1,arg2,arg3; char * op; } ifgoto;
         struct { Operand arg1; } ret;
         struct { Operand arg1,arg2; } dec;
         struct { Operand arg1; } arg;
@@ -139,11 +141,16 @@ static Type * translate_StructSpecifier(Node_t * root);
 static void translate_CompSt(Node_t * root);
 static void translate_StmtList(Node_t * root);
 static void translate_Stmt(Node_t * root);
-static void translate_Exp(Node_t * root);
+static void translate_Exp(Node_t * root,int place);
 static void translate_Args(Node_t * root);
 
+static void translate_Cond(Node_t * root,int label_true,int label_false);
 
 void translation_init() {
+
+}
+
+static int translate_getsize(Type * type) {
 
 }
 
@@ -199,7 +206,6 @@ static void translate_ExtDef(Node_t * root) {
     Node_t * cur = root->lchild->right;
     Node_t * specifier = root->lchild;
     Type * type = translate_Specifier(specifier);
-    if(!type) type = &Wrong_Type;
     cur->inh = type;
     if(type(cur,"ExtDecList")) {//Ext Var Dec list
         return;
@@ -373,7 +379,7 @@ static void translate_StmtList(Node_t * root) {
 static void translate_Stmt(Node_t * root) {
     panic_on("Wrong",!type(root,"Stmt"));
     if(type(root->lchild,"Exp")) {
-        translate_Exp(root->lchild);
+        
     } else if(type(root->lchild,"CompSt")) {
         
     } else if(type(root->lchild,"RETURN")) {
@@ -385,40 +391,114 @@ static void translate_Stmt(Node_t * root) {
     }
 }
 
-static void translate_Exp(Node_t * root) {
+static void translate_Cond(Node_t * root,int label_true,int label_false) {
+    panic_on("Wrong!",!type(root,"Exp"));
+    Node_t * mid = root->lchild->right;
+    if(type(mid,"RELOP")) {
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(root->lchild,t1);
+        translate_Exp(root->rchild,t2);
+        gencode(T_IF, genoperand(VARIABLE,t1), genoperand(VARIABLE,t2), genoperand(GOTO,label_true),mid->text);
+        gencode(T_GOTO, genoperand(GOTO,label_false));
+    } else if(type(mid,"AND")) {
+        int l1 = genlable();
+        translate_Cond(root->lchild,l1,label_false);
+        gencode(T_LABEL, genoperand(GOTO,l1));
+        translate_Cond(root->rchild,label_true,label_false);
+    } else if(type(mid,"OR")) {
+        int l1 = genlable();
+        translate_Cond(root->lchild,label_true,l1);
+        gencode(T_LABEL, genoperand(GOTO,l1));
+        translate_Cond(root->rchild,label_true,label_false);
+    } else if(type(root->lchild,"NOT")) {
+        translate_Cond(mid,label_false,label_true);
+    } else {
+        int t1 = genvar();
+        translate_Exp(root->lchild,t1);
+        gencode(T_IF, genoperand(VARIABLE,t1), genoperand(CONSTANT,0), genoperand(GOTO,label_true));
+        gencode(T_GOTO, genoperand(GOTO,label_false));
+    }
+}
+
+static void translate_Exp(Node_t * root,int place) {
     panic_on("Wrong Exp", !type(root,"Exp"));
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
-    const Type * ret = NULL;
     const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
+    char * unuse;
     if(type(left,"ID") && mid == NULL) {
-        
+        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
     } else if(type(left,"INT") && mid == NULL) {
-
+        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,(int)strtol(left->text,&unuse,10)));
     } else if(type(left,"FLOAT") && mid == NULL) {
-
+        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,strtod(left->text,&unuse)));
     } else if(type(mid,"ASSIGNOP")) {
-        
-    }  else if(type(mid,"RELOP")) {
-        
-    } else if(type(mid,"PLUS") || type(mid,"MINUS") || type(mid,"STAR") || type(mid,"DIV")) {
-        
-    } else if(type(left,"LP") || type(left,"MINUS")) {
-        
-    } else if(type(left,"NOT")) {
-        
+        char * left_name = left->lchild->text;
+        int t1 = genvar();
+        translate_Exp(right,t1);
+        gencode(T_ASSIGN,genoperand(ORIGIN,left_name),genoperand(VARIABLE,t1));
+        gencode(T_ASSIGN,genoperand(VARIABLE,t1),genoperand(ORIGIN,left_name));
+    }  else if(type(left,"MINUS")) {
+        int t1 = genvar();
+        translate_Exp(mid,t1);
+        gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(CONSTANT,0),genoperand(VARIABLE,t1));
+    } else if(type(mid,"PLUS")) {
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(left,t1);
+        translate_Exp(right,t2);
+        gencode(T_ADD,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+    } else if(type(mid,"MINUS")) {
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(left,t1);
+        translate_Exp(right,t2);
+        gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+    } else if(type(mid,"STAR")) {
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(left,t1);
+        translate_Exp(right,t2);
+        gencode(T_MUL,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+    } else if(type(mid,"DIV")) {
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(left,t1);
+        translate_Exp(right,t2);
+        gencode(T_DIV,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+    } else if(type(mid,"RELOP") || type(left,"NOT") || type(mid,"AND") || type(mid,"OR")) {
+        int l1 = genlable(),l2 = genlable();
+        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,0));
+        translate_Cond(root,l1,l2);
+        gencode(T_LABEL,l1);
+        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,1));
+        gencode(T_LABEL,l2);
+    } else if(type(left,"LP")) {
+        translate_Exp(mid,place);
     } else if(type(mid,"LP")) {
-
+        if(type(mid->right,"Args")) {
+            translate_Args(mid->right);
+            if(strcmp(left->text,"write") == 0) {
+                gencode(T_WRITE, genoperand(VARIABLE,place));
+            } else {
+                gencode(T_CALL, genoperand(FUNCTION,left->text));
+            }
+        } else {
+            if(strcmp(left->text,"read") == 0) {
+                gencode(T_READ, genoperand(VARIABLE,place));
+            } else {
+                gencode(T_CALL, genoperand(FUNCTION,left->text));
+            }
+        }
     } else if(type(mid,"LB")) {
         
     } else if(type(mid,"DOT")) {
         
     }
-    panic_on("Wrong Exp",ret == NULL);
 }
 
 static void translate_Args(Node_t * root) {
     panic_on("Wrong",!type(root,"Args"));
-    
+    if(type(root->rchild,"Args")) {
+        translate_Args(root->rchild);
+    }
+    int t1 = genvar();
+    gencode(T_ARG, genoperand(VARIABLE,t1));
 }
 
 
