@@ -1,9 +1,6 @@
-int foo(int c) {
-    return c + read();
-}
-
 int main() {
     int a;
-    a = read();
+    int b[23];
+    b[1] = 1;
     return a;
 }

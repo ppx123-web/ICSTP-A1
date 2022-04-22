@@ -6,9 +6,11 @@ typedef struct CodeList_t CodeList_t;
 typedef struct Operand Operand;
 typedef struct InterCode InterCode;
 
+static char * temp_var_prefix = "t";
+
 struct Operand {
     enum {
-        VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP
+        VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP, DEC, INT_CONST,
     } kind;
     union {
         int var_no;
@@ -17,6 +19,8 @@ struct Operand {
         int goto_id;
         char * id_name;
         char * relop;
+        int dec;
+        int int_const;
     } var;
 };
 
@@ -58,6 +62,7 @@ struct CodeList_t {
 static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
 static void codelist_display(CodeList_t * this);
 static void operand_display(Operand * op);
+static void intercode_display(InterCode * cur);
 static CodeList_t code_list;
 
 static Operand genoperand(int kind,...) {
@@ -72,6 +77,9 @@ static Operand genoperand(int kind,...) {
         case CONSTANT:
             ret.var.value = malloc(NAME_LENGTH);
             sprintf(ret.var.value,"%s",va_arg(ap,char *));
+            break;
+        case INT_CONST:
+            ret.var.int_const = va_arg(ap,int);
             break;
         case ADDRESS:
             ret.var.var_no = va_arg(ap,int);
@@ -89,6 +97,9 @@ static Operand genoperand(int kind,...) {
         case RELOP:
             ret.var.relop = malloc(NAME_LENGTH);
             sprintf(ret.var.relop,"%s",va_arg(ap,char *));
+            break;
+        case DEC:
+            ret.var.dec = va_arg(ap,int);
             break;
         default:
             panic("Wrong!");
@@ -148,6 +159,8 @@ static void gencode(int kind,...) {
             panic("Wrong");
     }
     va_end(ap);
+    intercode_display(code);
+    printf("\n");
     codelist_insert(&code_list,code_list.tail.prev,code);
 }
 
@@ -183,117 +196,121 @@ static void codelist_merge(CodeList_t * l1,CodeList_t * l2) {
     panic("Not implement");
 }
 
+static void intercode_display(InterCode * cur) {
+    switch (cur->kind) {
+        case T_LABEL:
+            printf("LABEL ");
+            operand_display(&cur->op.label.id);
+            printf(" :");
+            break;
+        case T_FUNCTION:
+            printf("FUNCTION ");
+            operand_display(&cur->op.function.func);
+            printf(" :");
+            break;
+        case T_GO:
+            printf("GOTO ");
+            operand_display(&cur->op.go.arg1);
+            break;
+        case T_RETURN:
+            printf("RETURN ");
+            operand_display(&cur->op.ret.arg1);
+            break;
+        case T_ARG:
+            printf("ARG ");
+            operand_display(&cur->op.arg.arg1);
+            break;
+        case T_PARAM:
+            printf("PARAM ");
+            operand_display(&cur->op.param.arg1);
+            break;
+        case T_READ:
+            printf("READ ");
+            operand_display(&cur->op.read.arg1);
+            break;
+        case T_WRITE:
+            printf("WRITE ");
+            operand_display(&cur->op.write.arg1);
+            break;
+        case T_ASSIGN:
+            operand_display(&cur->op.assign.arg1);
+            printf(" := ");
+            operand_display(&cur->op.assign.arg2);
+            break;
+        case T_ADDR:
+            operand_display(&cur->op.addr.arg1);
+            printf(" := &");
+            operand_display(&cur->op.addr.arg2);
+            break;
+        case T_A_STAR:
+            operand_display(&cur->op.a_star.arg1);
+            printf(" := *");
+            operand_display(&cur->op.a_star.arg2);
+            break;
+        case T_STAR_A:
+            printf("*");
+            operand_display(&cur->op.star_a.arg1);
+            printf(" := ");
+            operand_display(&cur->op.star_a.arg2);
+            break;
+        case T_DEC:
+            printf("DEC ");
+            operand_display(&cur->op.dec.arg1);
+            printf(" ");
+            operand_display(&cur->op.dec.arg2);
+            break;
+        case T_CALL:
+            operand_display(&cur->op.call.arg1);
+            printf(" := CALL ");
+            operand_display(&cur->op.call.arg2);
+            break;
+        case T_MINUS:
+            operand_display(&cur->op.minus.arg1);
+            printf(" := ");
+            operand_display(&cur->op.minus.arg2);
+            printf(" - ");
+            operand_display(&cur->op.minus.arg3);
+            break;
+        case T_MUL:
+            operand_display(&cur->op.mul.arg1);
+            printf(" := ");
+            operand_display(&cur->op.mul.arg2);
+            printf(" * ");
+            operand_display(&cur->op.mul.arg3);
+            break;
+        case T_DIV:
+            operand_display(&cur->op.div.arg1);
+            printf(" := ");
+            operand_display(&cur->op.div.arg2);
+            printf(" / ");
+            operand_display(&cur->op.div.arg3);
+            break;
+        case T_ADD:
+            operand_display(&cur->op.add.arg1);
+            printf(" := ");
+            operand_display(&cur->op.add.arg2);
+            printf(" + ");
+            operand_display(&cur->op.add.arg3);
+            break;
+        case T_IF:
+            printf("IF ");
+            operand_display(&cur->op.ifgoto.arg1);
+            printf(" ");
+            operand_display(&cur->op.ifgoto.op);
+            printf(" ");
+            operand_display(&cur->op.ifgoto.arg2);
+            printf(" GOTO ");
+            operand_display(&cur->op.ifgoto.arg3);
+            break;
+        default:
+            panic("Wrong");
+    }
+}
+
 static void codelist_display(CodeList_t * this) {
     InterCode * cur = this->head.next;
     while (cur != &this->tail) {
-        switch (cur->kind) {
-            case T_LABEL:
-                printf("LABEL ");
-                operand_display(&cur->op.label.id);
-                printf(" :");
-                break;
-            case T_FUNCTION:
-                printf("FUNCTION ");
-                operand_display(&cur->op.function.func);
-                printf(" :");
-                break;
-            case T_GO:
-                printf("GOTO ");
-                operand_display(&cur->op.go.arg1);
-                break;
-            case T_RETURN:
-                printf("RETURN ");
-                operand_display(&cur->op.ret.arg1);
-                break;
-            case T_ARG:
-                printf("ARG ");
-                operand_display(&cur->op.arg.arg1);
-                break;
-            case T_PARAM:
-                printf("PARAM ");
-                operand_display(&cur->op.param.arg1);
-                break;
-            case T_READ:
-                printf("READ ");
-                operand_display(&cur->op.read.arg1);
-                break;
-            case T_WRITE:
-                printf("WRITE ");
-                operand_display(&cur->op.write.arg1);
-                break;
-            case T_ASSIGN:
-                operand_display(&cur->op.assign.arg1);
-                printf(" := ");
-                operand_display(&cur->op.assign.arg2);
-                break;
-            case T_ADDR:
-                operand_display(&cur->op.addr.arg1);
-                printf(" := &");
-                operand_display(&cur->op.addr.arg2);
-                break;
-            case T_A_STAR:
-                operand_display(&cur->op.a_star.arg1);
-                printf(" := *");
-                operand_display(&cur->op.a_star.arg2);
-                break;
-            case T_STAR_A:
-                printf("*");
-                operand_display(&cur->op.star_a.arg1);
-                printf(" := ");
-                operand_display(&cur->op.star_a.arg2);
-                break;
-            case T_DEC:
-                printf("DEC ");
-                operand_display(&cur->op.dec.arg1);
-                printf(" ");
-                operand_display(&cur->op.dec.arg2);
-                break;
-            case T_CALL:
-                operand_display(&cur->op.call.arg1);
-                printf(" := CALL ");
-                operand_display(&cur->op.call.arg2);
-                break;
-            case T_MINUS:
-                operand_display(&cur->op.minus.arg1);
-                printf(" := ");
-                operand_display(&cur->op.minus.arg2);
-                printf(" - ");
-                operand_display(&cur->op.minus.arg3);
-                break;
-            case T_MUL:
-                operand_display(&cur->op.mul.arg1);
-                printf(" := ");
-                operand_display(&cur->op.mul.arg2);
-                printf(" * ");
-                operand_display(&cur->op.mul.arg3);
-                break;
-            case T_DIV:
-                operand_display(&cur->op.div.arg1);
-                printf(" := ");
-                operand_display(&cur->op.div.arg2);
-                printf(" / ");
-                operand_display(&cur->op.div.arg3);
-                break;
-            case T_ADD:
-                operand_display(&cur->op.add.arg1);
-                printf(" := ");
-                operand_display(&cur->op.add.arg2);
-                printf(" + ");
-                operand_display(&cur->op.add.arg3);
-                break;
-            case T_IF:
-                printf("IF ");
-                operand_display(&cur->op.ifgoto.arg1);
-                printf(" ");
-                operand_display(&cur->op.ifgoto.op);
-                printf(" ");
-                operand_display(&cur->op.ifgoto.arg2);
-                printf(" GOTO ");
-                operand_display(&cur->op.ifgoto.arg3);
-                break;
-            default:
-                panic("Wrong");
-        }
+        intercode_display(cur);
         printf("\n");
         cur = cur->next;
     }
@@ -302,10 +319,13 @@ static void codelist_display(CodeList_t * this) {
 static void operand_display(Operand * op) {
     switch (op->kind) {
         case VARIABLE:
-            printf("t%d",op->var.var_no);
+            printf("%s%d",temp_var_prefix,op->var.var_no);
             break;
         case CONSTANT:
             printf("#%s", op->var.value);
+            break;
+        case INT_CONST:
+            printf("#%d", op->var.int_const);
             break;
         case FUNCTION:
             printf("%s", op->var.f_name);
@@ -321,6 +341,9 @@ static void operand_display(Operand * op) {
             break;
         case RELOP:
             printf("%s",op->var.relop);
+            break;
+        case DEC:
+            printf("%d",op->var.dec);
             break;
         default:
             panic("Wrong!");
@@ -365,18 +388,45 @@ void translate() {
     Type * read_type = type_ops->type_alloc_init(FUNC_IMPL);
     Type * write_type = type_ops->type_alloc_init(FUNC_IMPL);
     read_type->u.func.var_list = NULL;
-    read_type->u.func.ret_type = NULL;
+    read_type->u.func.ret_type = type_ops->type_copy(&Int_Type);
     write_type->u.func.var_list = NULL;
     write_type->u.func.ret_type = NULL;
     translate_Insert_Node(translate_Creat_Node("read",read_type,-1));
     translate_Insert_Node(translate_Creat_Node("read",write_type,-1));
     translate_Program(tree->root);
 
-    codelist_display(&code_list);
+//    codelist_display(&code_list);
 }
 
 static int translate_getsize(Type * type) {
-    panic("Not implement");
+    if(type->kind == BASIC) {
+        return 4;
+    } else if(type->kind == ARRAY) {
+        return type->u.array.size * translate_getsize(type->u.array.elem);
+    } else if(type->kind == STRUCTURE) {
+        int ans = 0;
+        FieldList * cur = type->u.structure->type->u.structure;
+        while (cur) {
+            ans += translate_getsize(cur->type);
+            cur = cur->tail;
+        }
+        return ans;
+    } else {
+        panic("Get wrong type size!");
+    }
+}
+
+static int translate_getarray(Type * type,...) {
+    int ans = 0;
+    va_list ap;
+    va_start(ap,type);
+    Type * cur = type;
+    while (cur->kind == ARRAY) {
+        ans += va_arg(ap,int) * translate_getsize(cur->u.array.elem);
+        cur = cur->u.array.elem;
+    }
+    va_end(ap);
+    return ans;
 }
 
 static unit_t * translate_Creat_Node(char * name,Type * type,int line) {//不会复制type
@@ -517,7 +567,11 @@ static void translate_DecList(Node_t * root) {
 static void translate_Dec(Node_t * root) {
     panic_on("Wrong",!type(root,"Dec"));
     root->lchild->inh = root->inh;
-    translate_Insert_Node(translate_VarDec(root->lchild));
+    unit_t * var = translate_VarDec(root->lchild);
+    if(var->type->kind == STRUCTURE || var->type->kind == ARRAY) {
+        gencode(T_DEC, genoperand(ORIGIN,var->name), genoperand(DEC,translate_getsize(var->type)));
+    }
+    translate_Insert_Node(var);
     if(root->lchild != root->rchild) {
         int t1 = genvar();
         translate_Exp(root->rchild,t1);
@@ -665,6 +719,7 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
         gencode(T_IF, genoperand(VARIABLE,t1), genoperand(CONSTANT,0), genoperand(GOTO,label_true));
         gencode(T_GO, genoperand(GOTO,label_false));
     }
+    root->syn = &Int_Type;
 }
 
 static void translate_Exp(Node_t * root,int place) {
@@ -672,42 +727,68 @@ static void translate_Exp(Node_t * root,int place) {
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
     const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
     char * unuse;
+    const Type * ret = NULL;
     if(type(left,"ID") && mid == NULL) {
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
+        ret = symbol_table->find(left->text)->type;
+        if(ret->kind == BASIC) {
+            gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
+        } else {
+            gencode(T_ADDR,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
+        }
     } else if(type(left,"INT") && mid == NULL) {
         gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,left->text));
+        ret = &Int_Type;
     } else if(type(left,"FLOAT") && mid == NULL) {
         gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,left->text));
+        ret = &Float_Type;
     } else if(type(mid,"ASSIGNOP")) {
         char * left_name = left->lchild->text;
         int t1 = genvar();
+        //TODO left  a[] struct variable
         translate_Exp(right,t1);
-        gencode(T_ASSIGN,genoperand(ORIGIN,left_name),genoperand(VARIABLE,t1));
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left_name));
+        if(type(left->lchild,"ID")) {
+            gencode(T_ASSIGN,genoperand(ORIGIN,left_name),genoperand(VARIABLE,t1));
+            gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left_name));
+        } else {
+            int t2 = genvar();
+            translate_Exp(left,t2);
+            gencode(T_STAR_A,genoperand(VARIABLE,t2), genoperand(VARIABLE,t1));
+        }
+        left_type = left->syn;
+        ret = left_type;
     }  else if(type(left,"MINUS")) {
         int t1 = genvar();
         translate_Exp(mid,t1);
         gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(CONSTANT,0),genoperand(VARIABLE,t1));
+        ret = mid->syn;
     } else if(type(mid,"PLUS")) {
         int t1 = genvar(),t2 = genvar();
         translate_Exp(left,t1);
         translate_Exp(right,t2);
         gencode(T_ADD,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left_type = left->syn;
+        ret = left_type;
     } else if(type(mid,"MINUS")) {
         int t1 = genvar(),t2 = genvar();
         translate_Exp(left,t1);
         translate_Exp(right,t2);
         gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left_type = left->syn;
+        ret = left_type;
     } else if(type(mid,"STAR")) {
         int t1 = genvar(),t2 = genvar();
         translate_Exp(left,t1);
         translate_Exp(right,t2);
         gencode(T_MUL,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left_type = left->syn;
+        ret = left_type;
     } else if(type(mid,"DIV")) {
         int t1 = genvar(),t2 = genvar();
         translate_Exp(left,t1);
         translate_Exp(right,t2);
         gencode(T_DIV,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left_type = left->syn;
+        ret = left_type;
     } else if(type(mid,"RELOP") || type(left,"NOT") || type(mid,"AND") || type(mid,"OR")) {
         int l1 = genlable(),l2 = genlable();
         gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,0));
@@ -715,8 +796,10 @@ static void translate_Exp(Node_t * root,int place) {
         gencode(T_LABEL,l1);
         gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,1));
         gencode(T_LABEL,l2);
+        ret = &Int_Type;
     } else if(type(left,"LP")) {
         translate_Exp(mid,place);
+        ret = mid->syn;
     } else if(type(mid,"LP")) {
         if(type(mid->right,"Args")) {
             translate_Args(mid->right);
@@ -732,11 +815,22 @@ static void translate_Exp(Node_t * root,int place) {
                 gencode(T_CALL, genoperand(FUNCTION,left->text));
             }
         }
+        ret = symbol_table->find(left->text)->type->u.func.ret_type;
     } else if(type(mid,"LB")) {
-        panic("Not implement");
+        int t1 = genvar(),t2 = genvar();
+        translate_Exp(left,t1);
+        translate_Exp(mid->right,t2);
+
+        left_type = left->syn;
+        ret = left_type->u.array.elem;
+
+        int t3 = genvar();
+        gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(INT_CONST,  translate_getsize((Type*)ret)));
+        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t2), genoperand(VARIABLE,t3));
     } else if(type(mid,"DOT")) {
         panic("Not implement");
     }
+    root->syn = ret;
 }
 
 static void translate_Args(Node_t * root) {
