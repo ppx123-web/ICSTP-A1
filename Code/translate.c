@@ -363,6 +363,7 @@ static int translate_Insert_Node(unit_t *);
 
 static void translate_ExtDefList(Node_t * root);
 static void translate_ExtDef(Node_t * root);
+static void translate_ExtDecList(Node_t * root);
 
 static unit_t * translate_FunDec(Node_t *);
 static void translate_VarList(Node_t * root);
@@ -416,18 +417,18 @@ static int translate_getsize(Type * type) {
     }
 }
 
-static int translate_getarray(Type * type,...) {
+static int translate_getstructbias(Type * type,char * name) {
+    FieldList * cur = type->u.structure->type->u.structure;
     int ans = 0;
-    va_list ap;
-    va_start(ap,type);
-    Type * cur = type;
-    while (cur->kind == ARRAY) {
-        ans += va_arg(ap,int) * translate_getsize(cur->u.array.elem);
-        cur = cur->u.array.elem;
+    while (strcmp(cur->name,name) != 0) {
+        ans += translate_getsize(cur->type);
+        cur = cur->tail;
     }
-    va_end(ap);
     return ans;
 }
+
+
+
 
 static unit_t * translate_Creat_Node(char * name,Type * type,int line) {//不会复制type
     unit_t * node = symbol_table->node_alloc();
@@ -482,7 +483,11 @@ static void translate_ExtDef(Node_t * root) {
     Node_t * specifier = root->lchild;
     Type * type = translate_Specifier(specifier);
     cur->inh = type;
-    if(type(cur,"FunDec")) {
+    if(type(cur,"ExtDecList")) {//Ext Var Dec list
+        translate_ExtDecList(cur);
+    } else if(type(cur,"SEMI")) {//struct Definition
+        return;
+    } else if(type(cur,"FunDec")) {
         unit_t * func;
         char name[32];
         func = translate_FunDec(cur);
@@ -507,6 +512,15 @@ static void translate_ExtDef(Node_t * root) {
         }//将函数参数加入符号表
         translate_CompSt(root->rchild);
         symbol_stack->pop();//处理结束退栈
+    }
+}
+
+static void translate_ExtDecList(Node_t * root) {
+    panic_on("Wrong",!type(root,"ExtDecList"));
+    root->lchild->inh = root->rchild->inh = root->inh;
+    translate_Insert_Node(translate_VarDec(root->lchild));
+    if(root->rchild != root->lchild) {
+        translate_ExtDecList(root->rchild);
     }
 }
 
@@ -726,7 +740,6 @@ static void translate_Exp(Node_t * root,int place) {
     panic_on("Wrong Exp", !type(root,"Exp"));
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
     const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
-    char * unuse;
     const Type * ret = NULL;
     if(type(left,"ID") && mid == NULL) {
         ret = symbol_table->find(left->text)->type;
@@ -743,16 +756,17 @@ static void translate_Exp(Node_t * root,int place) {
         ret = &Float_Type;
     } else if(type(mid,"ASSIGNOP")) {
         char * left_name = left->lchild->text;
-        int t1 = genvar();
-        //TODO left  a[] struct variable
-        translate_Exp(right,t1);
+        //TODO left a[] struct variable
         if(type(left->lchild,"ID")) {
+            int t1 = genvar();
+            translate_Exp(right,t1);
             gencode(T_ASSIGN,genoperand(ORIGIN,left_name),genoperand(VARIABLE,t1));
             gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left_name));
         } else {
-            int t2 = genvar();
-            translate_Exp(left,t2);
-            gencode(T_STAR_A,genoperand(VARIABLE,t2), genoperand(VARIABLE,t1));
+            int t1 = genvar(),t2 = genvar();
+            translate_Exp(left,t1);
+            translate_Exp(right,t2);
+            gencode(T_STAR_A,genoperand(VARIABLE,t1), genoperand(VARIABLE,t2));
         }
         left_type = left->syn;
         ret = left_type;
@@ -826,9 +840,13 @@ static void translate_Exp(Node_t * root,int place) {
 
         int t3 = genvar();
         gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(INT_CONST,  translate_getsize((Type*)ret)));
-        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t2), genoperand(VARIABLE,t3));
+        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t1), genoperand(VARIABLE,t3));
     } else if(type(mid,"DOT")) {
-        panic("Not implement");
+        int t1 = genvar();
+        translate_Exp(left, t1);
+        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t1), genoperand(INT_CONST,
+                                                                                       translate_getstructbias((Type*)left->syn,right->text)));
+        ret = left->syn;
     }
     root->syn = ret;
 }
