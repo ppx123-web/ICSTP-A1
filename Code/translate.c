@@ -350,6 +350,14 @@ static void operand_display(Operand * op) {
     }
 }
 
+static void code_list_optimizer(CodeList_t * this) {
+    int size = genvar() + 1;
+    int * nmap = (int*) malloc(sizeof(int) * size);
+    int * vmap = (int*) malloc(sizeof(int) * size);
+    // map[t1] = #n , map variable operand to const num n
+}
+
+
 //======================================================================
 
 //======================================================================
