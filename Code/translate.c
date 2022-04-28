@@ -352,8 +352,20 @@ static void operand_display(Operand * op) {
 
 static void code_list_optimizer(CodeList_t * this) {
     int size = genvar() + 1;
-    int * nmap = (int*) malloc(sizeof(int) * size);
-    int * vmap = (int*) malloc(sizeof(int) * size);
+    struct map_table {
+        Operand arg;
+    };
+    struct map_table * map = (struct map_table *) malloc(sizeof(struct map_table) * size);
+    memset(map,0, sizeof(struct map_table) * size);
+    InterCode * cur = this->head.next, * temp;
+    while (cur != &this->tail) {
+        temp = cur->next;
+        if(cur->kind == T_ASSIGN) {
+            map[cur->op.assign.arg1.var.var_no].arg = cur->op.assign.arg2;
+            free(cur);
+        }
+        cur = temp;
+    }
     // map[t1] = #n , map variable operand to const num n
 }
 
