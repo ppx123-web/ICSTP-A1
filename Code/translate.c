@@ -771,9 +771,9 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
         translate_Cond(mid,label_false,label_true);
     } else {
         int t1 = genvar();
-        root->lchild->inh = &Is_Top_Addr;
-        translate_Exp(root->lchild,&t1);
-        gencode(T_IF, genoperand(VARIABLE,t1), genoperand(CONSTANT,0), genoperand(GOTO,label_true));
+        root->inh = &Is_Top_Addr;
+        translate_Exp(root,&t1);
+        gencode(T_IF, genoperand(VARIABLE,t1), genoperand(INT_CONST,0), genoperand(GOTO,label_true),genoperand(RELOP,"!="));
         gencode(T_GO, genoperand(GOTO,label_false));
     }
     root->syn = &Int_Type;
@@ -781,7 +781,6 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
 
 
 static void translate_Exp(Node_t * root,int * place) {
-    panic_on("Wrong Exp", !type(root,"Exp"));
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
     const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
     const Type * ret = NULL;
@@ -867,11 +866,11 @@ static void translate_Exp(Node_t * root,int * place) {
         ret = left_type;
     } else if(type(mid,"RELOP") || type(left,"NOT") || type(mid,"AND") || type(mid,"OR")) {
         int l1 = genlable(),l2 = genlable();
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,0));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,0));
         translate_Cond(root,l1,l2);
-        gencode(T_LABEL,l1);
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,1));
-        gencode(T_LABEL,l2);
+        gencode(T_LABEL, genoperand(GOTO,l1));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,1));
+        gencode(T_LABEL,genoperand(GOTO,l2));
         ret = &Int_Type;
     } else if(type(left,"LP")) {
         mid->inh = root->inh;
@@ -918,7 +917,14 @@ static void translate_Exp(Node_t * root,int * place) {
         translate_Exp(left, &t1);
         gencode(T_ADD, genoperand(VARIABLE,t2), genoperand(VARIABLE,t1), genoperand(INT_CONST,
                                                                                        translate_getstructbias((Type*)left->syn,right->text)));
-        ret = left->syn;
+        const FieldList * temp = left->syn->u.structure->type->u.structure;
+        while (temp) {
+            if(strcmp(temp->name,right->text) == 0) {
+                break;
+            }
+            temp = temp->tail;
+        }
+        ret = temp->type;
 
         if(root->inh == &Is_Top_Addr) {
             gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
