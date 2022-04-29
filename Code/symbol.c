@@ -368,6 +368,7 @@ static void node_init(unit_t * cur,int argc,...) {
     //初始化目前仅涉及了
     cur->hash_next = cur->hash_prev = cur->scope_next = cur->scope_prev = NULL;
 
+    cur->var_id.var_no = 0;
 }
 
 static void node_delete(void * cur,int mode) {

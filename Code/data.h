@@ -96,6 +96,11 @@ typedef struct Symbol_Node_t {
     }node_type;
     Type * type;
 
+    union {
+        int var_addr; //array struct使用
+        int var_no;   //int float使用
+    } var_id;
+
     //维护数据结构需要的信息
     struct Symbol_Node_t * hash_prev, * hash_next;
     struct Symbol_Node_t * scope_prev, * scope_next;

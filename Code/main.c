@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "debug.h"
 #include "data.h"
+#include <stdlib.h>
 
 int yyrestart(FILE*);
 int yyparse (void);
@@ -16,29 +17,28 @@ int main(int argc,char *argv[]) {
     if (argc <= 1) {
         printf("Usage:%s $FILE\n",argv[0]);
     }
-    for (int i = 1;i < argc;i++) {
     #ifndef FINAL
         Log("\n\n\n%s:\n",argv[i]);
     #endif
-        yyinit();
+    yyinit();
 
-        FILE * f = fopen(argv[i], "r");
-        if (!f) {
-            perror(argv[1]);
-            return 1;
-        }
-        yyrestart(f);
-        yyparse();
-        fclose(f);
-        semantic_check->init();
-        if (syntax == 0) {
-            //tree->traverse(tree->root,0);
-            //semantic_check->main(tree->root);
-            translate();
-            //test->main();
-        }
-        end_free();
+    FILE * f = fopen(argv[1], "r");
+    if (!f) {
+        perror(argv[1]);
+        return 1;
     }
+    yyrestart(f);
+    yyparse();
+    fclose(f);
+    semantic_check->init();
+    if (syntax == 0) {
+        //tree->traverse(tree->root,0);
+        //semantic_check->main(tree->root);
+        freopen(argv[2],"w",stdout);
+        translate();
+
+    }
+    //end_free();
     return 0;
 }
 

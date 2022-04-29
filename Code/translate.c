@@ -6,7 +6,10 @@ typedef struct CodeList_t CodeList_t;
 typedef struct Operand Operand;
 typedef struct InterCode InterCode;
 
-static char * temp_var_prefix = "t";
+static Type Is_Top_Addr = {
+        .kind = REMAINED,
+};
+static char * temp_var_prefix = "t", * label_name = "label";
 
 struct Operand {
     enum {
@@ -63,7 +66,7 @@ static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
 static void codelist_display(CodeList_t * this);
 static void operand_display(Operand * op);
 static void intercode_display(InterCode * cur);
-static CodeList_t code_list;
+CodeList_t code_list;
 
 static Operand genoperand(int kind,...) {
     va_list ap;
@@ -337,7 +340,7 @@ static void operand_display(Operand * op) {
             printf("t%d", op->var.var_no);
             break;
         case GOTO:
-            printf("L%d",op->var.goto_id);
+            printf("%s%d",label_name,op->var.goto_id);
             break;
         case RELOP:
             printf("%s",op->var.relop);
@@ -362,11 +365,17 @@ static void code_list_optimizer(CodeList_t * this) {
         temp = cur->next;
         if(cur->kind == T_ASSIGN) {
             map[cur->op.assign.arg1.var.var_no].arg = cur->op.assign.arg2;
+            cur->prev->next = temp;
+            temp->prev = cur->prev;
             free(cur);
+        } else {
+            if(cur->op.arg1.kind == VARIABLE && map[cur->op.arg1.var.var_no].arg.var.var_no) {
+
+            }
         }
         cur = temp;
     }
-    // map[t1] = #n , map variable operand to const num n
+
 }
 
 
@@ -399,8 +408,8 @@ static Type * translate_StructSpecifier(Node_t * root);
 static void translate_CompSt(Node_t * root);
 static void translate_StmtList(Node_t * root);
 static void translate_Stmt(Node_t * root);
-static void translate_Exp(Node_t * root,int place);
-static void translate_Args(Node_t * root);
+static void translate_Exp(Node_t * root,int * place);
+static int translate_Args(Node_t * root);
 
 static void translate_Cond(Node_t * root,int label_true,int label_false);
 
@@ -409,11 +418,11 @@ void translate() {
     Type * read_type = type_ops->type_alloc_init(FUNC_IMPL);
     Type * write_type = type_ops->type_alloc_init(FUNC_IMPL);
     read_type->u.func.var_list = NULL;
-    read_type->u.func.ret_type = type_ops->type_copy(&Int_Type);
+    read_type->u.func.ret_type = &Int_Type;
     write_type->u.func.var_list = NULL;
     write_type->u.func.ret_type = NULL;
     translate_Insert_Node(translate_Creat_Node("read",read_type,-1));
-    translate_Insert_Node(translate_Creat_Node("read",write_type,-1));
+    translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
 //    codelist_display(&code_list);
@@ -520,7 +529,8 @@ static void translate_ExtDef(Node_t * root) {
         while (temp) {
             unit_t * var = translate_Creat_Node(temp->name,type_ops->type_copy(temp->type),temp->line);
             translate_Insert_Node(var);
-            gencode(T_PARAM, genoperand(ORIGIN,var->name));
+            var->var_id.var_no = genvar();
+            gencode(T_PARAM, genoperand(VARIABLE,var->var_id.var_no));
             if(temp->type->kind == STRUCTURE) {
                 unit_t * find_struct = symbol_table->find(temp->type->u.structure->name);
                 if(!find_struct) {
@@ -602,14 +612,22 @@ static void translate_Dec(Node_t * root) {
     panic_on("Wrong",!type(root,"Dec"));
     root->lchild->inh = root->inh;
     unit_t * var = translate_VarDec(root->lchild);
-    if(var->type->kind == STRUCTURE || var->type->kind == ARRAY) {
-        gencode(T_DEC, genoperand(ORIGIN,var->name), genoperand(DEC,translate_getsize(var->type)));
+    if(symbol_stack->top()->field_type != STRUCT_FIELD ){
+        if((var->type->kind == STRUCTURE || var->type->kind == ARRAY)) {
+            var->var_id.var_addr = genvar();
+            int t1 = genvar();
+            gencode(T_DEC, genoperand(VARIABLE,t1), genoperand(DEC,translate_getsize(var->type)));
+            gencode(T_ADDR, genoperand(VARIABLE,var->var_id.var_addr), genoperand(VARIABLE,t1));
+        } else {
+            var->var_id.var_addr = genvar();
+        }
     }
     translate_Insert_Node(var);
     if(root->lchild != root->rchild) {
         int t1 = genvar();
-        translate_Exp(root->rchild,t1);
-        gencode(T_ASSIGN, genoperand(ORIGIN,root->lchild->lchild), genoperand(VARIABLE,t1));
+        root->rchild->inh = &Is_Top_Addr;
+        translate_Exp(root->rchild,&t1);
+        gencode(T_ASSIGN, genoperand(VARIABLE,var->var_id.var_addr), genoperand(VARIABLE,t1));
     }
 }
 
@@ -691,12 +709,15 @@ static void translate_StmtList(Node_t * root) {
 static void translate_Stmt(Node_t * root) {
     panic_on("Wrong",!type(root,"Stmt"));
     if(type(root->lchild,"Exp")) {
-        translate_Exp(root->lchild,-1);
+        root->lchild->inh = &Is_Top_Addr;
+        int t = -1;
+        translate_Exp(root->lchild,&t);
     } else if(type(root->lchild,"CompSt")) {
         translate_CompSt(root->lchild);
     } else if(type(root->lchild,"RETURN")) {
         int t1 = genvar();
-        translate_Exp(root->lchild->right,t1);
+        root->lchild->right->inh = &Is_Top_Addr;
+        translate_Exp(root->lchild->right,&t1);
         gencode(T_RETURN, genoperand(VARIABLE,t1));
     } else if(type(root->lchild,"IF")) {
         if(type(root->rchild->left,"ELSE")) {
@@ -731,8 +752,9 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
     Node_t * mid = root->lchild->right;
     if(type(mid,"RELOP")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(root->lchild,t1);
-        translate_Exp(root->rchild,t2);
+        root->lchild->inh = root->rchild->inh = &Is_Top_Addr;
+        translate_Exp(root->lchild,&t1);
+        translate_Exp(root->rchild,&t2);
         gencode(T_IF, genoperand(VARIABLE,t1), genoperand(VARIABLE,t2), genoperand(GOTO,label_true), genoperand(RELOP,mid->text));
         gencode(T_GO, genoperand(GOTO,label_false));
     } else if(type(mid,"AND")) {
@@ -749,135 +771,174 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
         translate_Cond(mid,label_false,label_true);
     } else {
         int t1 = genvar();
-        translate_Exp(root->lchild,t1);
+        root->lchild->inh = &Is_Top_Addr;
+        translate_Exp(root->lchild,&t1);
         gencode(T_IF, genoperand(VARIABLE,t1), genoperand(CONSTANT,0), genoperand(GOTO,label_true));
         gencode(T_GO, genoperand(GOTO,label_false));
     }
     root->syn = &Int_Type;
 }
 
-static void translate_Exp(Node_t * root,int place) {
+
+static void translate_Exp(Node_t * root,int * place) {
     panic_on("Wrong Exp", !type(root,"Exp"));
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
     const Type * left_type = NULL, * right_type = NULL, * mid_type = NULL;
     const Type * ret = NULL;
     if(type(left,"ID") && mid == NULL) {
-        ret = symbol_table->find(left->text)->type;
+        unit_t * find = symbol_table->find(left->text);
+        ret = find->type;
         if(ret->kind == BASIC) {
-            gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
+            if(find->var_id.var_no == 0) {
+                find->var_id.var_no = genvar();
+            }
+            *place = find->var_id.var_no;
+            //gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,find->var_id.var_no));
         } else {
-            gencode(T_ADDR,genoperand(VARIABLE,place),genoperand(ORIGIN,left->text));
+            if(find->var_id.var_addr == 0) {
+                find->var_id.var_addr = genvar();
+            }
+            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(VARIABLE,find->var_id.var_addr));
         }
     } else if(type(left,"INT") && mid == NULL) {
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,left->text));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,left->text));
         ret = &Int_Type;
     } else if(type(left,"FLOAT") && mid == NULL) {
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,left->text));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,left->text));
         ret = &Float_Type;
     } else if(type(mid,"ASSIGNOP")) {
-        char * left_name = left->lchild->text;
-        //TODO left a[] struct variable
+        int t1 = genvar(),t2 = genvar();
+        left->inh = NULL;
+        right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(right,&t2);
+        //left->inh = &Is_Top_Addr说明是读取值，在LB DOT中，的最顶层需要读取*VAR
+        //left->inh = NULL说明是赋值，在LB DOT中需要的是地址
+        //TODO 判断左侧是否是一个地址
         if(type(left->lchild,"ID")) {
-            int t1 = genvar();
-            translate_Exp(right,t1);
-            gencode(T_ASSIGN,genoperand(ORIGIN,left_name),genoperand(VARIABLE,t1));
-            gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(ORIGIN,left_name));
+            gencode(T_ASSIGN,genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
         } else {
-            int t1 = genvar(),t2 = genvar();
-            translate_Exp(left,t1);
-            translate_Exp(right,t2);
             gencode(T_STAR_A,genoperand(VARIABLE,t1), genoperand(VARIABLE,t2));
+        }
+        if(*place != -1) {
+            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1));
         }
         left_type = left->syn;
         ret = left_type;
     }  else if(type(left,"MINUS")) {
         int t1 = genvar();
-        translate_Exp(mid,t1);
-        gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(CONSTANT,0),genoperand(VARIABLE,t1));
+        mid->inh = root->inh;
+        translate_Exp(mid,&t1);
+        gencode(T_MINUS,genoperand(VARIABLE,*place),genoperand(INT_CONST,0),genoperand(VARIABLE,t1));
         ret = mid->syn;
     } else if(type(mid,"PLUS")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(left,t1);
-        translate_Exp(right,t2);
-        gencode(T_ADD,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left->inh = right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(right,&t2);
+        gencode(T_ADD,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
         left_type = left->syn;
         ret = left_type;
     } else if(type(mid,"MINUS")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(left,t1);
-        translate_Exp(right,t2);
-        gencode(T_MINUS,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left->inh = right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(right,&t2);
+        gencode(T_MINUS,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
         left_type = left->syn;
         ret = left_type;
     } else if(type(mid,"STAR")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(left,t1);
-        translate_Exp(right,t2);
-        gencode(T_MUL,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left->inh = right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(right,&t2);
+        gencode(T_MUL,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
         left_type = left->syn;
         ret = left_type;
     } else if(type(mid,"DIV")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(left,t1);
-        translate_Exp(right,t2);
-        gencode(T_DIV,genoperand(VARIABLE,place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        left->inh = NULL;
+        right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(right,&t2);
+
+        gencode(T_DIV,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
         left_type = left->syn;
         ret = left_type;
     } else if(type(mid,"RELOP") || type(left,"NOT") || type(mid,"AND") || type(mid,"OR")) {
         int l1 = genlable(),l2 = genlable();
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,0));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,0));
         translate_Cond(root,l1,l2);
         gencode(T_LABEL,l1);
-        gencode(T_ASSIGN,genoperand(VARIABLE,place),genoperand(CONSTANT,1));
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,1));
         gencode(T_LABEL,l2);
         ret = &Int_Type;
     } else if(type(left,"LP")) {
+        mid->inh = root->inh;
         translate_Exp(mid,place);
         ret = mid->syn;
     } else if(type(mid,"LP")) {
         if(type(mid->right,"Args")) {
-            translate_Args(mid->right);
+            int t1 = translate_Args(mid->right);
             if(strcmp(left->text,"write") == 0) {
-                gencode(T_WRITE, genoperand(VARIABLE,place));
+                gencode(T_WRITE, genoperand(VARIABLE,t1));
             } else {
-                gencode(T_CALL, genoperand(FUNCTION,left->text));
+                gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
             }
         } else {
             if(strcmp(left->text,"read") == 0) {
-                gencode(T_READ, genoperand(VARIABLE,place));
+                gencode(T_READ, genoperand(VARIABLE,*place));
             } else {
-                gencode(T_CALL, genoperand(FUNCTION,left->text));
+                gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
             }
         }
         ret = symbol_table->find(left->text)->type->u.func.ret_type;
     } else if(type(mid,"LB")) {
         int t1 = genvar(),t2 = genvar();
-        translate_Exp(left,t1);
-        translate_Exp(mid->right,t2);
+        left->inh = NULL;
+        mid->right->inh = root->inh;
+        translate_Exp(left,&t1);
+        translate_Exp(mid->right,&t2);
 
         left_type = left->syn;
         ret = left_type->u.array.elem;
 
-        int t3 = genvar();
+        int t3 = genvar(),t4 = genvar();
         gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(INT_CONST,  translate_getsize((Type*)ret)));
-        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t1), genoperand(VARIABLE,t3));
+        gencode(T_ADD, genoperand(VARIABLE,t4), genoperand(VARIABLE,t1), genoperand(VARIABLE,t3));
+        if(root->inh == &Is_Top_Addr) {
+            gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
+        } else {
+            gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
+        }
+
     } else if(type(mid,"DOT")) {
-        int t1 = genvar();
-        translate_Exp(left, t1);
-        gencode(T_ADD, genoperand(VARIABLE,place), genoperand(VARIABLE,t1), genoperand(INT_CONST,
+        int t1 = genvar(),t2 = genvar();
+        left->inh = NULL;
+        translate_Exp(left, &t1);
+        gencode(T_ADD, genoperand(VARIABLE,t2), genoperand(VARIABLE,t1), genoperand(INT_CONST,
                                                                                        translate_getstructbias((Type*)left->syn,right->text)));
         ret = left->syn;
+
+        if(root->inh == &Is_Top_Addr) {
+            gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+        } else {
+            gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+        }
     }
     root->syn = ret;
 }
 
-static void translate_Args(Node_t * root) {
+static int translate_Args(Node_t * root) {
     panic_on("Wrong",!type(root,"Args"));
     if(type(root->rchild,"Args")) {
         translate_Args(root->rchild);
     }
     int t1 = genvar();
+    root->lchild->inh = &Is_Top_Addr;
+    translate_Exp(root->lchild,&t1);
     gencode(T_ARG, genoperand(VARIABLE,t1));
+    return t1;
 }
 
 
