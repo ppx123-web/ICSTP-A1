@@ -782,6 +782,14 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
     root->syn = &Int_Type;
 }
 
+static int args_stack[512] = {0};
+static int args_stack_size = 0;
+
+static void translate_push_args(int k) {
+    while (k--) {
+        gencode(T_ARG, genoperand(VARIABLE,args_stack[--args_stack_size]));
+    }
+}
 
 static void translate_Exp(Node_t * root,int * place) {
     Node_t * mid = root->lchild->right, * left = root->lchild,* right = root->rchild;
@@ -887,10 +895,11 @@ static void translate_Exp(Node_t * root,int * place) {
         ret = mid->syn;
     } else if(type(mid,"LP")) {
         if(type(mid->right,"Args")) {
-            int t1 = translate_Args(mid->right);
+            int arg_no = translate_Args(mid->right);
             if(strcmp(left->text,"write") == 0) {
-                gencode(T_WRITE, genoperand(VARIABLE,t1));
+                gencode(T_WRITE, genoperand(VARIABLE,args_stack[--args_stack_size]));
             } else {
+                translate_push_args(arg_no);
                 gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
             }
         } else {
@@ -947,14 +956,16 @@ static void translate_Exp(Node_t * root,int * place) {
 
 static int translate_Args(Node_t * root) {
     panic_on("Wrong",!type(root,"Args"));
-    if(type(root->rchild,"Args")) {
-        translate_Args(root->rchild);
-    }
     int t1 = genvar();
     root->lchild->inh = &Is_Top_Addr;
     translate_Exp(root->lchild,&t1);
-    gencode(T_ARG, genoperand(VARIABLE,t1));
-    return t1;
+    args_stack[args_stack_size++] = t1;
+    if(type(root->rchild,"Args")) {
+        return translate_Args(root->rchild) + 1;
+    } else {
+        return 1;
+    }
+    //gencode(T_ARG, genoperand(VARIABLE,t1));
 }
 
 
