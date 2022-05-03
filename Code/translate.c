@@ -1,65 +1,10 @@
 #include "data.h"
 #include "debug.h"
+#include "intercode.h"
 #include <stdio.h>
-
-typedef struct CodeList_t CodeList_t;
-typedef struct Operand Operand;
-typedef struct InterCode InterCode;
 
 static Type Is_Top_Addr = {
         .kind = REMAINED,
-};
-static char * temp_var_prefix = "t", * label_name = "label";
-
-struct Operand {
-    enum {
-        VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP, DEC, INT_CONST,
-    } kind;
-    union {
-        int var_no;
-        char * value;
-        char * f_name;
-        int goto_id;
-        char * id_name;
-        char * relop;
-        int dec;
-        int int_const;
-    } var;
-};
-
-struct InterCode {
-    enum {
-        T_LABEL,T_FUNCTION,T_ASSIGN,T_ADD, T_MINUS, T_MUL, T_DIV, T_ADDR,
-        T_A_STAR, T_STAR_A, T_GO, T_IF, T_RETURN, T_DEC, T_ARG, T_CALL,
-        T_PARAM, T_READ, T_WRITE,
-    } kind;
-    union {
-        struct { Operand id; } label;
-        struct { Operand arg1; } go;
-        struct { Operand func; } function;
-        struct { Operand arg1; } ret;
-        struct { Operand arg1; } arg;
-        struct { Operand arg1; } param;
-        struct { Operand arg1; } read;
-        struct { Operand arg1; } write;
-        struct { Operand arg1,arg2; } assign;
-        struct { Operand arg1,arg2; } a_star;
-        struct { Operand arg1,arg2; } star_a;
-        struct { Operand arg1,arg2; } addr;
-        struct { Operand arg1,arg2; } dec;
-        struct { Operand arg1,arg2; } call;
-        struct { Operand arg1,arg2,arg3; } add;
-        struct { Operand arg1,arg2,arg3; } minus;
-        struct { Operand arg1,arg2,arg3; } mul;
-        struct { Operand arg1,arg2,arg3; } div;
-        struct { Operand arg1,arg2,arg3,op; } ifgoto;
-        struct { Operand arg1,arg2,arg3,arg4; };
-    } op;
-    InterCode * next, * prev;
-};
-
-struct CodeList_t {
-    InterCode head,tail;
 };
 
 static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
@@ -162,8 +107,8 @@ static void gencode(int kind,...) {
             panic("Wrong");
     }
     va_end(ap);
-    intercode_display(code);
-    printf("\n");
+//    intercode_display(code);
+//    printf("\n");
     codelist_insert(&code_list,code_list.tail.prev,code);
 }
 
@@ -184,6 +129,8 @@ static void codelist_init(CodeList_t * this) {
 }
 
 static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
+    static int inter_code_line = 0;
+    cur->line = ++inter_code_line;
     InterCode * end = pos;
     end->next = cur;
     cur->next = &this->tail;
@@ -356,28 +303,9 @@ static void operand_display(Operand * op) {
     }
 }
 
-static void code_list_optimizer(CodeList_t * this) {
-    int size = genvar() + 1;
-    struct map_table {
-        Operand arg;
-    };
-    struct map_table * map = (struct map_table *) malloc(sizeof(struct map_table) * size);
-    memset(map,0, sizeof(struct map_table) * size);
-    InterCode * cur = this->head.next, * temp;
-    while (cur != &this->tail) {
-        temp = cur->next;
-        if(cur->kind == T_ASSIGN) {
-            map[cur->op.assign.arg1.var.var_no].arg = cur->op.assign.arg2;
-            cur->prev->next = temp;
-            temp->prev = cur->prev;
-            free(cur);
-        } else {
-            if(cur->op.arg1.kind == VARIABLE && map[cur->op.arg1.var.var_no].arg.var.var_no) {
 
-            }
-        }
-        cur = temp;
-    }
+
+static void code_list_optimizer(CodeList_t * this) {
 
 }
 
@@ -428,7 +356,8 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-//    codelist_display(&code_list);
+    code_list_optimizer(&code_list);
+    codelist_display(&code_list);
 }
 
 static int translate_getsize(const Type * type) {

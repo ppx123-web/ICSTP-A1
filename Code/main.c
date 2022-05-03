@@ -17,9 +17,6 @@ int main(int argc,char *argv[]) {
     if (argc <= 1) {
         printf("Usage:%s $FILE\n",argv[0]);
     }
-    #ifndef FINAL
-        Log("\n\n\n%s:\n",argv[i]);
-    #endif
     yyinit();
 
     FILE * f = fopen(argv[1], "r");
@@ -36,7 +33,6 @@ int main(int argc,char *argv[]) {
         //semantic_check->main(tree->root);
         freopen(argv[2],"w",stdout);
         translate();
-
     }
     //end_free();
     return 0;
