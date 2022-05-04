@@ -1,3 +1,6 @@
+#ifndef INTERCODE_H
+#define INTERCODE_H
+
 typedef struct CodeList_t CodeList_t;
 typedef struct Operand Operand;
 typedef struct InterCode InterCode;
@@ -7,7 +10,7 @@ static char * temp_var_prefix = "t", * label_name = "label";
 
 struct Operand {
     enum {
-        NONTYPE,VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP, DEC, INT_CONST,
+        NONTYPE, VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP, DEC, INT_CONST,
     } kind;
     union {
         int var_no;
@@ -58,7 +61,56 @@ struct CodeList_t {
     InterCode head,tail;
 };
 
-typedef struct InterCode_Table_t {
 
-}InterCode_Table_t;
+void codelist_init(CodeList_t * this);
+void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
 
+Operand genoperand(int kind,...);
+void gencode(int kind,...);
+
+
+typedef struct vector {
+    int size;
+    int capacity;
+    void * data;
+    int ele_size;
+
+}vector;
+
+void vector_init(vector * vec,int ele_size,int capacity);
+void vector_resize(vector * vec,int size);
+void vector_push_back(vector * vec,void * udata);
+void vector_delete(vector * vec);
+void * vector_id(vector * vec,int id);
+int vector_size(vector *vec);
+
+
+typedef struct hashmap_node_t {
+    void * keydata, * valuedata;
+    struct hashmap_node_t * next;
+}hashmap_node_t;
+
+typedef struct hashmap {
+    int size;
+    int bucket_capacity;
+    hashmap_node_t * bucket;
+    int key_size;
+    int value_size;
+    int unit_size;
+
+
+    int (*hash)(struct hashmap * map,void * keydata,int size);
+    int (*compare)(void * ka,void * kb);
+}hashmap;
+
+void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
+                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb));
+void hashmap_delete(hashmap * map,void * keydata);
+void hashmap_set(hashmap * map,void * keydata,void * valuedata);
+void * hashmap_find(hashmap * map,void * keydata);
+
+void hashmap_deconstruct(hashmap * map);
+void hashmap_traverse(hashmap * map,void (* func)(void *,void *));
+
+
+#endif

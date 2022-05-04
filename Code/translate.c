@@ -7,13 +7,13 @@ static Type Is_Top_Addr = {
         .kind = REMAINED,
 };
 
-static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
+
 static void codelist_display(CodeList_t * this);
 static void operand_display(Operand * op);
 static void intercode_display(InterCode * cur);
 CodeList_t code_list;
 
-static Operand genoperand(int kind,...) {
+Operand genoperand(int kind,...) {
     va_list ap;
     Operand ret;
     ret.kind = kind;
@@ -56,7 +56,7 @@ static Operand genoperand(int kind,...) {
     return ret;
 }
 
-static void gencode(int kind,...) {
+void gencode(int kind,...) {
     InterCode * code = new(InterCode);
     code->kind = kind;
     va_list ap;
@@ -126,12 +126,12 @@ static int genlable() {
 }
 
 
-static void codelist_init(CodeList_t * this) {
+void codelist_init(CodeList_t * this) {
     this->head.next = &this->tail;
     this->tail.prev = &this->head;
 }
 
-static void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
+void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
     static int inter_code_line = 0;
     cur->line = ++inter_code_line;
     InterCode * end = pos;
@@ -782,7 +782,6 @@ static void translate_Exp(Node_t * root,int * place) {
                 find->var_id.var_no = genvar();
             }
             *place = find->var_id.var_no;
-            //gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,find->var_id.var_no));
         } else {
             if(find->var_id.var_addr == 0) {
                 find->var_id.var_addr = genvar();
@@ -799,8 +798,8 @@ static void translate_Exp(Node_t * root,int * place) {
         int t1 = genvar(),t2 = genvar();
         left->inh = NULL;
         right->inh = root->inh;
-        translate_Exp(left,&t1);
         translate_Exp(right,&t2);
+        translate_Exp(left,&t1);
         //left->inh = &Is_Top_Addr说明是读取值，在LB DOT中，的最顶层需要读取*VAR
         //left->inh = NULL说明是赋值，在LB DOT中需要的是地址
         if(type(left->lchild,"ID") && left->syn->kind == BASIC) {
