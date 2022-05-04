@@ -28,7 +28,7 @@ struct Operand {
 
 struct InterCode {
     enum {
-        T_LABEL,T_FUNCTION,T_ASSIGN,T_ADD, T_MINUS, T_MUL, T_DIV, T_ADDR,
+        T_EMPTY, T_LABEL, T_FUNCTION, T_ASSIGN, T_ADD, T_MINUS, T_MUL, T_DIV, T_ADDR,
         T_A_STAR, T_STAR_A, T_GO, T_IF, T_RETURN, T_DEC, T_ARG, T_CALL,
         T_PARAM, T_READ, T_WRITE,
     } kind;
@@ -66,6 +66,8 @@ struct CodeList_t {
 
 void codelist_init(CodeList_t * this);
 void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
+void codelist_display(CodeList_t * this);
+void intercode_display(InterCode * cur);
 
 CodeList_t * code_optimizer(int size);
 

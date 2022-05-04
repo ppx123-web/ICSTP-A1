@@ -8,9 +8,7 @@ static Type Is_Top_Addr = {
 };
 
 
-static void codelist_display(CodeList_t * this);
 static void operand_display(Operand * op);
-static void intercode_display(InterCode * cur);
 CodeList_t code_list;
 
 Operand genoperand(int kind,...) {
@@ -104,6 +102,7 @@ InterCode * u_gencode(int kind,va_list ap) {
         default:
             panic("Wrong");
     }
+//    intercode_display(code);
     return code;
 }
 
@@ -112,9 +111,6 @@ static void gencode(int kind,...) {
     va_start(ap,kind);
     InterCode * code = u_gencode(kind,ap);
     va_end(ap);
-
-//    intercode_display(code);
-//    printf("\n");
     if(code) {
         codelist_insert(&code_list,code_list.tail.prev,code);
     }
@@ -140,11 +136,11 @@ static int inter_code_line = 0;
 
 void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
     cur->line = ++inter_code_line;
-    InterCode * end = pos;
-    end->next = cur;
-    cur->next = &this->tail;
-    this->tail.prev = cur;
-    cur->prev = end;
+    InterCode * next = pos->next;
+    pos->next = cur;
+    next->prev = cur;
+    cur->next = next;
+    cur->prev = pos;
 }
 
 static void codelist_remove(CodeList_t * this,InterCode * cur) {
@@ -155,7 +151,7 @@ static void codelist_merge(CodeList_t * l1,CodeList_t * l2) {
     panic("Not implement");
 }
 
-static void intercode_display(InterCode * cur) {
+void intercode_display(InterCode * cur) {
     switch (cur->kind) {
         case T_LABEL:
             printf("LABEL ");
@@ -264,13 +260,13 @@ static void intercode_display(InterCode * cur) {
         default:
             panic("Wrong");
     }
+    printf("\n");
 }
 
-static void codelist_display(CodeList_t * this) {
+void codelist_display(CodeList_t * this) {
     InterCode * cur = this->head.next;
     while (cur != &this->tail) {
         intercode_display(cur);
-        printf("\n");
         cur = cur->next;
     }
 }
@@ -368,7 +364,8 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-    codelist_display(&code_list);
+//    codelist_display(&code_list);
+//    printf("\n\n");
     CodeList_t * opt_code = code_list_optimizer(&code_list);
 
 }

@@ -31,7 +31,7 @@ int main(int argc,char *argv[]) {
     if (syntax == 0) {
         //tree->traverse(tree->root,0);
         //semantic_check->main(tree->root);
-        freopen(argv[2],"w",stdout);
+//        freopen(argv[2],"w",stdout);
         translate();
     }
     //end_free();

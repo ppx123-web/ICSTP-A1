@@ -14,7 +14,6 @@ typedef struct Code_Block_t {
 
 Code_Block_t * code_block;
 
-static CodeList_t * cur_code_list;
 static void code_optimizer_init(int size);
 static void code_optimizer_finish(int size);
 static int partition_code_block();
@@ -28,6 +27,7 @@ static void gencode(CodeList_t * cl,int kind,...) {
     va_end(ap);
     if(code) {
         codelist_insert(cl,cl->tail.prev,code);
+        intercode_display(code);
     }
 }
 
@@ -91,8 +91,7 @@ typedef struct Graph_Node_t {
     enum {
         G_VAR, G_ADD, G_MINUS, G_MUL, G_DIV, G_ASSIGN, G_A_STAR, G_STAR_A,
     } kind;
-    int line,vis;
-    struct Graph_Node_t * left, * right;
+    int line;
 }Graph_Node_t;
 
 typedef struct map_pair {
@@ -144,89 +143,30 @@ static Graph_Node_t * search_operand_op(hashmap_t * map,Operand * a,Operand * b)
     }
 }
 
-static void code_optimizer_code(void * keydata,void * valuedata) {
-    Graph_Node_t * node = valuedata;
-    CodeList_t * cl = cur_code_list;
-    if(node == NULL) return;
-    if(node->kind == G_VAR) {
-        int size = vector_size(&node->arg_list);
-        Operand val = *(Operand*)vector_id(&node->arg_list,0);
-        if(size >= 2) {
-            for(int i = 1;i < size;i++) {
-                gencode(cl,T_ASSIGN, *(Operand*)vector_id(&node->arg_list,i), val);
-            }
-        }
-    }
-    if(node->vis == 1) {
-        return;
-    } else {
-#define OPZERO (*(Operand*)vector_id(&node->arg_list,0))
-#define OPFIRST (node->arg1)
-#define OPSECOND (node->arg2)
-        node->vis = 1;
-        code_optimizer_code(NULL,node->left);
-        code_optimizer_code(NULL,node->right);
-        switch (node->kind) {
-            case G_ADD:
-                gencode(cl,T_ADD, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_MINUS:
-                gencode(cl,T_MINUS, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_MUL:
-                gencode(cl,T_MUL, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_DIV:
-                gencode(cl,T_DIV, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_A_STAR:
-                gencode(cl,T_A_STAR, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_STAR_A:
-                gencode(cl,T_STAR_A, OPZERO, OPFIRST, OPSECOND);
-                break;
-            case G_ASSIGN:
-                gencode(cl,T_ASSIGN, OPZERO, OPFIRST, OPSECOND);
-                break;
-            default:
-                ;
-        }
-        int size = vector_size(&node->arg_list);
-        Operand val = *(Operand*)vector_id(&node->arg_list,0);
-        if(size >= 2) {
-            for(int i = 1;i < size;i++) {
-                gencode(cl, T_ASSIGN, *(Operand*)vector_id(&node->arg_list,i), val);
-            }
-        }
-    }
-}
-
-static CodeList_t * code_optimizer_block(hashmap_t * map) {
-    CodeList_t * ret = (CodeList_t*) malloc(sizeof(CodeList_t));
-    ret->head.next = &ret->tail;
-    ret->tail.prev = &ret->head;
-    cur_code_list = ret;
-    hashmap_traverse(map,code_optimizer_code);
-    return ret;
-}
-
-
-static CodeList_t * code_optimizer_dag(Code_Block_t * block) {
-    CodeList_t * ret = (CodeList_t*) malloc(sizeof(CodeList_t));
-    ret->head.next = &ret->tail;
-    ret->tail.prev = &ret->head;
-
+static CodeList_t code_optimizer_dag(Code_Block_t * block) {
+    CodeList_t ret;
+    ret.head.next = &ret.tail;
+    ret.tail.prev = &ret.head;
 
     InterCode * code = block->head;
+    if(!code || block->first_code > block->end_code) return ret;
     int graph_size = (block->end_code - block->first_code + 5) * 3;
     hashmap_t operand_map,op_map;
     hashmap_init(&operand_map,graph_size, sizeof(Operand), sizeof(Graph_Node_t),NULL,hashcompare);
-    hashmap_init(&op_map,graph_size, 2 * sizeof(Operand), sizeof(Graph_Node_t),NULL,compare_two_operand);
-    while (code != block->tail) {
+    hashmap_init(&op_map,graph_size, sizeof(map_pair), sizeof(Graph_Node_t),NULL,compare_two_operand);
+    while (code != block->tail->next) {
         Graph_Node_t node, * cur = &node, * temp = NULL;
-        cur->left = cur->right = NULL;
         InterCode * temp_code = NULL;
-        node.vis = 0;
+        for(int i = 1;i < 3;i++) {
+            if(code->kind && !hashmap_find(&operand_map,&code->op.args[i])) {
+                Graph_Node_t arg_node = {
+                        .kind = G_VAR,
+                };
+                vector_init(&arg_node.arg_list, sizeof(Operand),8);
+                vector_push_back(&arg_node.arg_list,&code->op.args[i]);
+                hashmap_set(&operand_map,&code->op.args[i],&arg_node);
+            }
+        }//变量没有节点则为变量在表中构建一个节点
         switch (code->kind) {
             case T_ADD:
                 cur->kind = G_ADD;
@@ -242,30 +182,17 @@ static CodeList_t * code_optimizer_dag(Code_Block_t * block) {
                 goto NODE1;
             NODE1:
                 // x = y op z
-                cur->arg1 = code->op.args[1];
-                cur->arg2 = code->op.args[2];
-                for(int i = 1;i < 3;i++) {
-                    if(!hashmap_find(&operand_map,&code->op.args[i])) {
-                        Graph_Node_t arg_node = {
-                                .kind = G_VAR,
-                        };
-                        vector_init(&arg_node.arg_list, sizeof(Operand),8);
-                        vector_push_back(&arg_node.arg_list,&code->op.args[i]);
-                        hashmap_set(&operand_map,&code->op.args[i],&arg_node);
-                    }
-                }//变量没有节点则为变量在表中构建一个节点
+                //TODO 优化需要使用args[1] args[2]的对应的图中的节点的arg list中第一个有效的节点来找search_operand_op
                 temp = search_operand_op(&op_map,&code->op.args[1],&code->op.args[2]);
                 //查看是否有使用y和z进行计算的节点
-                if(temp == NULL || temp->kind != cur->kind) {
-                    //没有，则将node插入到表中，维护其左右子节点
-                    cur->left = hashmap_find(&operand_map,&code->op.args[1]);
-                    cur->right = hashmap_find(&operand_map,&code->op.args[2]);
-
+                if(temp && temp->kind == cur->kind) {//节点存在
+                    vector_push_back(&temp->arg_list,&code->op.args[0]);
+                    gencode(&ret,T_ASSIGN,code->op.args[0], *(Operand*)vector_id(&temp->arg_list,0));
+                } else {
                     vector_init(&cur->arg_list, sizeof(Operand),8);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                     hashmap_set(&op_map,&(map_pair){.a = code->op.args[1],.b = code->op.args[2]},cur);
-                } else {
-                    vector_push_back(&temp->arg_list,&code->op.args[0]);
+                    gencode(&ret,code->kind,code->op.args[0],code->op.args[1],code->op.args[2]);
                 }
                 //更新x对应的节点
                 hashmap_set(&operand_map,&code->op.args[0],cur);
@@ -276,49 +203,35 @@ static CodeList_t * code_optimizer_dag(Code_Block_t * block) {
             case T_STAR_A:
                 cur->kind = G_STAR_A;
             NODE2:
-                if(!hashmap_find(&operand_map,&code->op.args[1])) {
-                    Graph_Node_t arg_node = {
-                            .kind = G_VAR,
-                    };
-                    vector_init(&arg_node.arg_list, sizeof(Operand),8);
-                    vector_push_back(&arg_node.arg_list,&code->op.args[1]);
-                    hashmap_set(&operand_map,&code->op.args[1],&arg_node);
-                }
                 temp = search_operand_op(&op_map,&code->op.args[1],NULL);
                 //查看是否有使用y
-                if(temp == NULL || temp->kind != cur->kind) {
-                    //没有，则将node插入到表中，维护其左子节点
-                    cur->left = hashmap_find(&operand_map,&code->op.args[1]);
-                    cur->right = NULL;
-
+                if(temp && temp->kind == cur->kind) {
+                    vector_push_back(&temp->arg_list,&code->op.args[0]);
+                    gencode(&ret,T_ASSIGN,code->op.args[0], *(Operand*)vector_id(&temp->arg_list,0));
+                } else {
                     vector_init(&cur->arg_list, sizeof(Operand),8);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                     hashmap_set(&op_map,&(map_pair){.a = code->op.args[1],.b = empty_operand},cur);
-                } else {
-                    vector_push_back(&temp->arg_list,&code->op.args[0]);
+                    gencode(&ret,code->kind,code->op.args[0],code->op.args[1]);
                 }
-                //更新x对应的节点
                 hashmap_set(&operand_map,&code->op.args[0],cur);
                 break;
             case T_ASSIGN:
                 cur->kind = G_ASSIGN;
-                if(!hashmap_find(&operand_map,&code->op.args[1])) {
-                    vector_init(&cur->arg_list, sizeof(Operand),8);
-                    vector_push_back(&cur->arg_list,&code->op.args[1]);
-                    hashmap_set(&operand_map,&code->op.args[1],cur);
-                }
                 cur = hashmap_find(&operand_map,&code->op.args[1]);
                 vector_push_back(&cur->arg_list,&code->op.args[0]);
-
+                gencode(&ret,T_ASSIGN,code->op.assign.arg1,code->op.assign.arg2);
                 break;
             default:
                 temp_code = new(InterCode);
                 memcpy(temp_code,code, sizeof(InterCode));
-                codelist_insert(ret,ret->tail.prev,temp_code);
+                codelist_insert(&ret,ret.tail.prev,temp_code);
+                intercode_display(temp_code);
         }
         code = code->next;
     }
     //TODO free hashmap vector
+//    codelist_display(&ret);
     return ret;
 }
 
@@ -329,15 +242,14 @@ static CodeList_t * code_optimizer_code_blocks(int size) {
     CodeList_t * ret = (CodeList_t*) malloc(sizeof(CodeList_t));
     ret->head.next = &ret->tail;
     ret->tail.prev = &ret->head;
-    cur_code_list = ret;
+    CodeList_t temp;
     for(int i = 0;i < size;i++) {
-//        printf("begin:%d, end:%d\n",code_block[i].first_code,code_block[i].end_code);
-        CodeList_t * temp = code_optimizer_dag(&code_block[i]);
-        ret->tail.prev = temp->head.next;
-        temp->head.next->prev = ret->tail.prev;
-        temp->tail.prev->next = &ret->tail;
-        ret->tail.prev = temp->tail.prev;
-        free(temp);
+//        printf("%d::begin:%d, end:%d\n",i,code_block[i].first_code,code_block[i].end_code);
+        temp = code_optimizer_dag(&code_block[i]);
+        ret->tail.prev = temp.head.next;
+        temp.head.next->prev = ret->tail.prev;
+        temp.tail.prev->next = &ret->tail;
+        ret->tail.prev = temp.tail.prev;
     }
 }
 
