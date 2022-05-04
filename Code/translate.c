@@ -56,11 +56,9 @@ Operand genoperand(int kind,...) {
     return ret;
 }
 
-void gencode(int kind,...) {
+InterCode * u_gencode(int kind,va_list ap) {
     InterCode * code = new(InterCode);
     code->kind = kind;
-    va_list ap;
-    va_start(ap,kind);
     switch (kind) {
         case T_LABEL:
         case T_FUNCTION:
@@ -78,7 +76,7 @@ void gencode(int kind,...) {
             if(code->op.arg1.var.var_no == -1) {
                 free(code);
                 va_end(ap);
-                return;
+                return NULL;
             }
             break;
         case T_ADDR:
@@ -106,13 +104,20 @@ void gencode(int kind,...) {
         default:
             panic("Wrong");
     }
+    return code;
+}
+
+static void gencode(int kind,...) {
+    va_list ap;
+    va_start(ap,kind);
+    InterCode * code = u_gencode(kind,ap);
     va_end(ap);
+
 //    intercode_display(code);
 //    printf("\n");
-    if(kind == T_IF && code->op.arg3.var.goto_id == -1) {
-        fprintf(stderr,"error\n");
+    if(code) {
+        codelist_insert(&code_list,code_list.tail.prev,code);
     }
-    codelist_insert(&code_list,code_list.tail.prev,code);
 }
 
 static int genvar() {
@@ -131,8 +136,9 @@ void codelist_init(CodeList_t * this) {
     this->tail.prev = &this->head;
 }
 
+static int inter_code_line = 0;
+
 void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
-    static int inter_code_line = 0;
     cur->line = ++inter_code_line;
     InterCode * end = pos;
     end->next = cur;
@@ -308,8 +314,11 @@ static void operand_display(Operand * op) {
 
 
 
-static void code_list_optimizer(CodeList_t * this) {
-
+static CodeList_t * code_list_optimizer(CodeList_t * this) {
+    int size = inter_code_line;
+    inter_code_line = 0;
+    CodeList_t * ret = code_optimizer(size);
+    return ret;
 }
 
 
@@ -359,8 +368,9 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-    code_list_optimizer(&code_list);
     codelist_display(&code_list);
+    CodeList_t * opt_code = code_list_optimizer(&code_list);
+
 }
 
 static int translate_getsize(const Type * type) {

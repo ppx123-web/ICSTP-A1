@@ -1,6 +1,8 @@
 #ifndef INTERCODE_H
 #define INTERCODE_H
 
+#include <stdarg.h>
+
 typedef struct CodeList_t CodeList_t;
 typedef struct Operand Operand;
 typedef struct InterCode InterCode;
@@ -65,8 +67,10 @@ struct CodeList_t {
 void codelist_init(CodeList_t * this);
 void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
 
+CodeList_t * code_optimizer(int size);
+
 Operand genoperand(int kind,...);
-void gencode(int kind,...);
+InterCode * u_gencode(int kind,va_list ap);
 
 
 typedef struct vector {

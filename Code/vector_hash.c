@@ -68,8 +68,9 @@ void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
 
     if(hash == NULL) {
         map->hash = hashdata;
+    } else {
+        map->hash = hash;
     }
-    map->hash = hash;
     map->compare = compare;
     assert(map->hash && map->compare);
     map->bucket = malloc(bucket_capacity * sizeof(hashmap_node_t));
@@ -103,7 +104,6 @@ void hashmap_set(hashmap * map,void * keydata,void * valuedata) {
 
     void * find = hashmap_find(map,keydata);
     if(find) {
-        memcpy(find,keydata,map->key_size);
         memcpy(find + map->value_size,valuedata,map->value_size);
     } else {
         hashmap_node_t * cur = malloc(sizeof(hashmap_node_t));
@@ -128,7 +128,7 @@ void * hashmap_find(hashmap * map,void * keydata) {
     while (cur) {
         next = cur->next;
         if(map->compare(cur->keydata,keydata)) {
-            return cur;
+            return cur->valuedata;
         }
         cur = next;
     }
