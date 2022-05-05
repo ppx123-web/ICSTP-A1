@@ -2,6 +2,7 @@
 #include "debug.h"
 #include "data.h"
 #include <stdlib.h>
+#include "intercode.h"
 
 int yyrestart(FILE*);
 int yyparse (void);
@@ -31,7 +32,9 @@ int main(int argc,char *argv[]) {
     if (syntax == 0) {
         //tree->traverse(tree->root,0);
         //semantic_check->main(tree->root);
-//        freopen(argv[2],"w",stdout);
+#ifndef INTERCODE_DEBUG
+        freopen(argv[2],"w",stdout);
+#endif
         translate();
     }
     //end_free();

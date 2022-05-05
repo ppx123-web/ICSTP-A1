@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 void vector_init(vector * vec,int ele_size,int capacity) {
     vec->size = 0;
@@ -98,13 +99,35 @@ void hashmap_delete(hashmap * map,void * keydata) {
     }
 }
 
+typedef struct Graph_Node_t {
+    vector arg_list;
+    Operand arg1,arg2;
+
+    enum {
+        G_VAR, G_ADD, G_MINUS, G_MUL, G_DIV, G_ASSIGN, G_A_STAR, G_STAR_A,
+    } kind;
+    int line;
+}Graph_Node_t;
+
+
 void hashmap_set(hashmap * map,void * keydata,void * valuedata) {
     int entry = map->hash(map,keydata,map->key_size) % map->bucket_capacity;
     hashmap_node_t * node = &map->bucket[entry];
 
     void * find = hashmap_find(map,keydata);
+//    printf("map (");
+//    if(map->key_size == sizeof(Operand)) {
+//        operand_display(keydata);
+//    } else {
+//        operand_display(keydata);
+//        printf(",");
+//        operand_display(keydata + sizeof(Operand));
+//    }
+//    printf(") to Node first:");
+//    operand_display(vector_id(&((Graph_Node_t*)valuedata)->arg_list,0));
+//    printf("\n");
     if(find) {
-        memcpy(find + map->value_size,valuedata,map->value_size);
+        memcpy(find,valuedata,map->value_size);
     } else {
         hashmap_node_t * cur = malloc(sizeof(hashmap_node_t));
 

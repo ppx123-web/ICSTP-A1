@@ -1,3 +1,7 @@
+//#define INTERCODE_DEBUG
+
+
+
 #ifndef INTERCODE_H
 #define INTERCODE_H
 
@@ -63,13 +67,14 @@ struct CodeList_t {
     InterCode head,tail;
 };
 
-
+int genvar();
 void codelist_init(CodeList_t * this);
 void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur);
 void codelist_display(CodeList_t * this);
 void intercode_display(InterCode * cur);
+void operand_display(Operand * op);
 
-CodeList_t * code_optimizer(int size);
+        CodeList_t * code_optimizer(int size);
 
 Operand genoperand(int kind,...);
 InterCode * u_gencode(int kind,va_list ap);

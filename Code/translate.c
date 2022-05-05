@@ -8,7 +8,7 @@ static Type Is_Top_Addr = {
 };
 
 
-static void operand_display(Operand * op);
+void operand_display(Operand * op);
 CodeList_t code_list;
 
 Operand genoperand(int kind,...) {
@@ -102,7 +102,9 @@ InterCode * u_gencode(int kind,va_list ap) {
         default:
             panic("Wrong");
     }
-//    intercode_display(code);
+#ifdef INTERCODE_DEBUG
+    intercode_display(code);
+#endif
     return code;
 }
 
@@ -116,7 +118,7 @@ static void gencode(int kind,...) {
     }
 }
 
-static int genvar() {
+int genvar() {
     static int var_idx = 1;
     return var_idx++;
 }
@@ -271,7 +273,7 @@ void codelist_display(CodeList_t * this) {
     }
 }
 
-static void operand_display(Operand * op) {
+void operand_display(Operand * op) {
     switch (op->kind) {
         case VARIABLE:
             if(op->var.var_no == -1) {
@@ -307,8 +309,6 @@ static void operand_display(Operand * op) {
             panic("Wrong!");
     }
 }
-
-
 
 static CodeList_t * code_list_optimizer(CodeList_t * this) {
     int size = inter_code_line;
@@ -364,10 +364,12 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-//    codelist_display(&code_list);
-//    printf("\n\n");
-    CodeList_t * opt_code = code_list_optimizer(&code_list);
 
+//    printf("\n\n");
+//    CodeList_t * opt_code = code_list_optimizer(&code_list);
+#ifndef INTERCODE_DEBUG
+    codelist_display(&code_list);
+#endif
 }
 
 static int translate_getsize(const Type * type) {
@@ -652,7 +654,7 @@ static void translate_Stmt(Node_t * root) {
     panic_on("Wrong",!type(root,"Stmt"));
     if(type(root->lchild,"Exp")) {
         root->lchild->inh = &Is_Top_Addr;
-        int t = genvar();
+        int t = -1;
         translate_Exp(root->lchild,&t);
     } else if(type(root->lchild,"CompSt")) {
         translate_CompSt(root->lchild);
@@ -796,7 +798,9 @@ static void translate_Exp(Node_t * root,int * place) {
             gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(VARIABLE,find->var_id.var_addr));
         }
     } else if(type(left,"INT") && mid == NULL) {
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,left->text));
+        char * s = NULL;
+        int num = (int)strtol(left->text,&s,0);
+        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,num));
         ret = &Int_Type;
     } else if(type(left,"FLOAT") && mid == NULL) {
         gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,left->text));
@@ -805,27 +809,46 @@ static void translate_Exp(Node_t * root,int * place) {
         int t1 = genvar(),t2 = genvar();
         left->inh = NULL;
         right->inh = root->inh;
-        translate_Exp(right,&t2);
+        int is_const = 0;
+        if(type(right->lchild,"INT")) {
+            is_const = 1;
+        }
+        if(!is_const) {
+            translate_Exp(right,&t2);
+        }
         translate_Exp(left,&t1);
         //left->inh = &Is_Top_Addr说明是读取值，在LB DOT中，的最顶层需要读取*VAR
         //left->inh = NULL说明是赋值，在LB DOT中需要的是地址
-        if(type(left->lchild,"ID") && left->syn->kind == BASIC) {
-            gencode(T_ASSIGN,genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
-            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1));
-        } else if(left->syn->kind == BASIC) {
-            gencode(T_STAR_A,genoperand(VARIABLE,t1), genoperand(VARIABLE,t2));
-            gencode(T_A_STAR,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1));
-        } else {
-            int t3 = genvar(),t4 = genvar(),t5 = genvar();
-            for(int i = 0;i < translate_getsize(left->syn);i += 4) {
-                gencode(T_ADD, genoperand(VARIABLE,t3), genoperand(VARIABLE,t1), genoperand(INT_CONST,i));
-                gencode(T_ADD, genoperand(VARIABLE,t4), genoperand(VARIABLE,t2), genoperand(INT_CONST,i));
-                gencode(T_A_STAR,genoperand(VARIABLE,t5),genoperand(VARIABLE,t4));
-                gencode(T_STAR_A,genoperand(VARIABLE,t3), genoperand(VARIABLE,t5));
+        if(!is_const) {
+            if(type(left->lchild,"ID") && left->syn->kind == BASIC) {
+                gencode(T_ASSIGN,genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+            } else if(left->syn->kind == BASIC) {
+                gencode(T_STAR_A,genoperand(VARIABLE,t1), genoperand(VARIABLE,t2));
+            } else {
+                int t3 = genvar(),t4 = genvar(),t5 = genvar();
+                for(int i = 0;i < translate_getsize(left->syn);i += 4) {
+                    gencode(T_ADD, genoperand(VARIABLE,t3), genoperand(VARIABLE,t1), genoperand(INT_CONST,i));
+                    gencode(T_ADD, genoperand(VARIABLE,t4), genoperand(VARIABLE,t2), genoperand(INT_CONST,i));
+                    gencode(T_A_STAR,genoperand(VARIABLE,t5),genoperand(VARIABLE,t4));
+                    gencode(T_STAR_A,genoperand(VARIABLE,t3), genoperand(VARIABLE,t5));
+                }
             }
+            if(*place != -1) {
+                gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+            }
+            left_type = left->syn;
+            ret = left_type;
+        } else {
+            char * s = NULL;
+            int num = (int)strtol(right->lchild->text,&s,0);
+            if(type(left->lchild,"ID") && left->syn->kind == BASIC) {
+                gencode(T_ASSIGN,genoperand(VARIABLE,t1),genoperand(INT_CONST,num));
+            } else if(left->syn->kind == BASIC) {
+                gencode(T_STAR_A,genoperand(VARIABLE,t1), genoperand(INT_CONST,num));
+            }
+            if(*place != -1)
+                gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,num));
         }
-        left_type = left->syn;
-        ret = left_type;
     }  else if(type(left,"MINUS")) {
         int t1 = genvar();
         mid->inh = root->inh;
