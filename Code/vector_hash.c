@@ -58,10 +58,11 @@ static int hashdata(hashmap * map,void * data,int size) {
     return val;
 }
 
-
+static void * origin_allocator()
 
 void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
-                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb)) {
+                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb),
+                          void * (*allocator)(size_t),void (*deallocator)(void *)) {
     map->bucket_capacity = bucket_capacity;
     map->key_size = key_size;
     map->value_size = value_size;
@@ -71,6 +72,16 @@ void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
         map->hash = hashdata;
     } else {
         map->hash = hash;
+    }
+    if(allocator == NULL) {
+        map->allocator = malloc;
+    } else {
+        map->allocator = allocator;
+    }
+    if(deallocator == NULL) {
+        map->deallocator = free;
+    } else {
+        map->deallocator = deallocator;
     }
     map->compare = compare;
     assert(map->hash && map->compare);
@@ -158,12 +169,12 @@ void * hashmap_find(hashmap * map,void * keydata) {
     return NULL;
 }
 
-static void hashmap_node_list_delete(hashmap_node_t * cur) {
+static void hashmap_node_list_delete(hashmap * map,hashmap_node_t * cur) {
     if(cur == NULL) return;
     else {
         hashmap_node_list_delete(cur->next);
         free(cur->keydata);
-        free(cur->valuedata);
+        map->deallocator(cur->valuedata);
         free(cur);
         return;
     }
@@ -171,7 +182,7 @@ static void hashmap_node_list_delete(hashmap_node_t * cur) {
 
 void hashmap_deconstruct(hashmap * map) {
     for(int i = 0;i < map->bucket_capacity;i++) {
-        hashmap_node_list_delete(map->bucket[i].next);
+        hashmap_node_list_delete(map,map->bucket[i].next);
     }
     free(map->bucket);
 }

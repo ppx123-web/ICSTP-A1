@@ -6,6 +6,9 @@
 #define INTERCODE_H
 
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 typedef struct CodeList_t CodeList_t;
 typedef struct Operand Operand;
@@ -74,7 +77,7 @@ void codelist_display(CodeList_t * this);
 void intercode_display(InterCode * cur);
 void operand_display(Operand * op);
 
-        CodeList_t * code_optimizer(int size);
+CodeList_t * code_optimizer(int size);
 
 Operand genoperand(int kind,...);
 InterCode * u_gencode(int kind,va_list ap);
@@ -112,10 +115,13 @@ typedef struct hashmap {
 
     int (*hash)(struct hashmap * map,void * keydata,int size);
     int (*compare)(void * ka,void * kb);
+    void * (*allocator)(size_t);
+    void (*deallocator)(void *);
 }hashmap;
 
 void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
-                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb));
+                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb),
+                  void * (*allocator)(size_t),void (*deallocator)(void *));
 void hashmap_delete(hashmap * map,void * keydata);
 void hashmap_set(hashmap * map,void * keydata,void * valuedata);
 void * hashmap_find(hashmap * map,void * keydata);

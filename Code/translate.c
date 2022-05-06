@@ -3,12 +3,12 @@
 #include "intercode.h"
 #include <stdio.h>
 
+int * variable_map;
+
 static Type Is_Top_Addr = {
         .kind = REMAINED,
 };
 
-
-void operand_display(Operand * op);
 CodeList_t code_list;
 
 Operand genoperand(int kind,...) {
@@ -128,7 +128,6 @@ static int genlable() {
     return label_idx++;
 }
 
-
 void codelist_init(CodeList_t * this) {
     this->head.next = &this->tail;
     this->tail.prev = &this->head;
@@ -143,14 +142,6 @@ void codelist_insert(CodeList_t * this,InterCode * pos, InterCode * cur) {
     next->prev = cur;
     cur->next = next;
     cur->prev = pos;
-}
-
-static void codelist_remove(CodeList_t * this,InterCode * cur) {
-    panic("Not implement");
-}
-
-static void codelist_merge(CodeList_t * l1,CodeList_t * l2) {
-    panic("Not implement");
 }
 
 void intercode_display(InterCode * cur) {
@@ -317,11 +308,8 @@ static CodeList_t * code_list_optimizer(CodeList_t * this) {
     return ret;
 }
 
-
 //======================================================================
-
 //======================================================================
-
 
 static void translate_Program(Node_t * root);
 
@@ -353,6 +341,9 @@ static int translate_Args(Node_t * root);
 static void translate_Cond(Node_t * root,int label_true,int label_false);
 
 void translate() {
+    variable_map = malloc(sizeof(int) * 102400);
+    memset(variable_map,0, sizeof(int) * 102400);
+
     codelist_init(&code_list);
     Type * read_type = type_ops->type_alloc_init(FUNC_IMPL);
     Type * write_type = type_ops->type_alloc_init(FUNC_IMPL);
@@ -364,12 +355,13 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-
 //    printf("\n\n");
 //    CodeList_t * opt_code = code_list_optimizer(&code_list);
 #ifndef INTERCODE_DEBUG
     codelist_display(&code_list);
 #endif
+
+    free(variable_map);
 }
 
 static int translate_getsize(const Type * type) {
@@ -400,9 +392,6 @@ static int translate_getstructbias(Type * type,char * name) {
     return ans;
 }
 
-
-
-
 static unit_t * translate_Creat_Node(char * name,Type * type,int line) {//不会复制type
     unit_t * node = symbol_table->node_alloc();
     symbol_table->node_init(node,name);
@@ -414,7 +403,6 @@ static int translate_Insert_Node(unit_t * cur) {
     symbol_table->insert(cur);
     return 1;
 }
-
 
 static Type * translate_Specifier(Node_t * root) {
     Type * ret = &Wrong_Type;
@@ -433,7 +421,6 @@ static Type * translate_Specifier(Node_t * root) {
     }
     return ret;
 }
-
 
 static void translate_Program(Node_t * root) {
     panic_on("Wrong",!type(root,"Program"));
@@ -563,7 +550,8 @@ static void translate_Dec(Node_t * root) {
             gencode(T_DEC, genoperand(VARIABLE,t1), genoperand(DEC,translate_getsize(var->type)));
             gencode(T_ADDR, genoperand(VARIABLE,var->var_id.var_addr), genoperand(VARIABLE,t1));
         } else {
-            var->var_id.var_addr = genvar();
+            var->var_id.var_no = genvar();
+            variable_map[var->var_id.var_no] = 1;
         }
     }
     translate_Insert_Node(var);
