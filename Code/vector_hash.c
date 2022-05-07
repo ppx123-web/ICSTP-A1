@@ -58,8 +58,6 @@ static int hashdata(hashmap * map,void * data,int size) {
     return val;
 }
 
-static void * origin_allocator()
-
 void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
                   int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb),
                           void * (*allocator)(size_t),void (*deallocator)(void *)) {
@@ -67,6 +65,7 @@ void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
     map->key_size = key_size;
     map->value_size = value_size;
     map->unit_size = key_size + value_size;
+    map->size = 0;
 
     if(hash == NULL) {
         map->hash = hashdata;
@@ -126,32 +125,21 @@ void hashmap_set(hashmap * map,void * keydata,void * valuedata) {
     hashmap_node_t * node = &map->bucket[entry];
 
     void * find = hashmap_find(map,keydata);
-//    printf("map (");
-//    if(map->key_size == sizeof(Operand)) {
-//        operand_display(keydata);
-//    } else {
-//        operand_display(keydata);
-//        printf(",");
-//        operand_display(keydata + sizeof(Operand));
-//    }
-//    printf(") to Node first:");
-//    operand_display(vector_id(&((Graph_Node_t*)valuedata)->arg_list,0));
-//    printf("\n");
     if(find) {
         memcpy(find,valuedata,map->value_size);
     } else {
+        hashmap_node_t * temp = node->next;
         hashmap_node_t * cur = malloc(sizeof(hashmap_node_t));
+        node->next = cur;
+        cur->next = temp;
 
         cur->keydata = malloc(map->key_size);
         cur->valuedata = malloc(map->value_size);
         memcpy(cur->keydata,keydata,map->key_size);
         memcpy(cur->valuedata,valuedata,map->value_size);
 
-        cur->next = node->next;
-        node->next = cur;
         map->size++;
     }
-
 
 }
 
@@ -159,6 +147,7 @@ void * hashmap_find(hashmap * map,void * keydata) {
     int entry = map->hash(map,keydata,map->key_size) % map->bucket_capacity;
     hashmap_node_t * node = &map->bucket[entry];
     hashmap_node_t * cur = node->next, * next;
+
     while (cur) {
         next = cur->next;
         if(map->compare(cur->keydata,keydata)) {
@@ -172,7 +161,7 @@ void * hashmap_find(hashmap * map,void * keydata) {
 static void hashmap_node_list_delete(hashmap * map,hashmap_node_t * cur) {
     if(cur == NULL) return;
     else {
-        hashmap_node_list_delete(cur->next);
+        hashmap_node_list_delete(map,cur->next);
         free(cur->keydata);
         map->deallocator(cur->valuedata);
         free(cur);

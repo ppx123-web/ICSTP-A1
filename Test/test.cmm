@@ -1,12 +1,7 @@
-//Assign arith as bool
 int main() {
-    int n, m;
-    if(n = 2) {
-        write(2);
-    }
-    if(n = (n + n)) {
-        write(3);
-    }
-    write(n);
+    int a[10];
+    a[2] = 1 + 2;
+    a[4] = 1 + 2;
+    write(a[4]);
     return 0;
 }

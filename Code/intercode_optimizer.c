@@ -18,10 +18,11 @@ static void gencode(CodeList_t * cl,int kind,...) {
 }
 
 static void code_optimizer_remove_const_assign(int);
+static CodeList_t * block_dag(int size);
 
 CodeList_t * code_optimizer(int size) {
-    code_optimizer_remove_const_assign(size);
-    return &code_list;
+//    code_optimizer_remove_const_assign(size);
+    return block_dag(size);
 }
 
 static void code_optimizer_remove_const_assign(int size) {
@@ -89,7 +90,7 @@ typedef struct Code_Block_t {
 }Code_Block_t;
 Code_Block_t * code_block;
 
-static Graph_Node_t ** block_op_map;
+static Graph_Node_t * block_op_map;
 
 static void code_optimizer_init(int size);
 static void code_optimizer_finish(int size);
@@ -98,29 +99,32 @@ static CodeList_t * code_optimizer_code_blocks(int size);
 static CodeList_t * code_optimizer_block(hashmap * map);
 static CodeList_t code_optimizer_dag(Code_Block_t * block);
 static void block_op_map_init();
+static void block_op_map_delete();
 
-static void block_dag(int size) {
+static CodeList_t * block_dag(int size) {
     code_optimizer_init(size);
     int code_block_size = partition_code_block();
     CodeList_t * ret = code_optimizer_code_blocks(code_block_size);
     code_optimizer_finish(code_block_size);
+    return ret;
 }
 
 
 static CodeList_t * code_optimizer_code_blocks(int size) {
     CodeList_t * ret = (CodeList_t*) malloc(sizeof(CodeList_t));
-    ret->head.next = &ret->tail;
-    ret->tail.prev = &ret->head;
+    codelist_init(ret);
     CodeList_t temp;
     for(int i = 0;i < size;i++) {
 //        printf("%d::begin:%d, end:%d\n",i,code_block[i].first_code,code_block[i].end_code);
-        block_op_map_init();
+        block_op_map_init(code_block[i].end_code - code_block[i].first_code);
         temp = code_optimizer_dag(&code_block[i]);
-        ret->tail.prev = temp.head.next;
+        ret->tail.prev->next = temp.head.next;
         temp.head.next->prev = ret->tail.prev;
         temp.tail.prev->next = &ret->tail;
         ret->tail.prev = temp.tail.prev;
+        block_op_map_delete();
     }
+    return ret;
 }
 
 
@@ -170,7 +174,8 @@ static int partition_code_block() {
 
 static int block_op_map_size = 0;
 static void block_op_map_init(int block_size) {
-    block_op_map = malloc(sizeof(typeof(block_op_map)) * block_size * 2);
+    block_op_map = malloc(sizeof(Graph_Node_t) * block_size * 3);
+    block_op_map_size = 0;
 }
 
 static void block_op_map_delete() {
@@ -190,9 +195,14 @@ static int hashcompare(void * ka,void * kb) {
     }
 }
 
-static int gen_block_op(Graph_Node_t * node) {
+static void gen_block_op(Graph_Node_t node) {
     block_op_map[block_op_map_size++] = node;
 }
+
+static Operand empty_operand = {
+        .kind = 0,
+        .var.var_no = 0,
+};
 
 static int operand_equal(Operand * a,Operand * b) {
     if(a->kind == b->kind) {
@@ -208,7 +218,7 @@ static int operand_equal(Operand * a,Operand * b) {
 }
 
 static Operand * operand_vector_id(vector* vec,int id) {
-    return vector_id(vec,0);
+    return vector_id(vec,id);
 }
 
 static Operand * search_op_map_first(hashmap_t * map, Operand * a) {
@@ -216,53 +226,48 @@ static Operand * search_op_map_first(hashmap_t * map, Operand * a) {
     if(node) {
         return operand_vector_id(&node->arg_list,0);
     } else {
-        return &;
+        return &empty_operand;
     }
 }
 
-static Graph_Node_t * search_operand_op(hashmap_t * map,Operand * a,Operand * b) {
-    assert(map->key_size == 2 * sizeof(Operand));
+static Graph_Node_t * search_operand_op(hashmap_t * map,Operand * a,Operand * b,int kind) {
     for(int i = block_op_map_size - 1;i >= 0;i--) {
-        if(operand_equal(&block_op_map[i]->arg1,search_op_map_first(map,a))
-        && operand_equal(&block_op_map[i]->arg2,search_op_map_first(map,b))) {
-            return block_op_map[i];
+        if(kind == block_op_map[i].kind && operand_equal(&block_op_map[i].args[1],search_op_map_first(map,a))
+            && operand_equal(&block_op_map[i].args[2],search_op_map_first(map,b))) {
+            return &block_op_map[i];
         }
     }
     return NULL;
 }
+//找到a和b所在节点对应的图节点的arg list的第一个元素，然后在block_op_map中遍历查找是否已经计算过
 
-#define new(A) ((A*)malloc(sizeof(A)))
-
-static int compare_two_operand(void * ka,void * kb) {
-    return hashcompare(ka,kb) && hashcompare(ka + sizeof(Operand),kb + sizeof(Operand));
+static void test_hash_var(hashmap_t * map,Operand * a) {
+    Graph_Node_t * node = hashmap_find(map,a);
+    operand_display(a);
+    if(node) {
+        printf("-find:");
+        operand_display(operand_vector_id(&node->arg_list,0));
+    } else {
+        printf("-Not find");
+    }
+    printf("\n");
 }
-
-static Operand empty_operand = {
-        .kind = 0,
-        .var.var_no = 0,
-};
 
 static CodeList_t code_optimizer_dag(Code_Block_t * block) {
     CodeList_t ret;
-    ret.head.next = &ret.tail;
-    ret.tail.prev = &ret.head;
+    codelist_init(&ret);
 
     InterCode * code = block->head;
     if(!code || block->first_code > block->end_code) return ret;
     int graph_size = (block->end_code - block->first_code + 5) * 3;
     hashmap_t operand_map;
     hashmap_init(&operand_map,graph_size, sizeof(Operand), sizeof(Graph_Node_t),NULL,hashcompare,NULL,NULL);
-//    hashmap_init(&op_map,graph_size, sizeof(map_pair), sizeof(Graph_Node_t),NULL,compare_two_operand,NULL,NULL);
     while (code != block->tail->next) {
         Graph_Node_t node, * cur = &node, * temp = NULL;
         InterCode * temp_code = NULL;
+        Operand * arg[3] = {NULL};
         for(int i = 1;i < 3;i++) {
-            if(code->kind) {
-                cur->args[i] = code->op.args[i];
-            } else {
-                cur->args[i] = empty_operand;
-            }
-            if(code->kind && code->op.args[i].kind == VARIABLE && !hashmap_find(&operand_map,&code->op.args[i])) {
+            if(code->op.args[i].kind && !hashmap_find(&operand_map,&code->op.args[i])) {
                 Graph_Node_t arg_node = {
                         .kind = G_VAR,
                 };
@@ -271,7 +276,23 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
                 hashmap_set(&operand_map,&code->op.args[i],&arg_node);
             }
         }//变量没有节点则为变量在表中构建一个节点
-        Operand * arg1 = NULL, * arg2 = NULL;
+        for(int i = 0;i < 3;i++) {
+            if(code->op.args[i].kind && hashmap_find(&operand_map,&code->op.args[i])) {
+                arg[i] = operand_vector_id(
+                        &((Graph_Node_t*)hashmap_find(&operand_map,&code->op.args[i]))->arg_list,0);
+            } else if(code->op.args[i].kind) {
+                arg[i] = &code->op.args[i];
+            } else {
+                arg[i] = &empty_operand;
+            }
+        }
+        for(int i = 1;i < 3;i++) {
+            if(code->op.args[i].kind) {
+                cur->args[i] = *arg[i];
+            } else {
+                cur->args[i] = empty_operand;
+            }
+        }
         switch (code->kind) {
             case T_ADD:
                 cur->kind = G_ADD;
@@ -285,23 +306,20 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
             case T_DIV:
                 cur->kind = G_DIV;
                 goto NODE1;
+
             NODE1:
                 // x = y op z
-                //TODO 优化需要使用args[1] args[2]的对应的图中的节点的arg list中第一个有效的节点来找search_operand_op
-                temp = search_operand_op(&operand_map,&cur->arg1,&cur->arg2);
-                //查看是否有使用y和z进行计算的节点
-                if(temp && temp->kind == cur->kind && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]) {//节点存在
+                temp = search_operand_op(&operand_map,arg[1],arg[2],cur->kind);
+                if(temp && temp->kind == cur->kind && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]) {
                     vector_push_back(&temp->arg_list,&code->op.args[0]);
-                    //gencode(&ret,T_ASSIGN,code->op.args[0], *(Operand*)vector_id(&temp->arg_list,0));
+                    hashmap_set(&operand_map,&code->op.args[0],cur);
+                    cur = temp;
                 } else {
                     vector_init(&cur->arg_list, sizeof(Operand),8);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
-                    hashmap_set(&op_map,&(map_pair){
-                            .a = *search_op_vector(&operand_map,&code->op.args[1]),
-                            .b = *search_op_vector(&operand_map,&code->op.args[2]) },cur);
-                    gencode(&ret,code->kind,code->op.args[0],code->op.args[1],code->op.args[2]);
+                    gen_block_op(node);
+                    gencode(&ret,code->kind,*arg[0],*arg[1],*arg[2]);
                 }
-                //更新x对应的节点
                 hashmap_set(&operand_map,&code->op.args[0],cur);
                 break;
             case T_A_STAR:
@@ -309,33 +327,49 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
                 goto NODE2;
             case T_STAR_A:
                 cur->kind = G_STAR_A;
+
             NODE2:
-                temp = search_operand_op(&op_map,search_op_vector(&operand_map,&code->op.args[1]),NULL);
+                temp = search_operand_op(&operand_map,arg[1],&empty_operand,cur->kind);
                 //查看是否有使用y
-                if(temp && temp->kind == cur->kind) {
+                if(temp && temp->kind == cur->kind && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]) {
                     vector_push_back(&temp->arg_list,&code->op.args[0]);
-                    //gencode(&ret,T_ASSIGN,code->op.args[0], *(Operand*)vector_id(&temp->arg_list,0));
+                    cur = temp;
                 } else {
                     vector_init(&cur->arg_list, sizeof(Operand),8);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
-                    hashmap_set(&op_map,&(map_pair){
-                            .a =*search_op_vector(&operand_map,&code->op.args[1]),
-                            .b = empty_operand},cur);
-                    gencode(&ret,code->kind,code->op.args[0],code->op.args[1]);
+                    gen_block_op(node);
+                    gencode(&ret,code->kind,*arg[0],*arg[1]);
                 }
                 hashmap_set(&operand_map,&code->op.args[0],cur);
                 break;
             case T_ASSIGN:
                 cur = hashmap_find(&operand_map,&code->op.args[1]);
-                vector_push_back(&cur->arg_list,&code->op.args[0]);
+                if(cur && !variable_map[arg[1]->var.var_no]) {
+                    vector_push_back(&cur->arg_list,&code->op.args[0]);
+                } else {
+                    cur = &node;
+                    gencode(&ret,T_ASSIGN,code->op.assign.arg1, *arg[1]);
+                    vector_init(&cur->arg_list, sizeof(Operand),8);
+                    vector_push_back(&cur->arg_list,&code->op.args[0]);
+                }
                 hashmap_set(&operand_map,&code->op.args[0],cur);
-                gencode(&ret,T_ASSIGN,code->op.assign.arg1,code->op.assign.arg2);
+                //test_hash_var(&operand_map,&(Operand){.kind = VARIABLE,.var.var_no = 5});
                 break;
             default:
-                temp_code = new(InterCode);
+                for(int i = 0;i < 3;i++) {
+                    if(code->op.args[i].kind == VARIABLE) {
+                        Graph_Node_t * o1 = hashmap_find(&operand_map,&code->op.args[i]);
+                        if(o1) {
+                            code->op.args[i] = *operand_vector_id(&o1->arg_list,0);
+                        }
+                    }
+                }
+                temp_code = malloc(sizeof(InterCode));
                 memcpy(temp_code,code, sizeof(InterCode));
                 codelist_insert(&ret,ret.tail.prev,temp_code);
+#ifdef INTERCODE_DEBUG
                 intercode_display(temp_code);
+#endif
         }
         code = code->next;
     }

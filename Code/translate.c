@@ -14,6 +14,7 @@ CodeList_t code_list;
 Operand genoperand(int kind,...) {
     va_list ap;
     Operand ret;
+    memset(&ret,0, sizeof(Operand));
     ret.kind = kind;
     va_start(ap,kind);
     switch (kind) {
@@ -356,9 +357,9 @@ void translate() {
     translate_Program(tree->root);
 
 //    printf("\n\n");
-//    CodeList_t * opt_code = code_list_optimizer(&code_list);
+    CodeList_t * opt_code = code_list_optimizer(&code_list);
 #ifndef INTERCODE_DEBUG
-    codelist_display(&code_list);
+    codelist_display(opt_code);
 #endif
 
     free(variable_map);
