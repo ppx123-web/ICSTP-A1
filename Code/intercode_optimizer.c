@@ -114,8 +114,9 @@ static CodeList_t * code_optimizer_code_blocks(int size) {
     CodeList_t * ret = (CodeList_t*) malloc(sizeof(CodeList_t));
     codelist_init(ret);
     CodeList_t temp;
-    for(int i = 0;i < size;i++) {
+    for(int i = 0;i <= size + 1;i++) {
 //        printf("%d::begin:%d, end:%d\n",i,code_block[i].first_code,code_block[i].end_code);
+        if(code_block[i].tail == NULL) continue;
         block_op_map_init(code_block[i].end_code - code_block[i].first_code);
         temp = code_optimizer_dag(&code_block[i]);
         ret->tail.prev->next = temp.head.next;
@@ -261,7 +262,7 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
     if(!code || block->first_code > block->end_code) return ret;
     int graph_size = (block->end_code - block->first_code + 5) * 3;
     hashmap_t operand_map;
-    hashmap_init(&operand_map,graph_size, sizeof(Operand), sizeof(Graph_Node_t),NULL,hashcompare,NULL,NULL);
+    hashmap_init(&operand_map,graph_size, sizeof(Operand), sizeof(Graph_Node_t),NULL,hashcompare,NULL);
     while (code != block->tail->next) {
         Graph_Node_t node, * cur = &node, * temp = NULL;
         InterCode * temp_code = NULL;
@@ -271,7 +272,7 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
                 Graph_Node_t arg_node = {
                         .kind = G_VAR,
                 };
-                vector_init(&arg_node.arg_list, sizeof(Operand),8);
+                vector_init(&arg_node.arg_list, sizeof(Operand),8,NULL);
                 vector_push_back(&arg_node.arg_list,&code->op.args[i]);
                 hashmap_set(&operand_map,&code->op.args[i],&arg_node);
             }
@@ -310,12 +311,16 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
             NODE1:
                 // x = y op z
                 temp = search_operand_op(&operand_map,arg[1],arg[2],cur->kind);
-                if(temp && temp->kind == cur->kind && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]) {
+                if(temp && temp->kind == cur->kind
+                && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]
+                && !variable_map[arg[0]->var.var_no]
+                && (arg[1]->kind != VARIABLE || !variable_map[arg[1]->var.var_no])
+                && (arg[2]->kind != VARIABLE || !variable_map[arg[2]->var.var_no])) {
                     vector_push_back(&temp->arg_list,&code->op.args[0]);
                     hashmap_set(&operand_map,&code->op.args[0],cur);
                     cur = temp;
                 } else {
-                    vector_init(&cur->arg_list, sizeof(Operand),8);
+                    vector_init(&cur->arg_list, sizeof(Operand),8,NULL);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                     gen_block_op(node);
                     gencode(&ret,code->kind,*arg[0],*arg[1],*arg[2]);
@@ -331,11 +336,14 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
             NODE2:
                 temp = search_operand_op(&operand_map,arg[1],&empty_operand,cur->kind);
                 //查看是否有使用y
-                if(temp && temp->kind == cur->kind && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]) {
+                if(temp && temp->kind == cur->kind
+                && !variable_map[operand_vector_id(&temp->arg_list,0)->var.var_no]
+                && !variable_map[arg[0]->var.var_no]
+                && (arg[1]->kind != VARIABLE || !variable_map[arg[1]->var.var_no])) {
                     vector_push_back(&temp->arg_list,&code->op.args[0]);
                     cur = temp;
                 } else {
-                    vector_init(&cur->arg_list, sizeof(Operand),8);
+                    vector_init(&cur->arg_list, sizeof(Operand),8,NULL);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                     gen_block_op(node);
                     gencode(&ret,code->kind,*arg[0],*arg[1]);
@@ -344,12 +352,13 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
                 break;
             case T_ASSIGN:
                 cur = hashmap_find(&operand_map,&code->op.args[1]);
-                if(cur && !variable_map[arg[1]->var.var_no]) {
+                if(cur && !variable_map[arg[0]->var.var_no]
+                          && (arg[1]->kind != VARIABLE || !variable_map[arg[1]->var.var_no])) {
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                 } else {
                     cur = &node;
                     gencode(&ret,T_ASSIGN,code->op.assign.arg1, *arg[1]);
-                    vector_init(&cur->arg_list, sizeof(Operand),8);
+                    vector_init(&cur->arg_list, sizeof(Operand),8,NULL);
                     vector_push_back(&cur->arg_list,&code->op.args[0]);
                 }
                 hashmap_set(&operand_map,&code->op.args[0],cur);
@@ -357,7 +366,7 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
                 break;
             default:
                 for(int i = 0;i < 3;i++) {
-                    if(code->op.args[i].kind == VARIABLE) {
+                    if(code->op.args[i].kind == VARIABLE && !variable_map[code->op.args[i].var.var_no] ) {
                         Graph_Node_t * o1 = hashmap_find(&operand_map,&code->op.args[i]);
                         if(o1) {
                             code->op.args[i] = *operand_vector_id(&o1->arg_list,0);

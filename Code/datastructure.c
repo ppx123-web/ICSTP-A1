@@ -4,12 +4,27 @@
 #include <assert.h>
 #include <stdio.h>
 
-void vector_init(vector * vec,int ele_size,int capacity) {
+
+void vector_init(vector * vec,int ele_size,int capacity,void (* deallocator)(void *)) {
     vec->size = 0;
     vec->ele_size = ele_size;
     vec->capacity = capacity;
-
     vec->data = malloc(vec->ele_size * capacity);
+
+    vec->deallocator = deallocator ? deallocator : NULL;
+}
+
+vector * vector_alloc_init(int ele_size,int capacity,void (* deallocator)(void *)) {
+    vector * vec = new(vector);
+
+    vec->size = 0;
+    vec->ele_size = ele_size;
+    vec->capacity = capacity;
+    vec->data = malloc(vec->ele_size * capacity);
+
+    vec->deallocator = deallocator ? deallocator : NULL;
+
+    return vec;
 }
 
 void vector_resize(vector * vec,int cap) {
@@ -27,9 +42,15 @@ void vector_push_back(vector * vec,void * udata) {
     void * p = vec->data + vec->ele_size * vec->size;
     memcpy(p,udata,vec->ele_size);
     vec->size++;
-}
+}//如果udata中含有指针，则要进行移动语义，需要移动构造函数，这里不实现
 
 void vector_delete(vector * vec) {
+    for(int i = 0;i < vec->size;i++) {
+        void * ptr = vec->data + vec->ele_size * i;
+        if(vec->deallocator) {
+            vec->deallocator(ptr);
+        }
+    }
     free(vec->data);
 }
 
@@ -41,7 +62,7 @@ void * vector_id(vector * vec,int id) {
     }
 }
 
-int vector_size(vector *vec) {
+int vector_size(vector * vec) {
     return vec->size;
 }
 
@@ -59,31 +80,19 @@ static int hashdata(hashmap * map,void * data,int size) {
 }
 
 void hashmap_init(hashmap * map,int bucket_capacity,int key_size,int value_size,
-                  int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb),
-                          void * (*allocator)(size_t),void (*deallocator)(void *)) {
+                int (*hash)(struct hashmap * map,void * keydata,int size),int (*compare)(void * ka,void * kb),
+                void (*deallocator)(void *)) {
     map->bucket_capacity = bucket_capacity;
     map->key_size = key_size;
     map->value_size = value_size;
     map->unit_size = key_size + value_size;
     map->size = 0;
 
-    if(hash == NULL) {
-        map->hash = hashdata;
-    } else {
-        map->hash = hash;
-    }
-    if(allocator == NULL) {
-        map->allocator = malloc;
-    } else {
-        map->allocator = allocator;
-    }
-    if(deallocator == NULL) {
-        map->deallocator = free;
-    } else {
-        map->deallocator = deallocator;
-    }
+    map->hash = hash ? hash : hashdata;
     map->compare = compare;
     assert(map->hash && map->compare);
+    map->deallocator = deallocator ? deallocator : free;
+
     map->bucket = malloc(bucket_capacity * sizeof(hashmap_node_t));
     for(int i = 0;i < bucket_capacity;i++) {
         map->bucket[i].keydata = map->bucket[i].valuedata = NULL;
@@ -100,6 +109,9 @@ void hashmap_delete(hashmap * map,void * keydata) {
         if(map->compare(cur->keydata,keydata)) {
             prev->next = next;
             free(cur->keydata);
+            if(map->deallocator) {
+                map->deallocator(cur->data.second);
+            }
             free(cur->valuedata);
             free(cur);
             return;
@@ -126,6 +138,9 @@ void hashmap_set(hashmap * map,void * keydata,void * valuedata) {
 
     void * find = hashmap_find(map,keydata);
     if(find) {
+        if(map->deallocator) {
+            map->deallocator(find);
+        }
         memcpy(find,valuedata,map->value_size);
     } else {
         hashmap_node_t * temp = node->next;

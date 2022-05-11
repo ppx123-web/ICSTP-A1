@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define new(A) (A*)(malloc(sizeof(A)))
+#define new(A) ((A*)malloc(sizeof(A)))
+
 #define NAME_LENGTH 32
 
 typedef struct Type_ Type;

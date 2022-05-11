@@ -57,6 +57,7 @@ Operand genoperand(int kind,...) {
 
 InterCode * u_gencode(int kind,va_list ap) {
     InterCode * code = new(InterCode);
+    memset(code,0, sizeof(InterCode));
     code->kind = kind;
     switch (kind) {
         case T_LABEL:
@@ -70,13 +71,13 @@ InterCode * u_gencode(int kind,va_list ap) {
             code->op.arg1 = va_arg(ap,Operand);
             break;
         case T_ASSIGN:
-            code->op.arg1 = va_arg(ap,Operand);
-            code->op.arg2 = va_arg(ap,Operand);
             if(code->op.arg1.var.var_no == -1) {
                 free(code);
                 va_end(ap);
                 return NULL;
             }
+            code->op.arg1 = va_arg(ap,Operand);
+            code->op.arg2 = va_arg(ap,Operand);
             break;
         case T_ADDR:
         case T_A_STAR:
@@ -93,6 +94,11 @@ InterCode * u_gencode(int kind,va_list ap) {
             code->op.arg1 = va_arg(ap,Operand);
             code->op.arg2 = va_arg(ap,Operand);
             code->op.arg3 = va_arg(ap,Operand);
+            if(code->op.arg1.var.var_no == -1) {
+                free(code);
+                va_end(ap);
+                return NULL;
+            }
             break;
         case T_IF:
             code->op.arg1 = va_arg(ap,Operand);
@@ -119,8 +125,18 @@ static void gencode(int kind,...) {
     }
 }
 
+static int is_if = 0;
+static int set_on_if() {
+    is_if = 1;
+}
+
+static int set_on_off() {
+    is_if = 0;
+}
+
 int genvar() {
     static int var_idx = 1;
+    variable_map[var_idx] = is_if;
     return var_idx++;
 }
 
@@ -258,9 +274,10 @@ void intercode_display(InterCode * cur) {
 }
 
 void codelist_display(CodeList_t * this) {
-    InterCode * cur = this->head.next;
-    while (cur != &this->tail) {
+    InterCode * cur = this->head.next, * prev;
+    while (cur != &this->tail && cur) {
         intercode_display(cur);
+        prev = cur;
         cur = cur->next;
     }
 }
@@ -269,7 +286,7 @@ void operand_display(Operand * op) {
     switch (op->kind) {
         case VARIABLE:
             if(op->var.var_no == -1) {
-                printf("Error");
+                op->var.var_no = 0;
             }
             printf("%s%d",temp_var_prefix,op->var.var_no);
             break;
@@ -356,11 +373,15 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-//    printf("\n\n");
+#ifdef INTERCODE_DEBUG
+    printf("\n\n");
     CodeList_t * opt_code = code_list_optimizer(&code_list);
-#ifndef INTERCODE_DEBUG
-    codelist_display(opt_code);
+#else
+//    CodeList_t * opt_code = code_list_optimizer(&code_list);
+//    codelist_display(opt_code);
+    codelist_display(&code_list);
 #endif
+
 
     free(variable_map);
 }
@@ -463,6 +484,7 @@ static void translate_ExtDef(Node_t * root) {
             translate_Insert_Node(var);
             var->var_id.var_no = genvar();
             gencode(T_PARAM, genoperand(VARIABLE,var->var_id.var_no));
+            variable_map[var->var_id.var_no] = 1;
             if(temp->type->kind == STRUCTURE) {
                 unit_t * find_struct = symbol_table->find(temp->type->u.structure->name);
                 if(!find_struct) {
@@ -698,6 +720,7 @@ static char * reverse_relop(char * op) {
 static void translate_Cond(Node_t * root,int label_true,int label_false) {
     panic_on("Wrong!",!type(root,"Exp"));
     Node_t * mid = root->lchild->right;
+    set_on_if();
     if(type(mid,"RELOP")) {
         int t1 = genvar(),t2 = genvar();
         root->lchild->inh = root->rchild->inh = &Is_Top_Addr;
@@ -754,9 +777,11 @@ static void translate_Cond(Node_t * root,int label_true,int label_false) {
             gencode(T_IF, genoperand(VARIABLE,t1), genoperand(INT_CONST,0), genoperand(GOTO,label_false),genoperand(RELOP,"=="));
         } else {
             fprintf(stderr,"Error\n");
+            assert(0);
         }
     }
     root->syn = &Int_Type;
+    set_on_off();
 }
 
 static int args_stack[1024] = {0};
@@ -865,7 +890,9 @@ static void translate_Exp(Node_t * root,int * place) {
         left->inh = right->inh = root->inh;
         translate_Exp(left,&t1);
         translate_Exp(right,&t2);
-        gencode(T_MUL,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        if(*place != -1) {
+            gencode(T_MUL,genoperand(VARIABLE,*place),genoperand(VARIABLE,t1),genoperand(VARIABLE,t2));
+        }
         left_type = left->syn;
         ret = left_type;
     } else if(type(mid,"DIV")) {
@@ -896,13 +923,21 @@ static void translate_Exp(Node_t * root,int * place) {
                 gencode(T_WRITE, genoperand(VARIABLE,args_stack[--args_stack_size]));
             } else {
                 translate_push_args(arg_no);
-                gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
+                if(*place != -1) {
+                    gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
+                } else {
+                    gencode(T_CALL, genoperand(VARIABLE,genvar()) ,genoperand(FUNCTION,left->text));
+                }
             }
         } else {
             if(strcmp(left->text,"read") == 0) {
                 gencode(T_READ, genoperand(VARIABLE,*place));
             } else {
-                gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
+                if(*place == -1) {
+                    gencode(T_CALL, genoperand(VARIABLE,genvar()) ,genoperand(FUNCTION,left->text));
+                } else {
+                    gencode(T_CALL, genoperand(VARIABLE,*place) ,genoperand(FUNCTION,left->text));
+                }
             }
         }
         ret = symbol_table->find(left->text)->type->u.func.ret_type;
