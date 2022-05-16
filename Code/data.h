@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define new(A) (A*)(malloc(sizeof(A)))
+#define new(A) ((A*)malloc(sizeof(A)))
+
 #define NAME_LENGTH 32
 
 typedef struct Type_ Type;
@@ -95,6 +96,11 @@ typedef struct Symbol_Node_t {
         HASHLIST,STACKLIST,STACKNODE,INFONODE,
     }node_type;
     Type * type;
+
+    union {
+        int var_addr; //array struct使用
+        int var_no;   //int float使用
+    } var_id;
 
     //维护数据结构需要的信息
     struct Symbol_Node_t * hash_prev, * hash_next;

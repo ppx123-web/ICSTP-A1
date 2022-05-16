@@ -1,6 +1,8 @@
 #include "data.h"
 #include "debug.h"
 
+#define new(A) ((A*)malloc(sizeof(A)))
+
 static MultiwayTree_t * MultiwayTree_init(MultiwayTree_t * t) {
 //    t->root = tree->Node_alloc("begin",0);
     return t;

@@ -91,11 +91,11 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 28 "syntax.y"
+#line 28 "./syntax.y"
 
     struct Tree_node_t * node;
 
-#line 99 "syntax.tab.h"
+#line 99 "./syntax.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

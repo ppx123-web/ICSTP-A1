@@ -1,6 +1,6 @@
 // #define DEBUG
-//#define SCANNER_DEBUG
- #define FINAL
+// #define SCANNER_DEBUG
+#define FINAL
 // #define TREEDEBUG
 
 

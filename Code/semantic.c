@@ -128,7 +128,7 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
     unit_t * find = symbol_table->find(cur->name);
     if(nodeop->IsStructDef(cur)) {
 //        cur->deep = 1;
-        if(find && find->deep == symbol_stack->stack_size) {
+        if(find && (find->deep == symbol_stack->stack_size || find->type->kind == STRUCTURE)) {
             ErrorHandling(16,cur->line,cur->name);
             nodeop->delete(cur,INFONODE);
             return 0;
@@ -142,7 +142,7 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
                 if(cur->type->kind == FUNC_IMPL || cur->type->kind == FUNC_DECL) {
                     if(!(find->type->kind == FUNC_IMPL && cur->type->kind == FUNC_IMPL)) {
                         if(nodeop->equal(find,cur)) {
-                            find->type->kind = cur->type->kind;
+                            find->type->kind = FUNC_IMPL;
                         } else {
                             ErrorHandling(19,cur->line,cur->name);
                         }
@@ -166,7 +166,11 @@ static int Semantic_Check_Insert_Node(unit_t * cur) {
         nodeop->delete(cur,cur->node_type);
         return 0;
     } else {
-        symbol_table->insert(cur);
+        if(find && find->type->kind == STRUCTURE) {
+            ErrorHandling(3,cur->line,cur->name);
+        } else {
+            symbol_table->insert(cur);
+        }
         return 1;
     }
 }
@@ -485,7 +489,9 @@ static void Semantic_Check_Exp(Node_t * root) {
         if(!type_ops->type_equal(left_type,right_type)) {
             ErrorHandling(5,mid->line,mid->text);
         }
-        if(!type(left->lchild,"ID") && !type(left->rchild,"RB") && !(type(left->lchild->right,"DOT"))) {
+        Node_t * ll = left;
+        while (ll->lchild) { ll = ll->lchild; }
+        if(!type(ll,"ID") || (type(ll,"ID") && type(ll->right,"LP"))) {
             ErrorHandling(6,mid->line,mid->text);
         }
         ret = left_type;
