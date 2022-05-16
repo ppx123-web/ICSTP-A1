@@ -317,13 +317,14 @@ void operand_display(Operand * op) {
     }
 }
 
-static CodeList_t * code_list_optimizer(CodeList_t * this) {
+/*static CodeList_t * code_list_optimizer(CodeList_t * this) {
     int size = inter_code_line;
     inter_code_line = 0;
     CodeList_t * ret = code_optimizer(size);
     return ret;
-}
+}*/
 
+void mips_code(CodeList_t * cl);
 //======================================================================
 //======================================================================
 
@@ -376,7 +377,7 @@ void translate() {
 //    codelist_display(opt_code);
     codelist_display(&code_list);
 
-
+    mips_code(&code_list);
     free(variable_map);
 }
 

@@ -32,9 +32,7 @@ int main(int argc,char *argv[]) {
     if (syntax == 0) {
         //tree->traverse(tree->root,0);
         //semantic_check->main(tree->root);
-#ifndef INTERCODE_DEBUG
         freopen(argv[2],"w",stdout);
-#endif
         translate();
     }
     //end_free();

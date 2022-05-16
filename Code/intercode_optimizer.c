@@ -1,3 +1,4 @@
+/*
 #include "intercode.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -389,3 +390,4 @@ static CodeList_t code_optimizer_dag(Code_Block_t * block) {
 
 
 
+*/

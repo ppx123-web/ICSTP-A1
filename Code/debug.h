@@ -2,7 +2,7 @@
 // #define SCANNER_DEBUG
 #define FINAL
 // #define TREEDEBUG
-
+#include <assert.h>
 
 #ifndef DEBUG_H
 #define DEBUG_H
