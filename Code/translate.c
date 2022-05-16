@@ -109,9 +109,7 @@ InterCode * u_gencode(int kind,va_list ap) {
         default:
             panic("Wrong");
     }
-#ifdef INTERCODE_DEBUG
-    intercode_display(code);
-#endif
+
     return code;
 }
 
@@ -373,14 +371,10 @@ void translate() {
     translate_Insert_Node(translate_Creat_Node("write",write_type,-1));
     translate_Program(tree->root);
 
-#ifdef INTERCODE_DEBUG
-    printf("\n\n");
-    CodeList_t * opt_code = code_list_optimizer(&code_list);
-#else
+
 //    CodeList_t * opt_code = code_list_optimizer(&code_list);
 //    codelist_display(opt_code);
     codelist_display(&code_list);
-#endif
 
 
     free(variable_map);
