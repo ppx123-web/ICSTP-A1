@@ -20,6 +20,7 @@ Operand genoperand(int kind,...) {
     switch (kind) {
         case VARIABLE:
             ret.var.var_no = va_arg(ap,int);
+            ret.var.use_info = INT32_MAX;
             break;
         case CONSTANT:
             ret.var.value = malloc(NAME_LENGTH);
@@ -375,7 +376,7 @@ void translate() {
 
 //    CodeList_t * opt_code = code_list_optimizer(&code_list);
 //    codelist_display(opt_code);
-    codelist_display(&code_list);
+//    codelist_display(&code_list);
 
     mips_code(&code_list);
     free(variable_map);

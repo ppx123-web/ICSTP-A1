@@ -5,11 +5,13 @@
 #ifndef INTERCODE_H
 #define INTERCODE_H
 
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "datastructure.h"
+#include <stdint.h>
 
 #define new(A) ((A*)malloc(sizeof(A)))
 
@@ -26,7 +28,9 @@ struct Operand {
         NONTYPE, VARIABLE, CONSTANT, ADDRESS, FUNCTION, GOTO, ORIGIN, RELOP, DEC, INT_CONST,
     } kind;
     union {
-        int var_no;
+        struct {
+            int var_no,use_info;
+        };
         char * value;
         char * f_name;
         int goto_id;
