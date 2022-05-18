@@ -1,24 +1,18 @@
-int main() {
-    int a1,a2,a3,a4,a5,a6,a7,a8,a9;
-    int a,b,c;
-    a = 1;
-    b = 2;
-    c = 3;
-    write(a + b + c);
-    a1 = a;
-    write(a1);
-    a2 = a1 + 1;
-    write(a2);
-    a3 = a2 + 1;
-    write(a3);
-    a4 = a3 + 1;
-    write(a4);
-    a5 = a4 + 1;
-    a6 = a5 + 1;
-    a7 = a6 + 1;
-    a8 = a7 + 1;
-    a9 = a8 + 1;
-    a = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9;
-    write(a);
+int fact(int n)
+{
+    if (n == 1)
+    return n;
+    else
+    return (n * fact(n - 1));
+}
+int main()
+{
+    int m, result;
+    m = read();
+    if (m > 1)
+    result = fact(m);
+    else
+    result = 1;
+    write(result);
     return 0;
 }

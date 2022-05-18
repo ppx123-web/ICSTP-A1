@@ -860,10 +860,11 @@ static void translate_Exp(Node_t * root,int * place) {
                 gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,num));
         }
     }  else if(type(left,"MINUS")) {
-        int t1 = genvar();
+        int t1 = genvar(),t2 = genvar();
         mid->inh = root->inh;
         translate_Exp(mid,&t1);
-        gencode(T_MINUS,genoperand(VARIABLE,*place),genoperand(INT_CONST,0),genoperand(VARIABLE,t1));
+        gencode(T_ASSIGN, genoperand(VARIABLE,t2), genoperand(INT_CONST,0));
+        gencode(T_MINUS,genoperand(VARIABLE,*place),genoperand(VARIABLE,t2),genoperand(VARIABLE,t1));
         ret = mid->syn;
     } else if(type(mid,"PLUS")) {
         int t1 = genvar(),t2 = genvar();
