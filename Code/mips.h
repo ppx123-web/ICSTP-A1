@@ -1,6 +1,11 @@
 #ifndef MIPS_H
 #define MIPS_H
 
+#define MIN(A,B) ((A) < (B)?(A):(B))
+#define MAX(A,B) ((A) > (B)?(A):(B))
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 

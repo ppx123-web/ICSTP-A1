@@ -948,8 +948,9 @@ static void translate_Exp(Node_t * root,int * place) {
         left_type = left->syn;
         ret = left_type->u.array.elem;
 
-        int t3 = genvar(),t4 = genvar();
-        gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(INT_CONST,  translate_getsize((Type*)ret)));
+        int t3 = genvar(),t4 = genvar(),t5 = genvar();
+        gencode(T_ASSIGN, genoperand(VARIABLE,t5),genoperand(INT_CONST,  translate_getsize((Type*)ret)));
+        gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(VARIABLE,t5));
         gencode(T_ADD, genoperand(VARIABLE,t4), genoperand(VARIABLE,t1), genoperand(VARIABLE,t3));
 
         if(root->inh == &Is_Top_Addr && ret->kind == BASIC) {

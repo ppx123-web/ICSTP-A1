@@ -15,8 +15,9 @@ static void end_free();
 void translate();
 
 int main(int argc,char *argv[]) {
-    if (argc <= 1) {
-        printf("Usage:%s $FILE\n",argv[0]);
+    if (argc <= 2) {
+        printf("Usage:%s $FILE $FILE\n",argv[0]);
+        return 0;
     }
     yyinit();
 
