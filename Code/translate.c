@@ -375,8 +375,10 @@ void translate() {
 
 
 //    CodeList_t * opt_code = code_list_optimizer(&code_list);
-//    codelist_display(opt_code);
+//    freopen("a.ir","w",stdout);
 //    codelist_display(&code_list);
+
+//    freopen("a.s","w",stdout);
 
     mips_code(&code_list);
     free(variable_map);
