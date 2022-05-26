@@ -63,26 +63,39 @@ static stack_node_t * var_offset;
 static Code_Block_t * func_block;
 static int block_var_offset_base = 0;
 
+static int * func_stack, * free_stack;
+static int func_stack_size, free_stack_size;
+
 void mips_code(CodeList_t * cl) {
     assembler_init();
     int intercode_size = cl->tail.prev->line + 5;
-    int var_size = 2 * genvar();
+    int var_size = 3 * genvar();
     var_offset = malloc(var_size * sizeof(stack_node_t));
     memset(var_offset,-1,var_size * sizeof(stack_node_t));
     Code_Block_t * code_block = malloc(sizeof(Code_Block_t) * intercode_size);
     int block_size = partition_code_block(cl,code_block);
 
     int * var_use_info = malloc(var_size * sizeof(int));
+    memset(var_use_info,0, sizeof(int) * var_size);
+
+    func_stack = malloc(var_size * sizeof(int));
+    free_stack = malloc(var_size * sizeof(int));
+    func_stack_size = free_stack_size = 0;
+
     for(int i = 0;i < block_size;i++) {
         block_scan_info(&code_block[i],var_use_info);
     }
-    func_block->func_stack = block_var_offset_base;
+    if(func_block) {
+        func_block->func_stack = block_var_offset_base;
+    }
     for(int i = 0;i < block_size;i++) {
         block_gen_code(&code_block[i]);
     }
-//    free(var_use_info);
-//    free(code_block);
-//    free(var_offset);
+    free(var_use_info);
+    free(code_block);
+    free(var_offset);
+    free(func_stack);
+    free(free_stack);
 }
 
 
@@ -132,6 +145,18 @@ static int partition_code_block(CodeList_t * cl,Code_Block_t * code_block) {
     return id;
 }
 
+static int alloc_stack() {
+    if(free_stack_size > 0) {
+        return free_stack[free_stack_size--];
+    } else {
+
+    }
+}
+
+static int stack_size() {
+    return func_stack_size * 4;
+}
+
 
 static void block_scan_info(Code_Block_t * cb,int * var_use_info) {
     if(cb->head->kind == T_FUNCTION) {
@@ -147,16 +172,15 @@ static void block_scan_info(Code_Block_t * cb,int * var_use_info) {
     for(InterCode * cur = cb->head;cur != cb->tail->next; cur = cur->next) {
         if(cur->kind != T_DEC && cur->kind != T_ADDR) {
             for(int i = 0;i < 3;i++) {
+                int var_no = cur->op.args[i].var.var_no;
                 if(cur->op.args[i].kind == VARIABLE &&
-                var_offset[cur->op.args[i].var.var_no].offset == -1) {
+                var_offset[var_no].offset == -1) {
                     cb->stack_size += 4;
-                    var_offset[cur->op.args[i].var.var_no].offset = cb->stack_size + cb->offset;
+                    var_offset[var_no].offset = cb->stack_size + cb->offset;
                 }
             }
         } else if(cur->kind == T_DEC){
-//            int array_size = cur->op.dec.arg2.var.dec;
-//            cb->stack_size += array_size;
-//            var_offset[cur->op.dec.arg1.var.var_no].offset = cb->stack_size + cb->offset;
+            ;
         } else if(cur->kind == T_ADDR) {
             cb->stack_size += 4;
             var_offset[cur->op.addr.arg1.var.var_no].offset = cb->stack_size + cb->offset;
@@ -185,7 +209,9 @@ static void block_scan_info(Code_Block_t * cb,int * var_use_info) {
 
 static void reg_free(int id) {
     if(regs.regs[id].use_info == INT32_MAX && regs.regs[id].var > 0) {
-        printf("  sw %s, %d($fp)\n",regs.regs[id].name, -var_offset[regs.regs[id].var].offset);
+        if(variable_map[regs.regs[id].var] == 1) {
+            printf("  sw %s, %d($fp)\n",regs.regs[id].name, -var_offset[regs.regs[id].var].offset);
+        }
         regs.regs[id].var = 0;
         regs.regs[id].use_info = 0;
     }
@@ -243,7 +269,7 @@ static int allocate(Operand op) {
             id = i;
         }
     }
-    printf("  sw %s, %d($fp)\n", regs.regs[id].name,-var_offset[op.var.var_no].offset);
+    printf("  sw %s, %d($fp)\n", regs.regs[id].name,-var_offset[regs.regs[id].var].offset);
     regs.regs[id].var = op.var.var_no;
     regs.regs[id].use_info = op.var.use_info;
     return id;
@@ -256,7 +282,7 @@ static void block_gen_code(Code_Block_t * cb) {
     if((cur->kind != T_IF && cur->kind != T_GO && cur->kind != T_RETURN)) {
         block_write_back();
     }
-    printf("\n");
+//    printf("\n");
 }
 
 static Operand call_args[256] = {0};
@@ -352,7 +378,9 @@ static void op_select(Code_Block_t * cb) {
                 emit_code(M_GO, cur->op.arg1.var.goto_id);
                 break;
             case T_RETURN:
-                emit_code(M_RETURN, REGNAME(ensure(cur->op.arg1)));
+                ensure_id[0] = ensure(cur->op.arg1);
+                reg_free(ensure_id[0]);
+                emit_code(M_RETURN, REGNAME(ensure_id[0]));
                 break;
             case T_CALL:
                 block_write_back();
@@ -369,7 +397,8 @@ static void op_select(Code_Block_t * cb) {
                 int arg_end = call_args_size > 4? call_args_size - 4:0;
                 for(int i = arg_begin;i >= arg_end;i--) {
                     ensure_id[0] = ensure(call_args[i]);
-                    reg_free(ensure_id[0]);
+                    regs.regs[ensure_id[0]].var = 0;
+                    regs.regs[ensure_id[0]].use_info = 0;
                     emit_code(M_ASSIGN_VAR, regs.a[arg_begin - i].name, REGNAME(ensure_id[0]));
                     regs.a[arg_begin - i].var = call_args[i].var.var_no;
                     regs.a[arg_begin - i].use_info = regs.a[arg_begin - i].use_info;
@@ -382,7 +411,7 @@ static void op_select(Code_Block_t * cb) {
                 break;
             case T_READ:
                 emit_code(M_READ, REGNAME(allocate(cur->op.arg1)));
-                block_write_back();
+//                block_write_back();
                 break;
             case T_WRITE:
                 ensure_id[0] = ensure(cur->op.arg1);
@@ -418,7 +447,17 @@ static void op_select(Code_Block_t * cb) {
                 param_arg_size = 0;
                 emit_code(M_FUNCTION, cur->op.arg1.var.f_name);
                 printf("  move $fp, $sp\n");
-                printf("  sub $sp, $sp, %d\n",cb->func_stack);
+                int stack_size = cb->func_stack;
+                while (stack_size) {
+                    if(stack_size >= 32768) {
+                        printf("  sub $sp, $sp, %d\n",32764);
+                        stack_size -= 32764;
+                    } else {
+                        printf("  sub $sp, $sp, %d\n",stack_size);
+                        stack_size = 0;
+                    }
+                }
+//                printf("  sub $sp, $sp, %d\n",cb->func_stack);
                 for(int i = regs.use_start;i <= regs.use_end;i++) {
                     regs.regs[i].var = 0;
                 }
@@ -437,7 +476,8 @@ static void op_select(Code_Block_t * cb) {
                 call_args[call_args_size++] = cur->op.arg1;
                 break;
             case T_DEC:
-                printf("  addi $sp, $sp, %d\n",-cur->op.dec.arg2.var.dec);
+                printf("  li $v1, %d\n",-cur->op.dec.arg2.var.dec);
+                printf("  add $sp, $sp, $v1\n");
                 break;
             case T_ADDR:
                 printf("  sw $sp, %d($fp)\n",-var_offset[cur->op.addr.arg1.var.var_no].offset);
@@ -462,7 +502,9 @@ static void emit_code(int kind,...) {
         case M_ASSIGN_VAR:
             temp[0] = va_arg(ap,char*);
             temp[1] = va_arg(ap,char*);
-            printf("  move %s, %s",temp[0],temp[1]);
+//            if(strcmp(temp[0],temp[1]) != 0) {
+                printf("  move %s, %s",temp[0],temp[1]);
+//            }
             break;
         case M_ASSIGN_CONST:
             temp[0] = va_arg(ap,char*);

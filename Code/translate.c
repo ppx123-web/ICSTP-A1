@@ -570,6 +570,7 @@ static void translate_Dec(Node_t * root) {
             int t1 = genvar();
             gencode(T_DEC, genoperand(VARIABLE,t1), genoperand(DEC,translate_getsize(var->type)));
             gencode(T_ADDR, genoperand(VARIABLE,var->var_id.var_addr), genoperand(VARIABLE,t1));
+            variable_map[var->var_id.var_addr] = 1;
         } else {
             var->var_id.var_no = genvar();
             variable_map[var->var_id.var_no] = 1;
@@ -812,7 +813,9 @@ static void translate_Exp(Node_t * root,int * place) {
     } else if(type(left,"INT") && mid == NULL) {
         char * s = NULL;
         int num = (int)strtol(left->text,&s,0);
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,num));
+        if(*place != -1) {
+            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,num));
+        }
         ret = &Int_Type;
     } else if(type(left,"FLOAT") && mid == NULL) {
         gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(CONSTANT,left->text));
@@ -905,10 +908,14 @@ static void translate_Exp(Node_t * root,int * place) {
         ret = left_type;
     } else if(type(mid,"RELOP") || type(left,"NOT") || type(mid,"AND") || type(mid,"OR")) {
         int l1 = genlable(),l2 = genlable();
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,0));
+        if(*place != -1) {
+            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,0));
+        }
         translate_Cond(root,l1,l2);
         gencode(T_LABEL, genoperand(GOTO,l1));
-        gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,1));
+        if(*place != -1) {
+            gencode(T_ASSIGN,genoperand(VARIABLE,*place),genoperand(INT_CONST,1));
+        }
         gencode(T_LABEL,genoperand(GOTO,l2));
         ret = &Int_Type;
     } else if(type(left,"LP")) {
@@ -955,11 +962,14 @@ static void translate_Exp(Node_t * root,int * place) {
         gencode(T_MUL, genoperand(VARIABLE,t3), genoperand(VARIABLE,t2), genoperand(VARIABLE,t5));
         gencode(T_ADD, genoperand(VARIABLE,t4), genoperand(VARIABLE,t1), genoperand(VARIABLE,t3));
 
-        if(root->inh == &Is_Top_Addr && ret->kind == BASIC) {
-            gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
-        } else {
-            gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
+        if(*place != -1) {
+            if(root->inh == &Is_Top_Addr && ret->kind == BASIC) {
+                gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
+            } else {
+                gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t4));
+            }
         }
+
 
     } else if(type(mid,"DOT")) {
         int t1 = genvar(),t2 = genvar();
@@ -975,12 +985,14 @@ static void translate_Exp(Node_t * root,int * place) {
             temp = temp->tail;
         }
         ret = temp->type;
-
-        if(root->inh == &Is_Top_Addr && ret->kind == BASIC) {
-            gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
-        } else {
-            gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+        if(*place != -1) {
+            if(root->inh == &Is_Top_Addr && ret->kind == BASIC) {
+                gencode(T_A_STAR, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+            } else {
+                gencode(T_ASSIGN, genoperand(VARIABLE,*place), genoperand(VARIABLE,t2));
+            }
         }
+
     }
     root->syn = ret;
 }
