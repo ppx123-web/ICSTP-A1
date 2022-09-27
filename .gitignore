@@ -1,10 +1,9 @@
 .vscode/
 cmake-build-debug/
 Test/
-Appendix*.pdf
-Project*.pdf
-*/*.o
-*/*.output
-*/*.txt
+.idea/
+report.md
+*.pdf
 *.zip
-*/*.zip
+*.sh
+lex.yy.c
