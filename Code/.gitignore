@@ -2,3 +2,5 @@ syntax.output
 syntax.tab.c
 syntax.tab.h
 *.o
+parser
+lex.yy.c
