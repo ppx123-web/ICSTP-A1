@@ -1,3 +1,7 @@
+A simple C-- compiler written by C.
+
+The Project has four stages: L1-L4 and each stage implements different functions.
+
 文件结构：
 	/Lab
 	    /Code
